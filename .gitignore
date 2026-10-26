@@ -69,3 +69,12 @@ upskill/*.md
 
 # Agent usage logs
 .agents/
+
+# Android build output and upload keys. The signed bundle is delivered outside git.
+luma/android/.gradle/
+luma/android/build/
+luma/android/app/build/
+luma/android/local.properties
+luma/android/keystore.properties
+*.jks
+*.keystore

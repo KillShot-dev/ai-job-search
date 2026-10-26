@@ -27,8 +27,8 @@ Symbols are original metaphors for the kind of app (a note, a camera, a bag). Th
 
 | Track | Result |
 | --- | --- |
-| Compile | Not compiled. This environment has no Android SDK. |
-| Signing | No upload key, no AAB, no APK. |
-| Play Console | No listing uploaded. |
+| Compile | Release bundle and APK built Oct 25, 2026, 7:53 PM PT. targetSdk 36, versionName 1.0.0. The binaries are not stored in git. |
+| Signing | Signed with an upload key kept outside the repo. Play App Signing has not been enrolled. |
+| Play Console | Nothing uploaded. |
 
 A signed Google Play release has not been delivered.

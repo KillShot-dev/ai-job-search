@@ -13,8 +13,8 @@ This directory is a separate product inside the workspace. It does not change th
 | Ink study | 36 earlier app icons and 16 system icons. Still in `artwork/`, not the dashboard |
 | Launcher mapping files | Candidate components only. Not verified on a device |
 | Dashboard | Branded HTML, also bundled for the WebView |
-| Android Studio project | Source only. Not compiled, not signed |
-| Google Play release | Not created |
+| Android Studio project | Release AAB and APK built (version 1.0.0, targetSdk 36). Upload key is not in git |
+| Google Play release | Not uploaded. Play Console takes the AAB, not the APK |
 
 `tracker/logo-summary.json` is the logo-set status. `tracker/summary.json` is the ink study. Artwork, mapping verification, and launcher testing stay in separate columns. Both tracks are `release_ready: false`.
 
@@ -26,6 +26,15 @@ python3 luma/tools/validate.py
 ```
 
 `build_logo_set.py` rewrites the logo-set SVG and PNG files, the dashboard, `appfilter.xml`, and the feature graphic. `build_icons.py` rebuilds only the ink study. Running it puts the ink dashboard back; run `build_logo_set.py` again to restore the logo set. It leaves `g001`–`g300` in `drawable-nodpi`.
+
+The Play upload file is the release Android App Bundle:
+
+```bash
+cd luma/android
+./gradlew bundleRelease
+```
+
+That needs an Android SDK in `local.properties` and `keystore.properties` for the upload key. Neither file is committed.
 
 PNG export uses `rsvg-convert`. Each logo tile must stay readable at 48×48, with a transparent corner and a unique glyph.
 
