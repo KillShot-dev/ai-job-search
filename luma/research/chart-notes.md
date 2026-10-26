@@ -37,4 +37,15 @@ The lists moved during the day, and the aggregators do not match each other. Art
 
 ## What the 36 drawn icons cover
 
-Ranks 1–36 of the primary pull. Each drawable maps to one package ID. Neighboring short-drama apps use different silhouettes. A second color of the same symbol is not in the set.
+Ranks 1–36 of the 6:00 PM primary pull. Each drawable maps to one package ID. Neighboring short-drama apps use different silhouettes. A second color of the same symbol is not in the set.
+
+## Logo set list (300)
+
+A later pull, written to `us-top-free-300.json`.
+
+- Fetched: 2026-10-26T01:34:42.442Z, which is Oct 25, 2026, 6:34 PM PT
+- Tool: `google-play-scraper` 10.1.4, overall `topselling_free` plus US category Top Free lists from the same session
+- Ranks 1–199: that overall response, in response order. Rank 1 is still Muse, `com.facebook.aura`. Rank 199 is onX Hunt, `onxmaps.hunt`. The 6:00 PM rank 199 (Weather: Live Forecast & Radar) had already moved.
+- Ranks 200–300: the next 101 packages that were not in those 199, ordered by best category rank, then category name. Rank 200 is Gossip Harbor, `com.mergegames.gossipharbor`, category GAME rank 1. Rank 300 is Weather Forecast - Live Alerts, `com.weather.daily.local.live`, category WEATHER rank 10.
+
+Play’s overall response still stopped at 199 when more apps were requested. Ranks 200–300 in this file are charting free apps. They are not published overall positions 200–300, and they were not invented to fill the gap.

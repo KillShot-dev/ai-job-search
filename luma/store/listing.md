@@ -1,6 +1,6 @@
 # Store listing draft
 
-Do not upload this text while the pack still has 36 app icons. A listing that says “300 icons” would be false for the build in this repository.
+Do not upload this text. The logo set has 300 tiles, and the mappings are still unverified. A listing that calls the pack finished would be false.
 
 ## If the finished pack ships
 
@@ -22,11 +22,11 @@ Replace the paragraph above with the real icon count, the snapshot date, and the
 
 ## What can be said about this prototype
 
-Luma is an in-progress icon pack. This build contains 36 original app icons from a 199-app U.S. Top Free snapshot taken on Oct 25, 2026, plus 16 system icons. It has not been tested on a phone and it is not for sale.
+Luma is an in-progress icon pack from metaPhasic Group. The build wired into the app is a 300-icon logo set: one original glyph on a glossy squircle, no wordmark on the tile. Ranks 1–199 follow a U.S. Top Free response from Oct 25, 2026, 6:34 PM PT. Ranks 200–300 continue with category Top Free apps because that overall response stops at 199. An earlier ink study of 36 app icons and 16 system icons is still in the tree. Nothing has been tested on a phone, and this prototype is not for sale.
 
 ## Graphic assets in this folder
 
-- `feature-graphic-1024x500.png` — prototype feature graphic. It says the pack is not a finished listing.
-- `play-icon-512.png` — pack icon at 512 pixels. It is the Luma mark, not the company logo.
+- `feature-graphic-1024x500.png` — prototype feature graphic for the logo set. It uses the metaPhasic Group lockup and says the pack is not a Play release.
+- `play-icon-512.png` — pack icon at 512 pixels. It is the Luma crescent, not the company logo.
 
 Phone screenshots of a launcher using the pack do not exist, because no launcher was tested.

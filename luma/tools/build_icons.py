@@ -967,6 +967,10 @@ def main() -> None:
     # Remove stale exports so dropped icons cannot linger and be counted.
     for folder in (SVG_DIR, PNG_DIR, PNG48_DIR, DRAWABLE):
         for old in folder.glob("*"):
+            # The logo set lives beside the ink study. Rebuilding the ink study
+            # must not delete g001–g300.
+            if folder == DRAWABLE and old.name.startswith("g") and old.suffix == ".png":
+                continue
             if old.is_file():
                 old.unlink()
 

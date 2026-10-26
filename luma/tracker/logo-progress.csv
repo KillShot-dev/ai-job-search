@@ -1,0 +1,301 @@
+rank,name,package_id,list,category,category_rank,family,drawable,artwork,mapping_verified,launcher_tested,counts_as_app_coverage
+1,Muse from Meta,com.facebook.aura,overall,,,spark,g001,prototype,false,false,true
+2,ChatGPT,com.openai.chatgpt,overall,,,spark,g002,prototype,false,false,true
+3,TikTok Pro - Events,com.ss.android.ugc.tiktok.pro,overall,,,play,g003,prototype,false,false,true
+4,Capital One Mobile,com.konylabs.capitalone,overall,,,card,g004,prototype,false,false,true
+5,Settings Home,com.eet.settings.launcher,overall,,,spark,g005,prototype,false,false,true
+6,Vinted: Shop & sell pre-loved,fr.vinted,overall,,,bag,g006,prototype,false,false,true
+7,WhatsApp,com.whatsapp,overall,,,bubble,g007,prototype,false,false,true
+8,"TikTok - Videos, Shop & LIVE",com.zhiliaoapp.musically,overall,,,play,g008,prototype,false,false,true
+9,McDonald's,com.mcdonalds.app,overall,,,cup,g009,prototype,false,false,true
+10,FreeReels - Dramas & Reels,com.freereels.app,overall,,,play,g010,prototype,false,false,true
+11,FreeDrama: Short Drama & Reels,com.drama.free,overall,,,play,g011,prototype,false,false,true
+12,Instagram,com.instagram.android,overall,,,camera,g012,prototype,false,false,true
+13,DealSeek: Coupons & Discounts,com.dealseekorg.dealseek,overall,,,card,g013,prototype,false,false,true
+14,PineDrama - Short Dramas,com.ss.android.ttmd.video,overall,,,play,g014,prototype,false,false,true
+15,Cleanup: Phone Storage Cleaner,com.storage.androidcleaner,overall,,,spark,g015,prototype,false,false,true
+16,TikTok Lite - Faster TikTok,com.tiktok.lite.go,overall,,,play,g016,prototype,false,false,true
+17,Temu: Shop Like a Billionaire,com.einnovation.temu,overall,,,bag,g017,prototype,false,false,true
+18,Kalshi: Trade Football & more,com.kalshi.mobile,overall,,,card,g018,prototype,false,false,true
+19,Cash App,com.squareup.cash,overall,,,card,g019,prototype,false,false,true
+20,Facebook,com.facebook.katana,overall,,,people,g020,prototype,false,false,true
+21,X,com.twitter.android,overall,,,news,g021,prototype,false,false,true
+22,Walmart: Shopping & Savings,com.walmart.android,overall,,,bag,g022,prototype,false,false,true
+23,Snapchat,com.snapchat.android,overall,,,bubble,g023,prototype,false,false,true
+24,CapCut - Video Editor,com.lemon.lvoverseas,overall,,,play,g024,prototype,false,false,true
+25,BlinkDrama: Short Dramas & TV,com.blink.drama.player,overall,,,play,g025,prototype,false,false,true
+26,Telegram,org.telegram.messenger,overall,,,bubble,g026,prototype,false,false,true
+27,Peacock TV: Stream TV & Movies,com.peacocktv.peacockandroid,overall,,,play,g027,prototype,false,false,true
+28,DramaWave - Dramas & Reels,com.dramawave.app,overall,,,play,g028,prototype,false,false,true
+29,MapQuest: Get Directions,com.mapquest.android.ace,overall,,,pin,g029,prototype,false,false,true
+30,Freecash: Earn Money,com.freecash.app2,overall,,,card,g030,prototype,false,false,true
+31,Claude by Anthropic,com.anthropic.claude,overall,,,spark,g031,prototype,false,false,true
+32,"Whatnot: Shop, Sell, Connect",com.whatnot_mobile,overall,,,bag,g032,prototype,false,false,true
+33,DramaBox - Stream Drama Shorts,com.storymatrix.drama,overall,,,play,g033,prototype,false,false,true
+34,TextNow: Call + Text Unlimited,com.enflick.android.TextNow,overall,,,bubble,g034,prototype,false,false,true
+35,Life360: Family Safety & GPS,com.life360.android.safetymapd,overall,,,pin,g035,prototype,false,false,true
+36,Messenger,com.facebook.orca,overall,,,bubble,g036,prototype,false,false,true
+37,ReelShort - Stream Drama & TV,com.newleaf.app.android.victor,overall,,,play,g037,prototype,false,false,true
+38,"Discord - Talk, Play, Hang Out",com.discord,overall,,,bubble,g038,prototype,false,false,true
+39,WakeBox,com.wake.box.ryan,overall,,,clock,g039,prototype,false,false,true
+40,NetShort - Popular Dramas & TV,com.netshort.abroad,overall,,,play,g040,prototype,false,false,true
+41,"DoorDash: Food, Grocery, More",com.dd.doordash,overall,,,cup,g041,prototype,false,false,true
+42,Easy Homescreen,easy.launcher,overall,,,spark,g042,prototype,false,false,true
+43,Tubi: Free Movies & Live TV,com.tubitv,overall,,,play,g043,prototype,false,false,true
+44,"PayPal - Pay, Send, Save",com.paypal.android.p2pmobile,overall,,,card,g044,prototype,false,false,true
+45,"Shop: Track, Pay, Discover",com.shopify.arrive,overall,,,bag,g045,prototype,false,false,true
+46,Reddit,com.reddit.frontpage,overall,,,news,g046,prototype,false,false,true
+47,"zeta: AI Chat, Story, Play",com.scatterlab.messenger,overall,,,bubble,g047,prototype,false,false,true
+48,PDF Reader: Documents Master,com.pdfreader.master.utgerful,overall,,,book,g048,prototype,false,false,true
+49,Chime® – Fee-Free Banking,com.onedebit.chime,overall,,,card,g049,prototype,false,false,true
+50,StoryReel: Drama Shorts & TV,com.storyreel.tv.android,overall,,,play,g050,prototype,false,false,true
+51,AliExpress - Shopping App,com.alibaba.aliexpresshd,overall,,,bag,g051,prototype,false,false,true
+52,JustPlay: Earn Money or Donate,com.justplay.app,overall,,,card,g052,prototype,false,false,true
+53,Pinterest,com.pinterest,overall,,,camera,g053,prototype,false,false,true
+54,SHEIN-Shopping Online,com.zzkko,overall,,,bag,g054,prototype,false,false,true
+55,CrimeRadar: Dispatch Alerts,com.newsbreak.crimeradar,overall,,,news,g055,prototype,false,false,true
+56,Amazon Shopping,com.amazon.mShop.android.shopping,overall,,,bag,g056,prototype,false,false,true
+57,PicFusion Lab,com.xphotokit.picfusionlab,overall,,,camera,g057,prototype,false,false,true
+58,Venmo,com.venmo,overall,,,card,g058,prototype,false,false,true
+59,Deep Clean Elite,com.deepcleanelit.dcle,overall,,,spark,g059,prototype,false,false,true
+60,Spotify: Music and Podcasts,com.spotify.music,overall,,,note,g060,prototype,false,false,true
+61,Indeed Job Search,com.indeed.android.jobsearch,overall,,,briefcase,g061,prototype,false,false,true
+62,Threads,com.instagram.barcelona,overall,,,bubble,g062,prototype,false,false,true
+63,DoorDash - Dasher,com.doordash.driverapp,overall,,,cup,g063,prototype,false,false,true
+64,YouTube TV: Live TV & more,com.google.android.apps.youtube.unplugged,overall,,,play,g064,prototype,false,false,true
+65,Netflix,com.netflix.mediaclient,overall,,,play,g065,prototype,false,false,true
+66,AI Photo Beauty Editor Studio,com.aiphotoedior.photogenerator.photoretouch,overall,,,camera,g066,prototype,false,false,true
+67,Fetch: Earn Rewards Every Day,com.fetchrewards.fetchrewards.hop,overall,,,card,g067,prototype,false,false,true
+68,Playout: Earn Money,io.playout,overall,,,card,g068,prototype,false,false,true
+69,Microsoft Authenticator,com.azure.authenticator,overall,,,lock,g069,prototype,false,false,true
+70,RushDrama Pro:MiniSeries,com.rushdramapro.miniseries,overall,,,play,g070,prototype,false,false,true
+71,Rips by Triumph,com.triumpharcade.tcg,overall,,,card,g071,prototype,false,false,true
+72,TimeCue – Reminders & Alerts,com.reminder.alert.timecue,overall,,,clock,g072,prototype,false,false,true
+73,GPS Location Tracker Ultra,com.locc.trak.ult,overall,,,pin,g073,prototype,false,false,true
+74,Vidix-AI Photo Video Generator,com.vidix.aivideogenerator.aiphotogenerator,overall,,,play,g074,prototype,false,false,true
+75,T-Life,com.tmobile.tuesdays,overall,,,phone,g075,prototype,false,false,true
+76,Draw Music: Sketch to Sound,com.banix.drawsound.drawmusic,overall,,,note,g076,prototype,false,false,true
+77,Depop - Buy & Sell Clothes,com.depop,overall,,,bag,g077,prototype,false,false,true
+78,Bible Offline-KJV Holy Bible,com.offline.bible,overall,,,book,g078,prototype,false,false,true
+79,Paramount+,com.cbs.app,overall,,,play,g079,prototype,false,false,true
+80,Crunchyroll: Anime Streaming,com.crunchyroll.crunchyroid,overall,,,play,g080,prototype,false,false,true
+81,Roku Remote (Official),com.roku.remote,overall,,,play,g081,prototype,false,false,true
+82,Google Gemini,com.google.android.apps.bard,overall,,,spark,g082,prototype,false,false,true
+83,"Uber: Rides, eats, hotels",com.ubercab,overall,,,car,g083,prototype,false,false,true
+84,Prime Video,com.amazon.avod.thirdpartyclient,overall,,,play,g084,prototype,false,false,true
+85,MiniReels,com.minireels.app,overall,,,play,g085,prototype,false,false,true
+86,Duolingo: Learn Languages,com.duolingo,overall,,,book,g086,prototype,false,false,true
+87,Grok AI,ai.x.grok,overall,,,spark,g087,prototype,false,false,true
+88,Microsoft Teams,com.microsoft.teams,overall,,,bubble,g088,prototype,false,false,true
+89,VIZIO,com.vizio.vue.launcher,overall,,,play,g089,prototype,false,false,true
+90,Pocket FM: Audio Dramas,com.radio.pocketfm,overall,,,play,g090,prototype,false,false,true
+91,Zoom Workplace,us.zoom.videomeetings,overall,,,bubble,g091,prototype,false,false,true
+92,OnePay – Mobile Banking,com.onefinance.one,overall,,,card,g092,prototype,false,false,true
+93,CVS Health,com.cvs.launchers.cvs,overall,,,heart,g093,prototype,false,false,true
+94,GoWish - Your Digital Wishlist,com.gowish.app,overall,,,bag,g094,prototype,false,false,true
+95,Lyft,me.lyft.android,overall,,,car,g095,prototype,false,false,true
+96,MyChart,epic.mychart.android,overall,,,heart,g096,prototype,false,false,true
+97,Grok Bot,ai.x.grok.bot,overall,,,spark,g097,prototype,false,false,true
+98,Volume Control Home,com.eet.volume.launcher,overall,,,note,g098,prototype,false,false,true
+99,Nexus - AI Video Generator,ai.photogenerator.aivideo.aivideogenerator.aiart,overall,,,play,g099,prototype,false,false,true
+100,Disney+,com.disney.disneyplus,overall,,,play,g100,prototype,false,false,true
+101,Versy Live: Sports Scores,com.puzzle.escape.labg.save,overall,,,trophy,g101,prototype,false,false,true
+102,Pluto TV: Watch Free Movies/TV,tv.pluto.android,overall,,,play,g102,prototype,false,false,true
+103,Document Reader & PDF Editor,all.documentreader.filereader.office.viewer,overall,,,book,g103,prototype,false,false,true
+104,HBO Max: Stream TV & Movies,com.wbd.stream,overall,,,play,g104,prototype,false,false,true
+105,Artmate: Drawing Together,com.trace.art.draw.drawing.paint,overall,,,spark,g105,prototype,false,false,true
+106,Volume Control Sound Launcher,com.soundcontroller.loudspeaker.volume.manager.android,overall,,,note,g106,prototype,false,false,true
+107,Recovery Photo Ultra,com.ultra.recovery.photo.video,overall,,,camera,g107,prototype,false,false,true
+108,Ge Browser - Safe & Smart,com.web.tools.ge.browser,overall,,,compass,g108,prototype,false,false,true
+109,Suno - AI Music & Songs Maker,com.suno.android,overall,,,note,g109,prototype,false,false,true
+110,Bible Chat - Holy Bible Study,com.basmo.BibleChat,overall,,,bubble,g110,prototype,false,false,true
+111,Proton VPN: Secure & Fast VPN,ch.protonvpn.android,overall,,,lock,g111,prototype,false,false,true
+112,Microsoft Word: Edit Documents,com.microsoft.office.word,overall,,,folder,g112,prototype,false,false,true
+113,Costco Wholesale,com.costco.app.android,overall,,,bag,g113,prototype,false,false,true
+114,Microsoft Edge,com.microsoft.emmx,overall,,,compass,g114,prototype,false,false,true
+115,Waze Navigation & Live Traffic,com.waze,overall,,,pin,g115,prototype,false,false,true
+116,GoodShort - Short Dramas Hub,com.newreading.goodreels,overall,,,play,g116,prototype,false,false,true
+117,VYBS: Play & Earn Rewards,co.vybs.app,overall,,,card,g117,prototype,false,false,true
+118,Emoji Battery & Shimeji Pet,com.anime.shimeji.petonscreen,overall,,,spark,g118,prototype,false,false,true
+119,Koupon: Real Deals & Codes,com.kouponai,overall,,,card,g119,prototype,false,false,true
+120,"Apple TV: Shows, Movies & More",com.apple.atve.androidtv.appletv,overall,,,play,g120,prototype,false,false,true
+121,Adobe Acrobat Reader: Edit PDF,com.adobe.reader,overall,,,book,g121,prototype,false,false,true
+122,AntiVirus Clean Master-Cleaner,com.anti.cleaner.phoener,overall,,,spark,g122,prototype,false,false,true
+123,Signal Private Messenger,org.thoughtcrime.securesms,overall,,,bubble,g123,prototype,false,false,true
+124,"DuckDuckGo, optional Duck.ai",com.duckduckgo.mobile.android,overall,,,spark,g124,prototype,false,false,true
+125,Microsoft Excel: Spreadsheets,com.microsoft.office.excel,overall,,,book,g125,prototype,false,false,true
+126,Max Cleaner,com.bigtime.trash.cleaner,overall,,,spark,g126,prototype,false,false,true
+127,Alibaba.com - B2B marketplace,com.alibaba.intl.android.apps.poseidon,overall,,,bag,g127,prototype,false,false,true
+128,Taco Bell Fast Food & Delivery,com.tacobell.ordering,overall,,,cup,g128,prototype,false,false,true
+129,VibeShort: AI Dramas & Reels,com.vibeshort.visualnovel.android,overall,,,play,g129,prototype,false,false,true
+130,Google Wallet,com.google.android.apps.walletnfcrel,overall,,,card,g130,prototype,false,false,true
+131,Google Docs,com.google.android.apps.docs.editors.docs,overall,,,book,g131,prototype,false,false,true
+132,Uber Eats: Food and Grocery,com.ubercab.eats,overall,,,cup,g132,prototype,false,false,true
+133,Firefox Fast & Private Browser,org.mozilla.firefox,overall,,,compass,g133,prototype,false,false,true
+134,Bandana Job Search,com.bandana.bandana,overall,,,briefcase,g134,prototype,false,false,true
+135,Instacart: Get Food Delivery,com.instacart.client,overall,,,bag,g135,prototype,false,false,true
+136,Google Authenticator,com.google.android.apps.authenticator2,overall,,,lock,g136,prototype,false,false,true
+137,Chase Mobile,com.chase.sig.android,overall,,,card,g137,prototype,false,false,true
+138,QR & Barcode Scanner,com.gamma.scan,overall,,,camera,g138,prototype,false,false,true
+139,Grant Cash Advance,com.kikoff.theseus,overall,,,card,g139,prototype,false,false,true
+140,YouTube,com.google.android.youtube,overall,,,play,g140,prototype,false,false,true
+141,eBay online shopping & selling,com.ebay.mobile,overall,,,bag,g141,prototype,false,false,true
+142,Klarna: Smarter everyday money,com.myklarnamobile,overall,,,card,g142,prototype,false,false,true
+143,Bible For Women-Holy Bible KJV,com.bible.holy.bible.for.women,overall,,,book,g143,prototype,false,false,true
+144,ESPN,com.espn.score_center,overall,,,trophy,g144,prototype,false,false,true
+145,Facebook Lite,com.facebook.lite,overall,,,people,g145,prototype,false,false,true
+146,Junk Cleaner,com.cardaccount.ram.junkcleanner,overall,,,spark,g146,prototype,false,false,true
+147,"Learn English, Spanish: Learna",com.codeway.aitutor,overall,,,book,g147,prototype,false,false,true
+148,Link Voice & Text Translator,com.translator.lucky.shuai,overall,,,book,g148,prototype,false,false,true
+149,OOC: The Playable Anime,com.newai.ooc,overall,,,play,g149,prototype,false,false,true
+150,Emoji Battery & Shimeji Pets,com.shimeji.petonscreen.battery.emoji,overall,,,spark,g150,prototype,false,false,true
+151,GPS Location Tracker Plus,com.whfplus.location.ker,overall,,,pin,g151,prototype,false,false,true
+152,Move to iOS,com.apple.movetoios,overall,,,phone,g152,prototype,false,false,true
+153,Pandora - Music & Podcasts,com.pandora.android,overall,,,note,g153,prototype,false,false,true
+154,The Home Depot,com.thehomedepot,overall,,,house,g154,prototype,false,false,true
+155,Zedge™ Wallpapers & Ringtones,net.zedge.android,overall,,,spark,g155,prototype,false,false,true
+156,Okta Verify,com.okta.android.auth,overall,,,lock,g156,prototype,false,false,true
+157,CleanBoost - Junk Cleaner,com.novabrain.tool.cleanboost,overall,,,spark,g157,prototype,false,false,true
+158,MusicTune-Offline Music Player,com.stormlibs.musictune,overall,,,note,g158,prototype,false,false,true
+159,Twitch: Live Streaming,tv.twitch.android.app,overall,,,play,g159,prototype,false,false,true
+160,Best Buy: Shop tech deals,com.bestbuy.android,overall,,,bag,g160,prototype,false,false,true
+161,Google Translate,com.google.android.apps.translate,overall,,,book,g161,prototype,false,false,true
+162,"XTranslate - Photo, Voice, PDF",com.fapp.translate.language.translator.fasttranslation,overall,,,camera,g162,prototype,false,false,true
+163,"Affirm: Buy now, pay over time",com.affirm.central,overall,,,card,g163,prototype,false,false,true
+164,Domino's Pizza USA,com.dominospizza,overall,,,cup,g164,prototype,false,false,true
+165,YouTube Kids,com.google.android.apps.youtube.kids,overall,,,play,g165,prototype,false,false,true
+166,ShortNext: Mini Series,com.dramareels.shorttv,overall,,,play,g166,prototype,false,false,true
+167,Canva: AI Photo & Video Editor,com.canva.editor,overall,,,play,g167,prototype,false,false,true
+168,GPS Location Flow & Tracker,com.gps.cati.flow,overall,,,pin,g168,prototype,false,false,true
+169,Lucky Drama - Shorts & Rewards,com.video.tv.ai.drama,overall,,,play,g169,prototype,false,false,true
+170,PolyBuzz: Chat with AI Friends,ai.socialapps.speakmaster,overall,,,bubble,g170,prototype,false,false,true
+171,CineTuck,com.story.sip.mmecw,overall,,,play,g171,prototype,false,false,true
+172,"Brave Private Web Browser, VPN",com.brave.browser,overall,,,compass,g172,prototype,false,false,true
+173,ADP Mobile Solutions,com.adpmobile.android,overall,,,briefcase,g173,prototype,false,false,true
+174,VPN - Super Unlimited Proxy,com.free.vpn.super.hotspot.open,overall,,,lock,g174,prototype,false,false,true
+175,NewsBreak: Local News & Alerts,com.particlenews.newsbreak,overall,,,news,g175,prototype,false,false,true
+176,NaviCore,com.nnnaaaccc.navicore,overall,,,pin,g176,prototype,false,false,true
+177,WhatsApp Business,com.whatsapp.w4b,overall,,,bubble,g177,prototype,false,false,true
+178,Samsung Smart Switch Mobile,com.sec.android.easyMover,overall,,,phone,g178,prototype,false,false,true
+179,Etsy: Shop from Real People,com.etsy.android,overall,,,bag,g179,prototype,false,false,true
+180,Yahoo Mail: Email & Planner,com.yahoo.mobile.client.android.mail,overall,,,mail,g180,prototype,false,false,true
+181,PDF Master,com.pdf.tools.check.scanner,overall,,,book,g181,prototype,false,false,true
+182,OurTalk AI: Soulful Chat,ourtalk.ai,overall,,,bubble,g182,prototype,false,false,true
+183,Wells Fargo Mobile®,com.wf.wellsfargomobile,overall,,,card,g183,prototype,false,false,true
+184,Plex: Find Movies & TV Shows,com.plexapp.android,overall,,,play,g184,prototype,false,false,true
+185,Hulu: Stream TV shows & movies,com.hulu.plus,overall,,,play,g185,prototype,false,false,true
+186,BestPlay: Play Games & Earn,com.bestplay.app,overall,,,gamepad,g186,prototype,false,false,true
+187,Health Care - Sound,com.health.care.sleep.sound.pulse.heartbeat,overall,,,note,g187,prototype,false,false,true
+188,Testerup: Test & Earn Rewards,de.empfohlen,overall,,,card,g188,prototype,false,false,true
+189,YouVersion Bible App + Audio,com.sirma.mobile.bible.android,overall,,,book,g189,prototype,false,false,true
+190,Bigo Live - Live Streaming App,sg.bigo.live,overall,,,play,g190,prototype,false,false,true
+191,ShortMax - Short Dramas & TV,live.shorttv.apps,overall,,,play,g191,prototype,false,false,true
+192,UKG Pro,com.ukg.oneapp,overall,,,briefcase,g192,prototype,false,false,true
+193,Google’s Find Hub,com.google.android.apps.adm,overall,,,phone,g193,prototype,false,false,true
+194,Fubo: Watch Live TV & Sports,tv.fubo.mobile,overall,,,play,g194,prototype,false,false,true
+195,PDF Reader – Reader & Editor,pdf.reader.editor.office.ora,overall,,,book,g195,prototype,false,false,true
+196,AI Hit Music Maker,com.volumecontrol.volumebassbooster.android2023,overall,,,note,g196,prototype,false,false,true
+197,Draw Music Maker: Doodle Pad,com.bigsoft.sketchsound.drawmusic,overall,,,note,g197,prototype,false,false,true
+198,MistyPix: AI Image Generator,com.aivideogenrator.phototovideo.videogen,overall,,,spark,g198,prototype,false,false,true
+199,onX Hunt: Offline Hunting Maps,onxmaps.hunt,overall,,,pin,g199,prototype,false,false,true
+200,Gossip Harbor: Merge & Story,com.mergegames.gossipharbor,category,GAME,1,gamepad,g200,prototype,false,false,true
+201,Airbnb,com.airbnb.android,category,TRAVEL_AND_LOCAL,1,house,g201,prototype,false,false,true
+202,Weather: Live Forecast & Radar,com.sunny.weather.pinco,category,WEATHER,1,cloud,g202,prototype,false,false,true
+203,Meowdoku: Brain Puzzle Games,com.oakever.meowdoku,category,GAME,2,gamepad,g203,prototype,false,false,true
+204,AHEALTH: Get Healthy Get Paid,com.tracerofficial,category,HEALTH_AND_FITNESS,2,heart,g204,prototype,false,false,true
+205,Google Earth,com.google.earth,category,TRAVEL_AND_LOCAL,2,pin,g205,prototype,false,false,true
+206,Weather Forecast & Live Radar,weather.forecast.channel.live,category,WEATHER,2,cloud,g206,prototype,false,false,true
+207,Gauth: AI Study Companion,com.education.android.h.intelligence,category,EDUCATION,3,spark,g207,prototype,false,false,true
+208,Rotate Rings,com.nebula.rotaterings,category,GAME,3,gamepad,g208,prototype,false,false,true
+209,BP Health Log,com.andwhisperer.bp.healthlog,category,HEALTH_AND_FITNESS,3,heart,g209,prototype,false,false,true
+210,Booking.com: Hotels & Travel,com.booking,category,TRAVEL_AND_LOCAL,3,pin,g210,prototype,false,false,true
+211,Live Weather Radar Launcher,com.weatherradarhome.weather.forecast.live.radar.aqi.android,category,WEATHER,3,cloud,g211,prototype,false,false,true
+212,ABCmouse: Kids Learning Games,com.aofl.abcmouse,category,EDUCATION,4,gamepad,g212,prototype,false,false,true
+213,Royal Smash! - Physics Puzzle,com.cyphergames.royalsmash,category,GAME,4,gamepad,g213,prototype,false,false,true
+214,Health Tracker: BP Monitor App,com.bloodpressure.health.healthtracker,category,HEALTH_AND_FITNESS,4,heart,g214,prototype,false,false,true
+215,Local Weather News - Radar,com.weather.forecast.news,category,NEWS_AND_MAGAZINES,4,cloud,g215,prototype,false,false,true
+216,Easy Mail - Email Launcher,com.applabstudios.ai.mail.homescreen.inbox,category,PERSONALIZATION,4,mail,g216,prototype,false,false,true
+217,Hailuo AI: Image&Video Maker,ai.hailuo.video,category,PHOTOGRAPHY,4,play,g217,prototype,false,false,true
+218,DraftKings: Sports & Casino,com.draftkings.sportsbook,category,SPORTS,4,trophy,g218,prototype,false,false,true
+219,Upside: Gas & Food Cash Back,com.upside.consumer.android,category,TRAVEL_AND_LOCAL,4,cup,g219,prototype,false,false,true
+220,YouTube Studio,com.google.android.apps.youtube.creator,category,VIDEO_PLAYERS,4,play,g220,prototype,false,false,true
+221,The Weather Channel - Radar,com.weather.Weather,category,WEATHER,4,cloud,g221,prototype,false,false,true
+222,Deepstash: Smarter Every Day!,com.deepstash,category,EDUCATION,5,book,g222,prototype,false,false,true
+223,Roblox,com.roblox.client,category,GAME,5,gamepad,g223,prototype,false,false,true
+224,Planet Fitness,com.planetfitness,category,HEALTH_AND_FITNESS,5,heart,g224,prototype,false,false,true
+225,Substack,com.substack.app,category,NEWS_AND_MAGAZINES,5,book,g225,prototype,false,false,true
+226,Android Ringtone Songs,com.bestapp.entertainment.ringsfree,category,PERSONALIZATION,5,spark,g226,prototype,false,false,true
+227,AI Photo Restore With Music,com.aiphoto.photoenhance.photomusic.photoeditor,category,PHOTOGRAPHY,5,note,g227,prototype,false,false,true
+228,FanDuel Sportsbook & Casino,com.fanduel.sportsbook,category,SPORTS,5,trophy,g228,prototype,false,false,true
+229,American Airlines,com.aa.android,category,TRAVEL_AND_LOCAL,5,pin,g229,prototype,false,false,true
+230,Edits: Video Editor,com.instagram.basel,category,VIDEO_PLAYERS,5,play,g230,prototype,false,false,true
+231,Weather Radar Home,com.omni.weather.launcher,category,WEATHER,5,cloud,g231,prototype,false,false,true
+232,PBS KIDS Video,org.pbskids.video,category,EDUCATION,6,play,g232,prototype,false,false,true
+233,Amaze GO!™,com.oakever.arrows,category,GAME,6,gamepad,g233,prototype,false,false,true
+234,"AllTrails: Hike, Bike & Run",com.alltrails.alltrails,category,HEALTH_AND_FITNESS,6,pin,g234,prototype,false,false,true
+235,KashKick: Get paid to have fun,com.kashkick.kashkickapp,category,LIFESTYLE,6,card,g235,prototype,false,false,true
+236,Police Scanner - Live Radio,police.scanner.radio.broadcastify.citizen,category,NEWS_AND_MAGAZINES,6,note,g236,prototype,false,false,true
+237,Candy Race Launcher,com.Gamnest.CandyRace,category,PERSONALIZATION,6,spark,g237,prototype,false,false,true
+238,AI Photo - AI Video Generator,com.tomo.photo.editor.video.maker,category,PHOTOGRAPHY,6,play,g238,prototype,false,false,true
+239,"Fanatics: Shop NFL, NBA & MLB",com.fanatics,category,SPORTS,6,bag,g239,prototype,false,false,true
+240,"Expedia: Hotels, Flights, Cars",com.expedia.bookings,category,TRAVEL_AND_LOCAL,6,pin,g240,prototype,false,false,true
+241,VLC for Android,org.videolan.vlc,category,VIDEO_PLAYERS,6,play,g241,prototype,false,false,true
+242,Daily Weather Alarm - Radar,com.dailyweather.alarm.radarwea,category,WEATHER,6,cloud,g242,prototype,false,false,true
+243,Lurnia: AI Language Tutor,com.ailanguageassistant.languagetutor.learnlanguages,category,EDUCATION,7,spark,g243,prototype,false,false,true
+244,Starbucks,com.starbucks.mobilecard,category,FOOD_AND_DRINK,7,cup,g244,prototype,false,false,true
+245,Word Tiles - Relaxing Puzzle,com.agavegames.wordtiles,category,GAME,7,gamepad,g245,prototype,false,false,true
+246,HerBody - Home Workout,com.womenfitness.xbodybuilding.workoutspro,category,HEALTH_AND_FITNESS,7,heart,g246,prototype,false,false,true
+247,Ring - Always Home,com.ringapp,category,LIFESTYLE,7,house,g247,prototype,false,false,true
+248,NYTimes: US and Global News,com.nytimes.android,category,NEWS_AND_MAGAZINES,7,news,g248,prototype,false,false,true
+249,"Themepack - App Icons, Widgets",com.iconchanger.widget.theme.shortcut,category,PERSONALIZATION,7,spark,g249,prototype,false,false,true
+250,AI Face Aging - Photo Editor,com.faceaging.camera.oldify.ageeditor,category,PHOTOGRAPHY,7,camera,g250,prototype,false,false,true
+251,CBS Sports: Live Scores & News,com.handmark.sportcaster,category,SPORTS,7,news,g251,prototype,false,false,true
+252,Fly Delta,com.delta.mobile.android,category,TRAVEL_AND_LOCAL,7,pin,g252,prototype,false,false,true
+253,Photo Video Maker with Music,com.photovideomaker.videomakerwithmusic,category,VIDEO_PLAYERS,7,play,g253,prototype,false,false,true
+254,Great Weather Alarm - Radar,com.greatweather.weathergreat.alarm,category,WEATHER,7,cloud,g254,prototype,false,false,true
+255,ClassDojo,com.classdojo.android,category,EDUCATION,8,book,g255,prototype,false,false,true
+256,Too Good To Go: End Food Waste,com.app.tgtg,category,FOOD_AND_DRINK,8,cup,g256,prototype,false,false,true
+257,Magic Sort!,com.grandgames.magicsort,category,GAME,8,gamepad,g257,prototype,false,false,true
+258,Flo Ovulation & Period Tracker,org.iggymedia.periodtracker,category,HEALTH_AND_FITNESS,8,heart,g258,prototype,false,false,true
+259,Amazon Alexa,com.amazon.dee.app,category,LIFESTYLE,8,bag,g259,prototype,false,false,true
+260,Waymo,com.waymo.carapp,category,MAPS_AND_NAVIGATION,8,pin,g260,prototype,false,false,true
+261,SoundCloud: Discover Music,com.soundcloud.android,category,MUSIC_AND_AUDIO,8,note,g261,prototype,false,false,true
+262,Scanner Radio - Police Scanner,com.scannerradio,category,NEWS_AND_MAGAZINES,8,note,g262,prototype,false,false,true
+263,All Weather Mode: Weather Home,com.weathermode.weatherlauncherandroidapp,category,PERSONALIZATION,8,cloud,g263,prototype,false,false,true
+264,PixVerse: AI Video Generator,com.pixverseai.pixverse,category,PHOTOGRAPHY,8,play,g264,prototype,false,false,true
+265,PrizePicks - Sports Picks,com.myprizepicks.myprizepicks,category,SPORTS,8,trophy,g265,prototype,false,false,true
+266,Southwest Airlines: Travel App,com.southwestairlines.mobile,category,TRAVEL_AND_LOCAL,8,pin,g266,prototype,false,false,true
+267,Movirea,com.vee.drama.cisoz,category,VIDEO_PLAYERS,8,play,g267,prototype,false,false,true
+268,Nice Weather,com.weather.realinfo.really,category,WEATHER,8,cloud,g268,prototype,false,false,true
+269,Spark Driver,com.walmart.sparkdriver,category,BUSINESS,9,car,g269,prototype,false,false,true
+270,Langla: AI Language Tutor,aitutor.ailanguagelearn.ailearning,category,EDUCATION,9,spark,g270,prototype,false,false,true
+271,NeatEat: Meal & Recipe Planner,com.forkcast890.app,category,FOOD_AND_DRINK,9,cup,g271,prototype,false,false,true
+272,Vita Mahjong,com.vitastudio.mahjong,category,GAME,9,gamepad,g272,prototype,false,false,true
+273,Yuka - Food & Cosmetic Scanner,io.yuka.android,category,HEALTH_AND_FITNESS,9,cup,g273,prototype,false,false,true
+274,DailyGift: Earn Reward,com.habit.record.reward.tracker,category,LIFESTYLE,9,card,g274,prototype,false,false,true
+275,Transit - Subway & Bus Times,com.thetransitapp.droid,category,MAPS_AND_NAVIGATION,9,pin,g275,prototype,false,false,true
+276,JBL Headphones,jbl.stc.com,category,MUSIC_AND_AUDIO,9,note,g276,prototype,false,false,true
+277,SmartNews: Local Breaking News,jp.gocro.smartnews.android,category,NEWS_AND_MAGAZINES,9,news,g277,prototype,false,false,true
+278,Emoji Battery Icon Customize,com.tstudio.emojibatteryicon,category,PERSONALIZATION,9,spark,g278,prototype,false,false,true
+279,Video Editor & Maker - InShot,com.camerasideas.instashot,category,PHOTOGRAPHY,9,play,g279,prototype,false,false,true
+280,Reco Social,com.reco.app,category,SOCIAL,9,people,g280,prototype,false,false,true
+281,Betr - Fantasy Sports,app.instabet.betr,category,SPORTS,9,trophy,g281,prototype,false,false,true
+282,Frontier Airlines,com.flyfrontier.android,category,TRAVEL_AND_LOCAL,9,pin,g282,prototype,false,false,true
+283,Adobe Premiere: Video Editor,com.adobe.premiere,category,VIDEO_PLAYERS,9,play,g283,prototype,false,false,true
+284,Live Weather: Forecast & Radar,com.opop.live.weather,category,WEATHER,9,cloud,g284,prototype,false,false,true
+285,Amazon Flex,com.amazon.flex.rabbit,category,BUSINESS,10,bag,g285,prototype,false,false,true
+286,Lingokids: Games & Shows,es.monkimun.lingokids,category,EDUCATION,10,gamepad,g286,prototype,false,false,true
+287,BURGER KING® App,com.emn8.mobilem8.nativeapp.bk,category,FOOD_AND_DRINK,10,cup,g287,prototype,false,false,true
+288,Block Blast!,com.block.juggle,category,GAME,10,gamepad,g288,prototype,false,false,true
+289,healow,com.ecw.healow,category,HEALTH_AND_FITNESS,10,heart,g289,prototype,false,false,true
+290,Nextdoor: Neighborhood Network,com.nextdoor,category,LIFESTYLE,10,house,g290,prototype,false,false,true
+291,GPS Tracker & Location Tracker,com.location.gps.tracker,category,MAPS_AND_NAVIGATION,10,pin,g291,prototype,false,false,true
+292,Amazon Music: Songs & Podcasts,com.amazon.mp3,category,MUSIC_AND_AUDIO,10,note,g292,prototype,false,false,true
+293,Citizen: Protect The World,sp0n.citizen,category,NEWS_AND_MAGAZINES,10,house,g293,prototype,false,false,true
+294,Big Keyboard: Easy Homescreen,com.bigkeyboardeasylauncher.biggerkeybuttonandroidlauncherapp,category,PERSONALIZATION,10,spark,g294,prototype,false,false,true
+295,Google Photos,com.google.android.apps.photos,category,PHOTOGRAPHY,10,camera,g295,prototype,false,false,true
+296,BAND - App for all groups,com.nhn.android.band,category,SOCIAL,10,people,g296,prototype,false,false,true
+297,DAZN - Watch Live Sports,com.dazn,category,SPORTS,10,trophy,g297,prototype,false,false,true
+298,earnify,com.bp.app.bpme.global.ros,category,TRAVEL_AND_LOCAL,10,card,g298,prototype,false,false,true
+299,DramaVibe - Dramas & Reels,com.dramavibe.stream,category,VIDEO_PLAYERS,10,play,g299,prototype,false,false,true
+300,Weather Forecast - Live Alerts,com.weather.daily.local.live,category,WEATHER,10,cloud,g300,prototype,false,false,true

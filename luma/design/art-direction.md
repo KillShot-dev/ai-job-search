@@ -19,4 +19,6 @@ Masters are SVG at a 192 viewBox. Exports are transparent 192×192 PNGs, which i
 
 `iconback`, `iconmask`, and `iconupon` are launcher fallback resources. They are not app coverage.
 
-The pack mark (`ic_launcher`) is a crescent and a vertical light. It is not the metaPhasic Group logo. That logo was not in the workspace.
+The pack mark (`ic_launcher`) is a crescent and a vertical light. The metaPhasic Group lockup is `brand/metaphasic-group.png`. The dashboard and the feature graphic use that file as supplied. It is not redrawn into the icon tiles.
+
+The logo set (`artwork/logo/`) is a second pass: one dark glyph on a glossy squircle, with no wordmark on the tile. Families are metaphors (note, camera, bag, play). They are not tracings of the Apple Music note or of the apps’ own logos.
