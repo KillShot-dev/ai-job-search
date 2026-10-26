@@ -1,3 +1,6 @@
+import { Link } from 'react-router-dom'
+import { BrandMark } from './BrandMark'
+
 export function Hero() {
   return (
     <section className="hero" id="top" aria-labelledby="hero-brand">
@@ -10,20 +13,24 @@ export function Hero() {
       </div>
 
       <div className="hero-content">
-        <h1 className="hero-brand" id="hero-brand">
-          metaPhasic
-          <span className="hero-brand-sub">Group</span>
-        </h1>
+        <div className="hero-lockup">
+          <BrandMark className="hero-mark" size={120} alt="" />
+          <h1 className="hero-brand" id="hero-brand">
+            metaPhasic
+            <span className="hero-brand-sub">Group</span>
+          </h1>
+        </div>
         <p className="hero-tagline">
-          Investments, development, and asset management — disciplined capital
-          for lasting value.
+          A software studio built on one standard: world-class work, no
+          shortcuts. Premium digital products — including Luma for Android —
+          plus asset management and consulting.
         </p>
         <div className="hero-actions">
-          <a className="btn btn-primary" href="#about">
-            Explore the firm
-          </a>
-          <a className="btn btn-ghost" href="#contact">
-            Contact
+          <Link className="btn btn-primary" to="/products">
+            View products
+          </Link>
+          <a className="btn btn-ghost" href="#about">
+            About the studio
           </a>
         </div>
       </div>

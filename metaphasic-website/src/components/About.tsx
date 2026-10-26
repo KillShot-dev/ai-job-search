@@ -7,33 +7,34 @@ export function About() {
         <div className="about-grid">
           <div>
             <Reveal className="section-head">
-              <p className="eyebrow">The firm</p>
+              <p className="eyebrow">The studio</p>
               <h2 className="section-title" id="about-title">
-                Clarity of purpose. Continuity of stewardship.
+                World-class work. No shortcuts.
               </h2>
               <div className="line-accent" aria-hidden="true" />
             </Reveal>
             <Reveal delay={120}>
               <p className="section-lead">
-                metaPhasic Group is an investment and asset management firm based
-                in Westlake, Ohio. We partner with operators and owners to deploy
-                capital thoughtfully — across investments, development, and the
-                ongoing care of assets that matter.
+                metaPhasic Group is a software studio built on one standard:
+                world-class work, no shortcuts. We design and develop premium
+                digital products — including the Luma icon pack collection for
+                Android — where every detail is considered, from the first
+                sketch to the final pixel.
               </p>
             </Reveal>
             <Reveal delay={220}>
               <div className="stat-row" role="list">
                 <div className="stat" role="listitem">
-                  <div className="stat-value">3</div>
-                  <div className="stat-label">Core disciplines</div>
+                  <div className="stat-value">7</div>
+                  <div className="stat-label">Luma finishes</div>
                 </div>
                 <div className="stat" role="listitem">
                   <div className="stat-value">OH</div>
-                  <div className="stat-label">United States</div>
+                  <div className="stat-label">Westlake, United States</div>
                 </div>
                 <div className="stat" role="listitem">
-                  <div className="stat-value">LT</div>
-                  <div className="stat-label">Long-term focus</div>
+                  <div className="stat-value">∞</div>
+                  <div className="stat-label">Care for every pixel</div>
                 </div>
               </div>
             </Reveal>
@@ -42,14 +43,15 @@ export function About() {
           <Reveal delay={180} variant="scale">
             <aside className="about-aside">
               <p>
-                We believe durable returns come from <strong>rigorous underwriting</strong>,
-                aligned incentives, and patient ownership — not from chasing
-                cycles or fashion.
+                Beyond our own products, we offer{' '}
+                <strong>asset management and consulting</strong>, helping
+                partners plan, build, and grow software that lasts.
               </p>
               <p>
-                Every engagement is grounded in fundamentals: where value is
-                created, how risk is priced, and how assets are improved over
-                time.
+                Whether it&apos;s an app, a design system, or a product
+                strategy, we bring the same discipline to every engagement:
+                thoughtful design, solid engineering, and products people
+                genuinely enjoy using.
               </p>
             </aside>
           </Reveal>

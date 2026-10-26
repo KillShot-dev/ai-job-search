@@ -7,7 +7,7 @@ export function Contact() {
         <Reveal className="section-head">
           <p className="eyebrow">Contact</p>
           <h2 className="section-title" id="contact-title">
-            Let’s discuss your next chapter.
+            Let’s build something lasting.
           </h2>
           <div className="line-accent" aria-hidden="true" />
         </Reveal>
@@ -37,9 +37,8 @@ export function Contact() {
               </div>
             </div>
             <div className="contact-map-hint">
-              Located in Westlake, Ohio — serving investment, development, and
-              asset management inquiries. Reach out via metaphasic.net for
-              partnership and capital conversations.
+              Based in Westlake, Ohio — for product partnerships, consulting, and
+              asset management inquiries. Reach out via metaphasic.net.
             </div>
           </div>
         </Reveal>

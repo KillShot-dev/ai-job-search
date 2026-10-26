@@ -3,23 +3,23 @@ import { Reveal } from './Reveal'
 const STEPS = [
   {
     num: '01',
-    title: 'Understand',
-    body: 'We begin with context — objectives, constraints, and the economics of the opportunity — before capital or structure is proposed.',
+    title: 'Discover',
+    body: 'We start with people and constraints — who it’s for, what success looks like, and where craft will matter most.',
   },
   {
     num: '02',
-    title: 'Underwrite',
-    body: 'Assumptions are tested. Risks are priced. Scenarios are examined so decisions rest on clarity, not optimism alone.',
+    title: 'Design',
+    body: 'From first sketch to interaction detail, we shape interfaces that feel inevitable: clear, calm, and considered.',
   },
   {
     num: '03',
-    title: 'Structure',
-    body: 'Capital, governance, and incentives are aligned so every party shares a durable interest in outcomes.',
+    title: 'Build',
+    body: 'Solid engineering without shortcuts. Performance, accessibility, and maintainability are part of the definition of done.',
   },
   {
     num: '04',
-    title: 'Steward',
-    body: 'After closing, we stay engaged — monitoring performance, adapting plans, and protecting long-term value.',
+    title: 'Refine & steward',
+    body: 'We stay close after ship — polishing, iterating, and helping partners grow software that lasts.',
   },
 ] as const
 
@@ -32,15 +32,15 @@ export function Approach() {
             <Reveal className="section-head">
               <p className="eyebrow">Approach</p>
               <h2 className="section-title" id="approach-title">
-                A process built for judgment.
+                Discipline from sketch to pixel.
               </h2>
               <div className="line-accent" aria-hidden="true" />
             </Reveal>
             <Reveal delay={100}>
               <p className="section-lead">
-                Inspired by the best institutional practice — deliberate,
-                transparent, and oriented toward multi-year outcomes rather than
-                short-term noise.
+                The same standard we hold for Luma and our own products applies
+                to every engagement: thoughtful design, solid engineering, and
+                outcomes people enjoy using.
               </p>
             </Reveal>
           </div>

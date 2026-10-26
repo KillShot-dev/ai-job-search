@@ -1,52 +1,53 @@
+import { Link } from 'react-router-dom'
 import { Reveal } from './Reveal'
 
 const PILLARS = [
   {
-    id: 'investments',
+    id: 'products',
     index: '01',
-    title: 'Investments',
-    body: 'We seek opportunities where capital, judgment, and operational insight compound. Our investment approach balances conviction with disciplined risk management.',
+    title: 'Premium products',
+    body: 'We ship digital products with obsessive craft — including the Luma icon pack collection for Android (seven finishes) — where every interaction earns its place.',
     points: [
-      'Selective equity and structured capital',
-      'Partnership with aligned management teams',
-      'Underwriting grounded in fundamentals',
+      'Luma: Regular, Dark, Gradient, Glyph, Clear, Prism, Midnight',
+      'Native-quality mobile experiences',
+      'Design systems that scale with the product',
     ],
   },
   {
-    id: 'development',
+    id: 'work',
     index: '02',
-    title: 'Development',
-    body: 'From concept through delivery, we advance projects that create lasting economic and community value — with attention to timing, quality, and capital efficiency.',
+    title: 'Design & engineering',
+    body: 'Thoughtful design meets solid engineering. We build software people enjoy using — without shortcuts that show up later as debt.',
     points: [
-      'Project structuring and capital planning',
-      'Execution oversight and milestone discipline',
-      'Value creation through thoughtful design',
+      'End-to-end product development',
+      'Performance, accessibility, polish',
+      'Clear collaboration with partners',
     ],
   },
   {
-    id: 'asset-management',
+    id: 'consulting',
     index: '03',
-    title: 'Asset Management',
-    body: 'We steward assets with a long horizon — optimizing performance, protecting downside, and positioning portfolios for resilient growth.',
+    title: 'Asset management & consulting',
+    body: 'We help partners plan, build, and grow software that lasts — strategy, systems, and stewardship for digital assets that matter.',
     points: [
-      'Active oversight and reporting',
-      'Lifecycle planning and reinvestment',
-      'Alignment with ownership objectives',
+      'Product strategy and roadmaps',
+      'Portfolio and asset stewardship',
+      'Ongoing advisory for growing teams',
     ],
   },
 ] as const
 
 export function Pillars() {
   return (
-    <section className="section" aria-label="What we do">
+    <section className="section" id="work" aria-label="What we do">
       <div className="container">
         <Reveal className="section-head">
-          <p className="eyebrow">Capabilities</p>
-          <h2 className="section-title">Three disciplines. One standard of care.</h2>
+          <p className="eyebrow">What we do</p>
+          <h2 className="section-title">Products. Craft. Partnership.</h2>
           <div className="line-accent" aria-hidden="true" />
           <p className="section-lead" style={{ marginTop: '1.5rem' }}>
-            Investments, development, and asset management — practiced as
-            connected crafts, not siloed products.
+            From our own apps to partner engagements — one standard of care
+            across design, engineering, and consulting.
           </p>
         </Reveal>
 
@@ -71,6 +72,14 @@ export function Pillars() {
             </Reveal>
           ))}
         </div>
+
+        <Reveal delay={200}>
+          <p className="products-cta-row">
+            <Link className="btn btn-ghost" to="/products">
+              Explore the product lineup →
+            </Link>
+          </p>
+        </Reveal>
       </div>
     </section>
   )
