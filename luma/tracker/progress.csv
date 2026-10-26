@@ -1,0 +1,53 @@
+kind,rank,chart_name,short_name,package_id,drawable,artwork,svg,png_192,mapping_verified,candidate_activities,launcher_tested,counts_as_app_coverage,dark_pixels_at_48
+app,1,Muse from Meta,Muse,com.facebook.aura,ic_muse,prototype,artwork/svg/ic_muse.svg,artwork/png/192/ic_muse.png,false,,false,true,160
+app,2,ChatGPT,ChatGPT,com.openai.chatgpt,ic_chatgpt,prototype,artwork/svg/ic_chatgpt.svg,artwork/png/192/ic_chatgpt.png,false,,false,true,199
+app,3,TikTok Pro - Events,TikTok Pro,com.ss.android.ugc.tiktok.pro,ic_tiktok_pro,prototype,artwork/svg/ic_tiktok_pro.svg,artwork/png/192/ic_tiktok_pro.png,false,,false,true,144
+app,4,Capital One Mobile,Capital One,com.konylabs.capitalone,ic_capital_one,prototype,artwork/svg/ic_capital_one.svg,artwork/png/192/ic_capital_one.png,false,,false,true,220
+app,5,Settings Home,Settings Home,com.eet.settings.launcher,ic_settings_home,prototype,artwork/svg/ic_settings_home.svg,artwork/png/192/ic_settings_home.png,false,,false,true,199
+app,6,Vinted: Shop & sell pre-loved,Vinted,fr.vinted,ic_vinted,prototype,artwork/svg/ic_vinted.svg,artwork/png/192/ic_vinted.png,false,,false,true,99
+app,7,WhatsApp,WhatsApp,com.whatsapp,ic_whatsapp,prototype,artwork/svg/ic_whatsapp.svg,artwork/png/192/ic_whatsapp.png,false,com.whatsapp.Main,false,true,201
+app,8,McDonald's,McDonald's,com.mcdonalds.app,ic_mcdonalds,prototype,artwork/svg/ic_mcdonalds.svg,artwork/png/192/ic_mcdonalds.png,false,,false,true,131
+app,9,"TikTok - Videos, Shop & LIVE",TikTok,com.zhiliaoapp.musically,ic_tiktok,prototype,artwork/svg/ic_tiktok.svg,artwork/png/192/ic_tiktok.png,false,com.ss.android.ugc.aweme.splash.SplashActivity,false,true,204
+app,10,FreeReels - Dramas & Reels,FreeReels,com.freereels.app,ic_freereels,prototype,artwork/svg/ic_freereels.svg,artwork/png/192/ic_freereels.png,false,,false,true,215
+app,11,FreeDrama: Short Drama & Reels,FreeDrama,com.drama.free,ic_freedrama,prototype,artwork/svg/ic_freedrama.svg,artwork/png/192/ic_freedrama.png,false,,false,true,228
+app,12,Instagram,Instagram,com.instagram.android,ic_instagram,prototype,artwork/svg/ic_instagram.svg,artwork/png/192/ic_instagram.png,false,com.instagram.android.activity.MainTabActivity,false,true,197
+app,13,DealSeek: Coupons & Discounts,DealSeek,com.dealseekorg.dealseek,ic_dealseek,prototype,artwork/svg/ic_dealseek.svg,artwork/png/192/ic_dealseek.png,false,,false,true,170
+app,14,PineDrama - Short Dramas,PineDrama,com.ss.android.ttmd.video,ic_pinedrama,prototype,artwork/svg/ic_pinedrama.svg,artwork/png/192/ic_pinedrama.png,false,,false,true,189
+app,15,Cleanup: Phone Storage Cleaner,Cleanup,com.storage.androidcleaner,ic_cleanup,prototype,artwork/svg/ic_cleanup.svg,artwork/png/192/ic_cleanup.png,false,,false,true,95
+app,16,TikTok Lite - Faster TikTok,TikTok Lite,com.tiktok.lite.go,ic_tiktok_lite,prototype,artwork/svg/ic_tiktok_lite.svg,artwork/png/192/ic_tiktok_lite.png,false,,false,true,148
+app,17,Temu: Shop Like a Billionaire,Temu,com.einnovation.temu,ic_temu,prototype,artwork/svg/ic_temu.svg,artwork/png/192/ic_temu.png,false,,false,true,202
+app,18,Kalshi: Trade Football & more,Kalshi,com.kalshi.mobile,ic_kalshi,prototype,artwork/svg/ic_kalshi.svg,artwork/png/192/ic_kalshi.png,false,,false,true,142
+app,19,Cash App,Cash App,com.squareup.cash,ic_cashapp,prototype,artwork/svg/ic_cashapp.svg,artwork/png/192/ic_cashapp.png,false,,false,true,201
+app,20,Facebook,Facebook,com.facebook.katana,ic_facebook,prototype,artwork/svg/ic_facebook.svg,artwork/png/192/ic_facebook.png,false,com.facebook.katana.LoginActivity,false,true,262
+app,21,X,X,com.twitter.android,ic_x,prototype,artwork/svg/ic_x.svg,artwork/png/192/ic_x.png,false,com.twitter.android.StartActivity,false,true,64
+app,22,Walmart: Shopping & Savings,Walmart,com.walmart.android,ic_walmart,prototype,artwork/svg/ic_walmart.svg,artwork/png/192/ic_walmart.png,false,,false,true,98
+app,23,Snapchat,Snapchat,com.snapchat.android,ic_snapchat,prototype,artwork/svg/ic_snapchat.svg,artwork/png/192/ic_snapchat.png,false,com.snapchat.android.LandingPageActivity,false,true,198
+app,24,CapCut - Video Editor,CapCut,com.lemon.lvoverseas,ic_capcut,prototype,artwork/svg/ic_capcut.svg,artwork/png/192/ic_capcut.png,false,,false,true,151
+app,25,BlinkDrama: Short Dramas & TV,BlinkDrama,com.blink.drama.player,ic_blinkdrama,prototype,artwork/svg/ic_blinkdrama.svg,artwork/png/192/ic_blinkdrama.png,false,,false,true,166
+app,26,Telegram,Telegram,org.telegram.messenger,ic_telegram,prototype,artwork/svg/ic_telegram.svg,artwork/png/192/ic_telegram.png,false,org.telegram.ui.LaunchActivity,false,true,230
+app,27,Peacock TV: Stream TV & Movies,Peacock,com.peacocktv.peacockandroid,ic_peacock,prototype,artwork/svg/ic_peacock.svg,artwork/png/192/ic_peacock.png,false,,false,true,220
+app,28,DramaWave - Dramas & Reels,DramaWave,com.dramawave.app,ic_dramawave,prototype,artwork/svg/ic_dramawave.svg,artwork/png/192/ic_dramawave.png,false,,false,true,286
+app,29,MapQuest: Get Directions,MapQuest,com.mapquest.android.ace,ic_mapquest,prototype,artwork/svg/ic_mapquest.svg,artwork/png/192/ic_mapquest.png,false,,false,true,299
+app,30,Freecash: Earn Money,Freecash,com.freecash.app2,ic_freecash,prototype,artwork/svg/ic_freecash.svg,artwork/png/192/ic_freecash.png,false,,false,true,152
+app,31,Claude by Anthropic,Claude,com.anthropic.claude,ic_claude,prototype,artwork/svg/ic_claude.svg,artwork/png/192/ic_claude.png,false,,false,true,187
+app,32,"Whatnot: Shop, Sell, Connect",Whatnot,com.whatnot_mobile,ic_whatnot,prototype,artwork/svg/ic_whatnot.svg,artwork/png/192/ic_whatnot.png,false,,false,true,110
+app,33,DramaBox - Stream Drama Shorts,DramaBox,com.storymatrix.drama,ic_dramabox,prototype,artwork/svg/ic_dramabox.svg,artwork/png/192/ic_dramabox.png,false,,false,true,191
+app,34,TextNow: Call + Text Unlimited,TextNow,com.enflick.android.TextNow,ic_textnow,prototype,artwork/svg/ic_textnow.svg,artwork/png/192/ic_textnow.png,false,,false,true,146
+app,35,Life360: Family Safety & GPS,Life360,com.life360.android.safetymapd,ic_life360,prototype,artwork/svg/ic_life360.svg,artwork/png/192/ic_life360.png,false,,false,true,144
+app,36,Messenger,Messenger,com.facebook.orca,ic_messenger,prototype,artwork/svg/ic_messenger.svg,artwork/png/192/ic_messenger.png,false,com.facebook.orca.auth.StartScreenActivity,false,true,221
+system,,Phone,Phone,,sys_phone,prototype,artwork/svg/sys_phone.svg,artwork/png/192/sys_phone.png,false,com.android.dialer.main.impl.MainActivity com.google.android.dialer.extensions.GoogleDialtactsActivity,false,false,172
+system,,Messages,Messages,,sys_messages,prototype,artwork/svg/sys_messages.svg,artwork/png/192/sys_messages.png,false,com.google.android.apps.messaging.ui.ConversationListActivity com.android.messaging.ui.conversationlist.ConversationListActivity,false,false,319
+system,,Camera,Camera,,sys_camera,prototype,artwork/svg/sys_camera.svg,artwork/png/192/sys_camera.png,false,com.android.camera.CameraLauncher,false,false,320
+system,,Photos,Photos,,sys_photos,prototype,artwork/svg/sys_photos.svg,artwork/png/192/sys_photos.png,false,com.google.android.apps.photos.home.HomeActivity,false,false,257
+system,,Settings,Settings,,sys_settings,prototype,artwork/svg/sys_settings.svg,artwork/png/192/sys_settings.png,false,com.android.settings.Settings,false,false,121
+system,,Clock,Clock,,sys_clock,prototype,artwork/svg/sys_clock.svg,artwork/png/192/sys_clock.png,false,com.android.deskclock.DeskClock com.android.deskclock.DeskClock,false,false,127
+system,,Calendar,Calendar,,sys_calendar,prototype,artwork/svg/sys_calendar.svg,artwork/png/192/sys_calendar.png,false,com.android.calendar.AllInOneActivity,false,false,380
+system,,Browser,Browser,,sys_browser,prototype,artwork/svg/sys_browser.svg,artwork/png/192/sys_browser.png,false,com.google.android.apps.chrome.Main,false,false,192
+system,,Calculator,Calculator,,sys_calculator,prototype,artwork/svg/sys_calculator.svg,artwork/png/192/sys_calculator.png,false,com.android.calculator2.Calculator com.android.calculator2.Calculator,false,false,366
+system,,Contacts,Contacts,,sys_contacts,prototype,artwork/svg/sys_contacts.svg,artwork/png/192/sys_contacts.png,false,com.android.contacts.activities.PeopleActivity com.android.contacts.activities.PeopleActivity,false,false,136
+system,,Files,Files,,sys_files,prototype,artwork/svg/sys_files.svg,artwork/png/192/sys_files.png,false,com.android.documentsui.files.FilesActivity com.android.documentsui.files.FilesActivity,false,false,284
+system,,Weather,Weather,,sys_weather,prototype,artwork/svg/sys_weather.svg,artwork/png/192/sys_weather.png,false,,false,false,146
+system,,Notes,Notes,,sys_notes,prototype,artwork/svg/sys_notes.svg,artwork/png/192/sys_notes.png,false,,false,false,366
+system,,Music,Music,,sys_music,prototype,artwork/svg/sys_music.svg,artwork/png/192/sys_music.png,false,,false,false,139
+system,,Flashlight,Flashlight,,sys_flashlight,prototype,artwork/svg/sys_flashlight.svg,artwork/png/192/sys_flashlight.png,false,,false,false,162
+system,,Recorder,Recorder,,sys_recorder,prototype,artwork/svg/sys_recorder.svg,artwork/png/192/sys_recorder.png,false,,false,false,172

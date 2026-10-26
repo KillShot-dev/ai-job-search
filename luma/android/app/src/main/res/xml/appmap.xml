@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- PROTOTYPE. Candidate launcher components are widely published names. mapping_verified is false. launcher_tested is false. No activity in this file was confirmed on a device. -->
+<appmap>
+    <item class="com.whatsapp.Main" name="ic_whatsapp"/>
+    <item class="com.ss.android.ugc.aweme.splash.SplashActivity" name="ic_tiktok"/>
+    <item class="com.instagram.android.activity.MainTabActivity" name="ic_instagram"/>
+    <item class="com.facebook.katana.LoginActivity" name="ic_facebook"/>
+    <item class="com.twitter.android.StartActivity" name="ic_x"/>
+    <item class="com.snapchat.android.LandingPageActivity" name="ic_snapchat"/>
+    <item class="org.telegram.ui.LaunchActivity" name="ic_telegram"/>
+    <item class="com.facebook.orca.auth.StartScreenActivity" name="ic_messenger"/>
+</appmap>

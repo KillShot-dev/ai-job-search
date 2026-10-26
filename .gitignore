@@ -30,6 +30,8 @@ linkedin_Profile.pdf
 *.jpeg
 *.png
 !cover_letters/OpenFonts/fonts/**
+# Luma icon-pack exports are product assets, not personal photos
+!luma/**/*.png
 
 # OS files
 .DS_Store

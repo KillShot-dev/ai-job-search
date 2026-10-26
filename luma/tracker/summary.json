@@ -1,0 +1,15 @@
+{
+  "status": "prototype",
+  "release_ready": false,
+  "signed_package": false,
+  "compiled": false,
+  "chart_apps_with_package_ids": 199,
+  "coverage_target": 300,
+  "app_icons_drawn": 36,
+  "system_icons_drawn": 16,
+  "generic_fallbacks_counted_as_apps": 0,
+  "mapping_verified": 0,
+  "launcher_tested": 0,
+  "duplicate_glyph_geometries": 0,
+  "duplicate_package_ids": 0
+}

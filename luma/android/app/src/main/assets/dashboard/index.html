@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Luma — Icon Pack prototype</title>
+  <style>
+    :root {
+      --ink: #243044;
+      --muted: #5c6b7c;
+      --line: #d5e0ea;
+      --bg: #e7eef4;
+      --card: #f8fbfc;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(900px 420px at 10% -10%, #ffffff 0%, rgba(255,255,255,0) 60%),
+        linear-gradient(180deg, #f4f7fb 0%, var(--bg) 100%);
+    }
+    header {
+      display: flex;
+      gap: 28px;
+      align-items: center;
+      padding: 36px 48px 12px;
+    }
+    .logo-slot {
+      width: 148px;
+      height: 84px;
+      border: 1.5px dashed #8aa0b5;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #607488;
+      background: rgba(255,255,255,0.65);
+      font-size: 12px;
+      line-height: 1.35;
+      padding: 8px;
+    }
+    h1 {
+      font-weight: 560;
+      font-size: 42px;
+      letter-spacing: -0.04em;
+      margin: 0 0 4px;
+    }
+    .sub { color: var(--muted); margin: 0; font-size: 16px; }
+    .status {
+      display: inline-block;
+      margin-top: 12px;
+      background: #243044;
+      color: white;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      padding: 20px 48px 8px;
+    }
+    .metric {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px 16px;
+    }
+    .metric b { display: block; font-size: 28px; letter-spacing: -0.04em; }
+    .metric span { color: var(--muted); font-size: 13px; }
+    section { padding: 8px 48px 28px; }
+    h2 { font-size: 18px; font-weight: 600; margin: 18px 0 12px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+      gap: 14px;
+    }
+    figure.icon {
+      margin: 0;
+      background: rgba(255,255,255,0.72);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 16px 12px 12px;
+      text-align: center;
+    }
+    figure img { width: 96px; height: 96px; }
+    figcaption { display: flex; flex-direction: column; gap: 2px; }
+    figcaption strong { font-size: 14px; }
+    figcaption span { color: var(--muted); font-size: 12px; }
+    .pkg {
+      font-family: ui-monospace, monospace;
+      font-size: 10px !important;
+      word-break: break-all;
+    }
+    footer {
+      padding: 8px 48px 40px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-slot">metaPhasic Group logo<br/>was not attached<br/>to this workspace</div>
+    <div>
+      <h1>Luma</h1>
+      <p class="sub">Icon pack prototype for metaPhasic Group. Interpretive symbols, not official app logos.</p>
+      <div class="status">PROTOTYPE · NOT A PLAY RELEASE</div>
+    </div>
+  </header>
+  <div class="metrics">
+    <div class="metric"><b>199</b><span>chart apps with package IDs</span></div>
+    <div class="metric"><b>36</b><span>original app icons drawn</span></div>
+    <div class="metric"><b>0</b><span>mappings verified on a device</span></div>
+    <div class="metric"><b>0</b><span>launcher tests completed</span></div>
+  </div>
+  <section>
+    <h2>Chart icons</h2>
+    <div class="grid">
+      <figure class="icon">
+  <img src="icons/ic_muse.png" alt="Muse icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Muse</strong>
+    <span>Rank 1</span>
+    <span class="pkg">com.facebook.aura</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_chatgpt.png" alt="ChatGPT icon" width="96" height="96"/>
+  <figcaption>
+    <strong>ChatGPT</strong>
+    <span>Rank 2</span>
+    <span class="pkg">com.openai.chatgpt</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_tiktok_pro.png" alt="TikTok Pro icon" width="96" height="96"/>
+  <figcaption>
+    <strong>TikTok Pro</strong>
+    <span>Rank 3</span>
+    <span class="pkg">com.ss.android.ugc.tiktok.pro</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_capital_one.png" alt="Capital One icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Capital One</strong>
+    <span>Rank 4</span>
+    <span class="pkg">com.konylabs.capitalone</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_settings_home.png" alt="Settings Home icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Settings Home</strong>
+    <span>Rank 5</span>
+    <span class="pkg">com.eet.settings.launcher</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_vinted.png" alt="Vinted icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Vinted</strong>
+    <span>Rank 6</span>
+    <span class="pkg">fr.vinted</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_whatsapp.png" alt="WhatsApp icon" width="96" height="96"/>
+  <figcaption>
+    <strong>WhatsApp</strong>
+    <span>Rank 7</span>
+    <span class="pkg">com.whatsapp</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_mcdonalds.png" alt="McDonald&#x27;s icon" width="96" height="96"/>
+  <figcaption>
+    <strong>McDonald&#x27;s</strong>
+    <span>Rank 8</span>
+    <span class="pkg">com.mcdonalds.app</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_tiktok.png" alt="TikTok icon" width="96" height="96"/>
+  <figcaption>
+    <strong>TikTok</strong>
+    <span>Rank 9</span>
+    <span class="pkg">com.zhiliaoapp.musically</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_freereels.png" alt="FreeReels icon" width="96" height="96"/>
+  <figcaption>
+    <strong>FreeReels</strong>
+    <span>Rank 10</span>
+    <span class="pkg">com.freereels.app</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_freedrama.png" alt="FreeDrama icon" width="96" height="96"/>
+  <figcaption>
+    <strong>FreeDrama</strong>
+    <span>Rank 11</span>
+    <span class="pkg">com.drama.free</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_instagram.png" alt="Instagram icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Instagram</strong>
+    <span>Rank 12</span>
+    <span class="pkg">com.instagram.android</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_dealseek.png" alt="DealSeek icon" width="96" height="96"/>
+  <figcaption>
+    <strong>DealSeek</strong>
+    <span>Rank 13</span>
+    <span class="pkg">com.dealseekorg.dealseek</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_pinedrama.png" alt="PineDrama icon" width="96" height="96"/>
+  <figcaption>
+    <strong>PineDrama</strong>
+    <span>Rank 14</span>
+    <span class="pkg">com.ss.android.ttmd.video</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_cleanup.png" alt="Cleanup icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Cleanup</strong>
+    <span>Rank 15</span>
+    <span class="pkg">com.storage.androidcleaner</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_tiktok_lite.png" alt="TikTok Lite icon" width="96" height="96"/>
+  <figcaption>
+    <strong>TikTok Lite</strong>
+    <span>Rank 16</span>
+    <span class="pkg">com.tiktok.lite.go</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_temu.png" alt="Temu icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Temu</strong>
+    <span>Rank 17</span>
+    <span class="pkg">com.einnovation.temu</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_kalshi.png" alt="Kalshi icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Kalshi</strong>
+    <span>Rank 18</span>
+    <span class="pkg">com.kalshi.mobile</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_cashapp.png" alt="Cash App icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Cash App</strong>
+    <span>Rank 19</span>
+    <span class="pkg">com.squareup.cash</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_facebook.png" alt="Facebook icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Facebook</strong>
+    <span>Rank 20</span>
+    <span class="pkg">com.facebook.katana</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_x.png" alt="X icon" width="96" height="96"/>
+  <figcaption>
+    <strong>X</strong>
+    <span>Rank 21</span>
+    <span class="pkg">com.twitter.android</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_walmart.png" alt="Walmart icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Walmart</strong>
+    <span>Rank 22</span>
+    <span class="pkg">com.walmart.android</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_snapchat.png" alt="Snapchat icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Snapchat</strong>
+    <span>Rank 23</span>
+    <span class="pkg">com.snapchat.android</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_capcut.png" alt="CapCut icon" width="96" height="96"/>
+  <figcaption>
+    <strong>CapCut</strong>
+    <span>Rank 24</span>
+    <span class="pkg">com.lemon.lvoverseas</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_blinkdrama.png" alt="BlinkDrama icon" width="96" height="96"/>
+  <figcaption>
+    <strong>BlinkDrama</strong>
+    <span>Rank 25</span>
+    <span class="pkg">com.blink.drama.player</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_telegram.png" alt="Telegram icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Telegram</strong>
+    <span>Rank 26</span>
+    <span class="pkg">org.telegram.messenger</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_peacock.png" alt="Peacock icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Peacock</strong>
+    <span>Rank 27</span>
+    <span class="pkg">com.peacocktv.peacockandroid</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_dramawave.png" alt="DramaWave icon" width="96" height="96"/>
+  <figcaption>
+    <strong>DramaWave</strong>
+    <span>Rank 28</span>
+    <span class="pkg">com.dramawave.app</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_mapquest.png" alt="MapQuest icon" width="96" height="96"/>
+  <figcaption>
+    <strong>MapQuest</strong>
+    <span>Rank 29</span>
+    <span class="pkg">com.mapquest.android.ace</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_freecash.png" alt="Freecash icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Freecash</strong>
+    <span>Rank 30</span>
+    <span class="pkg">com.freecash.app2</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_claude.png" alt="Claude icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Claude</strong>
+    <span>Rank 31</span>
+    <span class="pkg">com.anthropic.claude</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_whatnot.png" alt="Whatnot icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Whatnot</strong>
+    <span>Rank 32</span>
+    <span class="pkg">com.whatnot_mobile</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_dramabox.png" alt="DramaBox icon" width="96" height="96"/>
+  <figcaption>
+    <strong>DramaBox</strong>
+    <span>Rank 33</span>
+    <span class="pkg">com.storymatrix.drama</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_textnow.png" alt="TextNow icon" width="96" height="96"/>
+  <figcaption>
+    <strong>TextNow</strong>
+    <span>Rank 34</span>
+    <span class="pkg">com.enflick.android.TextNow</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_life360.png" alt="Life360 icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Life360</strong>
+    <span>Rank 35</span>
+    <span class="pkg">com.life360.android.safetymapd</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/ic_messenger.png" alt="Messenger icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Messenger</strong>
+    <span>Rank 36</span>
+    <span class="pkg">com.facebook.orca</span>
+  </figcaption>
+</figure>
+    </div>
+    <h2>System icons</h2>
+    <div class="grid">
+      <figure class="icon">
+  <img src="icons/sys_phone.png" alt="Phone icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Phone</strong>
+    <span>System</span>
+    <span class="pkg">Core system icon, outside the chart count</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/sys_messages.png" alt="Messages icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Messages</strong>
+    <span>System</span>
+    <span class="pkg">Core system icon, outside the chart count</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/sys_camera.png" alt="Camera icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Camera</strong>
+    <span>System</span>
+    <span class="pkg">Core system icon, outside the chart count</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/sys_photos.png" alt="Photos icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Photos</strong>
+    <span>System</span>
+    <span class="pkg">Core system icon, outside the chart count</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/sys_settings.png" alt="Settings icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Settings</strong>
+    <span>System</span>
+    <span class="pkg">Core system icon, outside the chart count</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/sys_clock.png" alt="Clock icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Clock</strong>
+    <span>System</span>
+    <span class="pkg">Core system icon, outside the chart count</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/sys_calendar.png" alt="Calendar icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Calendar</strong>
+    <span>System</span>
+    <span class="pkg">Core system icon, outside the chart count</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/sys_browser.png" alt="Browser icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Browser</strong>
+    <span>System</span>
+    <span class="pkg">Core system icon, outside the chart count</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/sys_calculator.png" alt="Calculator icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Calculator</strong>
+    <span>System</span>
+    <span class="pkg">Core system icon, outside the chart count</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/sys_contacts.png" alt="Contacts icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Contacts</strong>
+    <span>System</span>
+    <span class="pkg">Core system icon, outside the chart count</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/sys_files.png" alt="Files icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Files</strong>
+    <span>System</span>
+    <span class="pkg">Core system icon, outside the chart count</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/sys_weather.png" alt="Weather icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Weather</strong>
+    <span>System</span>
+    <span class="pkg">Core system icon, outside the chart count</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/sys_notes.png" alt="Notes icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Notes</strong>
+    <span>System</span>
+    <span class="pkg">Core system icon, outside the chart count</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/sys_music.png" alt="Music icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Music</strong>
+    <span>System</span>
+    <span class="pkg">Core system icon, outside the chart count</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/sys_flashlight.png" alt="Flashlight icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Flashlight</strong>
+    <span>System</span>
+    <span class="pkg">Core system icon, outside the chart count</span>
+  </figcaption>
+</figure>
+<figure class="icon">
+  <img src="icons/sys_recorder.png" alt="Recorder icon" width="96" height="96"/>
+  <figcaption>
+    <strong>Recorder</strong>
+    <span>System</span>
+    <span class="pkg">Core system icon, outside the chart count</span>
+  </figcaption>
+</figure>
+    </div>
+  </section>
+  <footer>
+    Artwork, mapping verification, and launcher testing are tracked separately.
+    System icons are not part of the 300-app coverage count.
+    Ranks 37–199 are catalogued and not yet drawn. Ranks 200–300 were not in the Play response.
+  </footer>
+</body>
+</html>

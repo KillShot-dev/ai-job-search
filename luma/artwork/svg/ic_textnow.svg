@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="ictextnowbg" x1="36" y1="18" x2="160" y2="176" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F7F4FC"/>
+      <stop offset="1" stop-color="#DDD3F1"/>
+    </linearGradient>
+    <linearGradient id="ictextnowglass" x1="96" y1="20" x2="96" y2="108" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.78"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="ictextnowclip">
+      <rect x="14" y="14" width="164" height="164" rx="50"/>
+    </clipPath>
+  </defs>
+  <rect x="14" y="14" width="164" height="164" rx="50" fill="url(#ictextnowbg)"/>
+  <g clip-path="url(#ictextnowclip)">
+    <ellipse cx="74" cy="58" rx="62" ry="36" fill="#ffffff" fill-opacity="0.28"/>
+    <path d="M30 86C48 48 78 30 108 30c10 0 18 2 26 6-30 2-62 24-84 58-8 12-14 24-16 34-4-14-6-28-4-42z" fill="url(#ictextnowglass)"/>
+  </g>
+  <rect x="15" y="15" width="162" height="162" rx="49" fill="none" stroke="#F8FBFF" stroke-opacity="0.9" stroke-width="1.6"/>
+  <rect x="17.2" y="17.2" width="157.6" height="157.6" rx="47.5" fill="none" stroke="#7E90A4" stroke-opacity="0.28" stroke-width="1"/>
+  <g>
+    <path d="M68 120 C62 72 116 60 132 98" fill="none" stroke="#243044" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="66" cy="124" r="13" fill="#243044"/>
+    <circle cx="134" cy="98" r="13" fill="#243044"/>
+    <circle cx="126" cy="60" r="9" fill="#4C3A86"/>
+  </g>
+</svg>
