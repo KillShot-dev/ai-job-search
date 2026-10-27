@@ -96,10 +96,21 @@ struct TransferQueueView: View {
             }
             ForEach(queue.items) { item in
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(item.title).font(FileRadarFont.caption()).lineLimit(1)
+                    HStack {
+                        Text(item.title).font(FileRadarFont.caption()).lineLimit(1)
+                        Spacer(minLength: 4)
+                        if item.status == .queued || item.status == .working {
+                            Button(action: { queue.cancelItem(id: item.id) }) {
+                                Image(systemName: "xmark.circle")
+                            }
+                            .buttonStyle(.plain)
+                            .font(FileRadarFont.caption())
+                            .accessibilityLabel("Cancel this transfer")
+                        }
+                    }
                     ProgressView(value: item.progress)
                     HStack {
-                        Text(item.status.rawValue.capitalized).font(FileRadarFont.caption()).foregroundStyle(.secondary)
+                        Text(statusLabel(for: item)).font(FileRadarFont.caption()).foregroundStyle(.secondary)
                         if let error = item.error {
                             Text(error).font(FileRadarFont.caption()).foregroundStyle(.red).lineLimit(1)
                         }
@@ -111,6 +122,64 @@ struct TransferQueueView: View {
         .background(RoundedRectangle(cornerRadius: 8).fill(Color.secondary.opacity(0.08)))
         .accessibilityLabel("Transfer queue.")
     }
+
+    private func statusLabel(for item: TransferQueue.TransferItem) -> String {
+        switch item.status {
+        case .working:
+            return "Working · \(item.completedFiles)/\(item.sources.count)"
+        case .queued, .done, .cancelled, .failed:
+            return item.status.rawValue.capitalized
+        }
+    }
+}
+
+/// ForkLift-style transfer HUD: floats over the detail when jobs are active
+/// so bulk work never feels buried in the sidebar alone.
+struct TransferHUDView: View {
+    @ObservedObject var queue = TransferQueue.shared
+    @EnvironmentObject var theme: ThemeSettings
+
+    var body: some View {
+        if queue.activeCount > 0 || queue.items.contains(where: { $0.status == .failed }) {
+            HStack(spacing: 12) {
+                Image(systemName: queue.isPaused ? "pause.circle.fill" : "arrow.left.arrow.right.circle.fill")
+                    .foregroundStyle(theme.look.accent)
+                    .imageScale(.large)
+                VStack(alignment: .leading, spacing: 2) {
+                    if let current = queue.items.first(where: { $0.status == .working })
+                        ?? queue.items.first(where: { $0.status == .queued })
+                        ?? queue.items.first(where: { $0.status == .failed }) {
+                        Text(current.title).font(FileRadarFont.heading()).lineLimit(1)
+                        ProgressView(value: current.progress)
+                            .tint(theme.look.accent)
+                        Text(queue.isPaused ? "Paused — resume when ready" : "\(queue.activeCount) active · pause between files")
+                            .font(FileRadarFont.caption()).foregroundStyle(.secondary)
+                    }
+                }
+                Spacer(minLength: 8)
+                Button(queue.isPaused ? "Resume" : "Pause") { queue.isPaused.toggle() }
+                    .controlSize(.small)
+                Button("Cancel") { queue.cancelAll() }
+                    .controlSize(.small)
+                if queue.activeCount == 0 {
+                    Button("Dismiss") { queue.clearFinished() }
+                        .controlSize(.small)
+                }
+            }
+            .padding(.horizontal, 14).padding(.vertical, 10)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
+                    .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.12), radius: 12, y: 4)
+            .padding(.horizontal, 16).padding(.bottom, 12)
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+            .animation(FileRadarMotion.panel, value: queue.activeCount)
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("Transfer progress")
+        }
+    }
 }
 
 // MARK: - Tab strip (restored on relaunch via TabState)
@@ -118,29 +187,43 @@ struct TransferQueueView: View {
 struct TabBarView: View {
     @ObservedObject var tabState: TabState
     var onSelectFolder: (URL) -> Void
+    @EnvironmentObject var theme: ThemeSettings
 
     var body: some View {
         HStack(spacing: 4) {
             ForEach(tabState.tabs) { tab in
                 HStack(spacing: 4) {
+                    Image(systemName: "folder")
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(tabState.selectedID == tab.id ? theme.look.accent : .secondary)
                     Button(tab.title) {
                         tabState.selectedID = tab.id
                         onSelectFolder(tab.folder)
                     }
                     .buttonStyle(.plain)
                     .font(FileRadarFont.caption())
-                    .padding(.horizontal, 8).padding(.vertical, 4)
-                    .background(tabState.selectedID == tab.id
-                                ? Capsule().fill(Color.accentColor.opacity(0.18))
-                                : Capsule().fill(Color.clear))
+                    .help(tab.folder.path)
                     if tabState.tabs.count > 1 {
                         Button(action: { tabState.closeTab(tab) }) {
-                            Image(systemName: "xmark").font(.system(size: 8))
+                            Image(systemName: "xmark").font(.system(size: 8, weight: .semibold))
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("Close tab \(tab.title)")
                     }
                 }
+                .padding(.horizontal, 10).padding(.vertical, 5)
+                .background(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(tabState.selectedID == tab.id
+                              ? theme.look.accent.opacity(0.16)
+                              : Color.primary.opacity(0.04))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .strokeBorder(tabState.selectedID == tab.id
+                                      ? theme.look.accent.opacity(0.35)
+                                      : Color.clear, lineWidth: 1)
+                )
             }
             Button(action: {
                 let panel = NSOpenPanel()
@@ -155,10 +238,12 @@ struct TabBarView: View {
                 Image(systemName: "plus")
             }
             .buttonStyle(.plain)
+            .padding(6)
             .accessibilityLabel("Open a folder in a new tab")
             Spacer()
         }
-        .padding(.horizontal, 8).padding(.vertical, 4)
+        .padding(.horizontal, 10).padding(.vertical, 6)
+        .background(theme.look.chromeMaterial)
     }
 }
 
@@ -177,20 +262,56 @@ struct DualPaneView: View {
     var rightFolder: URL
     var rightFiles: [FileItem]
     @Binding var activeIsRight: Bool
+    var onChooseRightFolder: () -> Void
+    @EnvironmentObject var theme: ThemeSettings
+    @State private var preferCopy = false
 
     var body: some View {
-        HStack(alignment: .top, spacing: 0) {
-            pane(title: leftTitle, files: leftFiles, isActive: !activeIsRight,
-                 dropFolder: nil, onTap: { activeIsRight = false })
-            Divider()
-            pane(title: rightFolder.lastPathComponent, files: rightFiles, isActive: activeIsRight,
-                 dropFolder: rightFolder, onTap: { activeIsRight = true })
+        VStack(spacing: 0) {
+            HStack(spacing: 10) {
+                Label(activeIsRight ? "Right pane active" : "Left pane active",
+                      systemImage: "rectangle.split.2x1")
+                    .font(FileRadarFont.caption())
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Toggle("Drop copies (Option)", isOn: $preferCopy)
+                    .toggleStyle(.checkbox)
+                    .font(FileRadarFont.caption())
+                    .help("When on, drops onto the right pane copy instead of move. Name clashes are still skipped, never overwritten.")
+                Button("Choose right folder…") { onChooseRightFolder() }
+                    .font(FileRadarFont.caption())
+                    .controlSize(.small)
+                Text(rightFolder.path)
+                    .font(FileRadarFont.caption())
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .frame(maxWidth: 220, alignment: .trailing)
+                    .help(rightFolder.path)
+            }
+            .padding(.horizontal, 12).padding(.vertical, 6)
+            .background(Color.primary.opacity(0.03))
+
+            HStack(alignment: .top, spacing: 0) {
+                pane(title: leftTitle, files: leftFiles, isActive: !activeIsRight,
+                     dropFolder: nil, copyOnDrop: false, onTap: { activeIsRight = false })
+                Divider()
+                pane(title: rightFolder.lastPathComponent, files: rightFiles, isActive: activeIsRight,
+                     dropFolder: rightFolder, copyOnDrop: preferCopy, onTap: { activeIsRight = true })
+            }
         }
     }
 
-    private func pane(title: String, files: [FileItem], isActive: Bool, dropFolder: URL?, onTap: @escaping () -> Void) -> some View {
-        FileCollectionView(title: title, files: files, dropTargetFolder: dropFolder)
-            .border(isActive ? Color.accentColor : Color.clear, width: isActive ? 1 : 0)
+    private func pane(title: String, files: [FileItem], isActive: Bool,
+                      dropFolder: URL?, copyOnDrop: Bool, onTap: @escaping () -> Void) -> some View {
+        FileCollectionView(title: title, files: files,
+                           dropTargetFolder: dropFolder, preferCopyOnDrop: copyOnDrop)
+            .overlay(
+                RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
+                    .strokeBorder(isActive ? theme.look.accent.opacity(0.55) : Color.clear, lineWidth: 1.5)
+                    .padding(2)
+            )
+            .background(isActive ? theme.look.accent.opacity(0.03) : Color.clear)
             .onTapGesture(perform: onTap)
     }
 }

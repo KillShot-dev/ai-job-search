@@ -78,6 +78,9 @@ func fileContextMenu(for file: FileItem) -> some View {
         }
     }
     Divider()
+    Button("Add to Drop Stack") {
+        DropStack.shared.add([file.url])
+    }
     Button("Pin to Sidebar") {
         NotificationCenter.default.post(name: .pinToSidebar, object: file.url)
     }
@@ -91,6 +94,9 @@ func fileContextMenu(for file: FileItem) -> some View {
     Button("Copy Path") {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(file.url.path, forType: .string)
+    }
+    Button("Batch Rename Selection…") {
+        NotificationCenter.default.post(name: .showBatchRename, object: nil)
     }
     Button("Export Parcel…") {
         NotificationCenter.default.post(name: .exportParcel, object: [file] as [FileItem])
@@ -108,65 +114,115 @@ extension Notification.Name {
     static let showCommandPalette = Notification.Name("FileRadarShowCommandPalette")
     static let toggleDualPane = Notification.Name("FileRadarToggleDualPane")
     static let toggleFavorite = Notification.Name("FileRadarToggleFavorite")
+    static let showBatchRename = Notification.Name("FileRadarShowBatchRename")
+    static let togglePreviewStrip = Notification.Name("FileRadarTogglePreviewStrip")
+    static let selectAllVisible = Notification.Name("FileRadarSelectAllVisible")
+    static let trashSelection = Notification.Name("FileRadarTrashSelection")
 }
 
 struct FileCollectionView: View {
     var title: String
     var files: [FileItem]
     var dropTargetFolder: URL?
+    /// When true, drops enqueue a copy instead of a move (dual-pane Option mode).
+    var preferCopyOnDrop: Bool = false
     @EnvironmentObject var store: FileStore
     @EnvironmentObject var playback: MusicPlaybackService
     @EnvironmentObject var theme: ThemeSettings
+    @State private var dropTargeted = false
 
     private var sortedFiles: [FileItem] { store.sorted(files) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.compactDensity ? 6 : 10) {
-            Text(title).font(FileRadarFont.title()).padding(.horizontal)
-            if files.isEmpty {
-                EmptyStateView(title: "Nothing here yet",
-                               message: "Files of this kind will appear here once they are indexed. Nothing has been moved or deleted.")
-            } else if store.viewMode == .columns {
-                ColumnBrowserView(rootFiles: files)
-            } else if store.viewMode == .grid {
-                ScrollView {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: store.cardSize), spacing: theme.compactDensity ? 10 : 16)],
-                              spacing: theme.compactDensity ? 10 : 16) {
-                        ForEach(sortedFiles) { file in
-                            FileCardView(file: file, size: store.cardSize)
-                                .onTapGesture(count: 2) { handleOpen(file) }
-                                .onTapGesture {
-                                    withAnimation(FileRadarMotion.selection) {
-                                        store.selectedIDs = [file.id]
-                                    }
-                                }
-                        }
-                    }.padding()
+            HStack(alignment: .firstTextBaseline) {
+                Text(title).font(FileRadarFont.title())
+                Spacer()
+                if dropTargetFolder != nil {
+                    Text(preferCopyOnDrop ? "Drop to copy" : "Drop to move")
+                        .font(FileRadarFont.caption())
+                        .foregroundStyle(dropTargeted ? AnyShapeStyle(theme.look.accent) : AnyShapeStyle(.secondary))
+                        .padding(.horizontal, 8).padding(.vertical, 3)
+                        .background(
+                            Capsule().fill(dropTargeted ? theme.look.accent.opacity(0.14) : Color.clear)
+                        )
                 }
-                .onDrop(of: [.fileURL], isTargeted: nil) { providers in
-                    guard let folder = dropTargetFolder else { return true }
-                    DropUtilities.loadURLs(from: providers) { urls in
+            }
+            .padding(.horizontal)
+
+            ZStack {
+                content
+                if dropTargeted, dropTargetFolder != nil {
+                    RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
+                        .strokeBorder(theme.look.accent, style: StrokeStyle(lineWidth: 2, dash: [7, 5]))
+                        .background(
+                            RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
+                                .fill(theme.look.accent.opacity(0.08))
+                        )
+                        .padding(8)
+                        .allowsHitTesting(false)
+                        .overlay {
+                            Text(preferCopyOnDrop ? "Release to copy" : "Release to move")
+                                .font(FileRadarFont.heading())
+                                .padding(.horizontal, 14).padding(.vertical, 8)
+                                .background(.ultraThinMaterial, in: Capsule())
+                        }
+                        .transition(.opacity)
+                }
+            }
+            .animation(FileRadarMotion.selection, value: dropTargeted)
+            .onDrop(of: [.fileURL], isTargeted: $dropTargeted) { providers in
+                guard let folder = dropTargetFolder else { return false }
+                DropUtilities.loadURLs(from: providers) { urls in
+                    if preferCopyOnDrop {
+                        TransferQueue.shared.enqueueCopy(urls, to: folder)
+                    } else {
                         TransferQueue.shared.enqueueMove(urls, to: folder)
                     }
-                    return true
                 }
-            } else {
-                List(sortedFiles, selection: $store.selectedIDs) { file in
-                    HStack(spacing: 10) {
-                        AsyncFileThumbnail(file: file, size: CGSize(width: 28, height: 28))
-                        Text(file.name)
-                        Spacer()
-                        if file.kind == .folder {
-                            FolderSizeText(folder: file.url)
-                        } else {
-                            Text(ByteCountFormatter.string(fromByteCount: file.size, countStyle: .file))
-                                .foregroundStyle(.secondary)
-                        }
-                        Text(file.modifiedDate, style: .date).foregroundStyle(.secondary)
+                return true
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        if files.isEmpty {
+            EmptyStateView(title: "Nothing here yet",
+                           message: "Files of this kind will appear here once they are indexed. Nothing has been moved or deleted.")
+        } else if store.viewMode == .columns {
+            ColumnBrowserView(rootFiles: files)
+        } else if store.viewMode == .grid {
+            ScrollView {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: store.cardSize), spacing: theme.compactDensity ? 10 : 16)],
+                          spacing: theme.compactDensity ? 10 : 16) {
+                    ForEach(sortedFiles) { file in
+                        FileCardView(file: file, size: store.cardSize)
+                            .onTapGesture(count: 2) { handleOpen(file) }
+                            .onTapGesture {
+                                withAnimation(FileRadarMotion.selection) {
+                                    store.selectedIDs = [file.id]
+                                }
+                            }
                     }
-                    .contextMenu { fileContextMenu(for: file) }
-                    .onTapGesture(count: 2) { handleOpen(file) }
+                }.padding()
+            }
+        } else {
+            List(sortedFiles, selection: $store.selectedIDs) { file in
+                HStack(spacing: 10) {
+                    AsyncFileThumbnail(file: file, size: CGSize(width: 28, height: 28))
+                    Text(file.name)
+                    Spacer()
+                    if file.kind == .folder {
+                        FolderSizeText(folder: file.url)
+                    } else {
+                        Text(ByteCountFormatter.string(fromByteCount: file.size, countStyle: .file))
+                            .foregroundStyle(.secondary)
+                    }
+                    Text(file.modifiedDate, style: .date).foregroundStyle(.secondary)
                 }
+                .contextMenu { fileContextMenu(for: file) }
+                .onTapGesture(count: 2) { handleOpen(file) }
             }
         }
     }

@@ -238,3 +238,112 @@ extension Notification.Name {
     static let applySavedSearch = Notification.Name("FileRadarApplySavedSearch")
     static let exportParcel = Notification.Name("FileRadarExportParcel")
 }
+
+// MARK: - Batch rename sheet (selection-driven; Path Finder / Bloom parity)
+
+/// Renames the current selection with a live before→after preview.
+/// Collisions and path-escaping names are refused — never overwritten.
+struct BatchRenameSheet: View {
+    var files: [FileItem]
+    var onApplied: ([FileItem]) -> Void
+    @EnvironmentObject var license: LicenseManager
+    @Environment(\.dismiss) private var dismiss
+    @State private var pattern = "{name}-{n}"
+    @State private var failedNames: [String] = []
+    @State private var showLicense = false
+
+    private var plan: [(file: FileItem, newName: String)] {
+        RenameService.preview(files: files, pattern: pattern)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Batch rename").font(FileRadarFont.title())
+            if !license.isAllowed(.batchRename) {
+                LockedFeatureView(feature: .batchRename) { showLicense = true }
+            } else if files.isEmpty {
+                Text("Select files first, then rename them here.")
+                    .font(FileRadarFont.body()).foregroundStyle(.secondary)
+            } else {
+                Text("\(files.count) selected · tokens {name}, {n}, {date}. Collisions stay untouched.")
+                    .font(FileRadarFont.caption()).foregroundStyle(.secondary)
+                TextField("Pattern", text: $pattern)
+                    .textFieldStyle(.roundedBorder)
+                    .font(FileRadarFont.body())
+                List {
+                    ForEach(plan, id: \.file.id) { item in
+                        HStack(alignment: .firstTextBaseline) {
+                            Text(item.file.name).font(FileRadarFont.body()).lineLimit(1)
+                            Image(systemName: "arrow.right")
+                                .font(FileRadarFont.caption()).foregroundStyle(.tertiary)
+                            Text(item.newName)
+                                .font(FileRadarFont.body())
+                                .foregroundStyle(item.newName == item.file.name ? .secondary : Color.accentColor)
+                                .lineLimit(1)
+                        }
+                    }
+                }
+                .frame(minHeight: 220)
+                if !failedNames.isEmpty {
+                    Text("Left untouched: \(failedNames.joined(separator: ", "))")
+                        .font(FileRadarFont.caption()).foregroundStyle(.red)
+                }
+                HStack {
+                    Button("Cancel") { dismiss() }
+                    Spacer()
+                    Button("Rename \(files.count)") {
+                        let refused = RenameService.apply(plan)
+                        failedNames = refused.map(\.name)
+                        let ok = files.filter { f in !refused.contains(where: { $0.id == f.id }) }
+                        onApplied(ok)
+                        if refused.isEmpty { dismiss() }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(files.isEmpty || plan.allSatisfy { $0.newName == $0.file.name })
+                }
+            }
+        }
+        .padding(20)
+        .frame(width: 560, height: 480)
+        .sheet(isPresented: $showLicense) { LicenseEntryView() }
+    }
+}
+
+// MARK: - Selection preview strip (Finder/Bloom lesson; content as interface)
+
+struct SelectionPreviewStrip: View {
+    var file: FileItem?
+    @EnvironmentObject var theme: ThemeSettings
+
+    var body: some View {
+        HStack(spacing: 14) {
+            if let file {
+                AsyncFileThumbnail(file: file, size: CGSize(width: 72, height: 54))
+                    .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(file.name).font(FileRadarFont.heading()).lineLimit(1)
+                    Text("\(file.kind.displayName) · \(ByteCountFormatter.string(fromByteCount: file.size, countStyle: .file)) · \(file.modifiedDate.formatted(date: .abbreviated, time: .omitted))")
+                        .font(FileRadarFont.caption()).foregroundStyle(.secondary)
+                        .lineLimit(1)
+                    if let w = file.width, let h = file.height {
+                        Text("\(w) × \(h)").font(FileRadarFont.caption()).foregroundStyle(.tertiary)
+                    }
+                }
+                Spacer()
+                Button("Quick Look") { QuickLookHelper.shared.show(files: [file]) }
+                    .controlSize(.small)
+                Button("Open") { NSWorkspace.shared.open(file.url) }
+                    .controlSize(.small)
+            } else {
+                Text("Select a file for a quiet preview strip.")
+                    .font(FileRadarFont.caption()).foregroundStyle(.secondary)
+                Spacer()
+            }
+        }
+        .padding(.horizontal, 14).padding(.vertical, 10)
+        .background(theme.look.chromeMaterial)
+        .overlay(alignment: .top) { Divider() }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(file.map { "Preview of \($0.name)" } ?? "Empty preview strip")
+    }
+}

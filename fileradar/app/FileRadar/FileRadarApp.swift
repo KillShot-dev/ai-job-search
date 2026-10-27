@@ -69,6 +69,23 @@ struct FileRadarApp: App {
                 Button("Toggle Dual Pane") {
                     NotificationCenter.default.post(name: .toggleDualPane, object: nil)
                 }
+                Button("Toggle Preview Strip") {
+                    NotificationCenter.default.post(name: .togglePreviewStrip, object: nil)
+                }
+                .keyboardShortcut("p", modifiers: [.command, .shift])
+                Button("Batch Rename Selection…") {
+                    NotificationCenter.default.post(name: .showBatchRename, object: nil)
+                }
+                .keyboardShortcut("r", modifiers: [.command, .shift])
+                Button("Select All Visible") {
+                    NotificationCenter.default.post(name: .selectAllVisible, object: nil)
+                }
+                .keyboardShortcut("a", modifiers: .command)
+                Button("Move Selection to Trash") {
+                    NotificationCenter.default.post(name: .trashSelection, object: nil)
+                }
+                .keyboardShortcut(.delete, modifiers: .command)
+                Divider()
                 Button("Export Parcel…") {
                     NotificationCenter.default.post(name: .exportParcel, object: nil)
                 }

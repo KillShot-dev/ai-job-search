@@ -58,10 +58,62 @@ struct ContentView: View {
     @State private var showPalette = false
     @StateObject private var tabState = TabState()
     @AppStorage("dualPaneEnabled") private var dualPaneEnabled = false
+    @AppStorage("previewStripEnabled") private var previewStripEnabled = true
     @State private var activeIsRight = false
+    @State private var showBatchRename = false
     @StateObject private var trash = TrashService()
 
     var body: some View {
+        splitChrome
+            .tint(theme.look.accent)
+            .fileRadarAtmosphere(theme.look)
+            .modifier(ContentSheetsModifier(
+                showLicense: $showLicense,
+                showPalette: $showPalette,
+                showBatchRename: $showBatchRename,
+                selectedFiles: selectedFiles,
+                onPalette: performPalette,
+                onRenameApplied: { renamed in
+                    for file in renamed {
+                        store.files.removeAll { $0.id == file.id }
+                    }
+                    store.selectedIDs = []
+                }
+            ))
+            .modifier(ContentNotificationsModifier(
+                destination: $destination,
+                searchText: $searchText,
+                showBatchRename: $showBatchRename,
+                showPalette: $showPalette,
+                showLicense: $showLicense,
+                dualPaneEnabled: $dualPaneEnabled,
+                previewStripEnabled: $previewStripEnabled,
+                store: store,
+                favorites: favorites,
+                trash: trash,
+                license: license,
+                onSelectAll: selectAllVisible,
+                onTrashSelection: trashSelected
+            ))
+            .onAppear(perform: bootstrap)
+            .onChange(of: destination) { _, new in
+                museChatViewModel?.updateContext(title: new.title,
+                                                 fileNames: museContextFileNames(for: new))
+                if case .savedSearch(let id) = new,
+                   let item = savedSearches.items.first(where: { $0.id == id }) {
+                    searchText = item.query
+                    destination = .search
+                }
+            }
+            .onKeyPress(.space) {
+                let selected = selectedFiles
+                guard !selected.isEmpty else { return .ignored }
+                QuickLookHelper.shared.show(files: selected)
+                return .handled
+            }
+    }
+
+    private var splitChrome: some View {
         NavigationSplitView {
             List(selection: $destination) {
                 Section("Library") {
@@ -158,14 +210,23 @@ struct ContentView: View {
                 TabBarView(tabState: tabState) { folder in
                     destination = .pinned(folder)
                 }
-                if dualPaneEnabled, isFolderDestination {
-                    DualPaneView(leftTitle: destination.title,
-                                 leftFiles: folderFiles(for: destination),
-                                 rightFolder: tabState.secondFolder,
-                                 rightFiles: store.files.filter { $0.url.path.hasPrefix(tabState.secondFolder.path) },
-                                 activeIsRight: $activeIsRight)
-                } else {
-                    detailView
+                ZStack(alignment: .bottom) {
+                    VStack(spacing: 0) {
+                        if dualPaneEnabled, isFolderDestination {
+                            DualPaneView(leftTitle: destination.title,
+                                         leftFiles: folderFiles(for: destination),
+                                         rightFolder: tabState.secondFolder,
+                                         rightFiles: store.files.filter { $0.url.path.hasPrefix(tabState.secondFolder.path) },
+                                         activeIsRight: $activeIsRight,
+                                         onChooseRightFolder: chooseRightPaneFolder)
+                        } else {
+                            detailView
+                        }
+                        if previewStripEnabled {
+                            SelectionPreviewStrip(file: selectedFile)
+                        }
+                    }
+                    TransferHUDView()
                 }
             }
             .inspector(isPresented: $showInspector) {
@@ -195,6 +256,19 @@ struct ContentView: View {
                         .disabled(!dualPaneEnabled)
                 }
                 ToolbarItem(placement: .navigation) {
+                    Button(previewStripEnabled ? "Hide Preview" : "Show Preview") {
+                        previewStripEnabled.toggle()
+                    }
+                    .keyboardShortcut("p", modifiers: [.command, .shift])
+                    .help("Quiet preview strip under the file list (Shift-Cmd-P).")
+                }
+                ToolbarItem(placement: .navigation) {
+                    Button("Rename…") { showBatchRename = true }
+                        .keyboardShortcut("r", modifiers: [.command, .shift])
+                        .disabled(store.selectedIDs.isEmpty)
+                        .help("Batch rename the current selection (Shift-Cmd-R).")
+                }
+                ToolbarItem(placement: .navigation) {
                     Picker("Sort", selection: $store.sort) {
                         ForEach(FileStore.SortOrder.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
                     }
@@ -212,94 +286,65 @@ struct ContentView: View {
                 }
             }
         }
-        .tint(theme.look.accent)
-        .sheet(isPresented: $showLicense) { LicenseEntryView() }
-        .sheet(isPresented: $showPalette) { CommandPaletteView(onSelect: performPalette) }
-        .onReceive(NotificationCenter.default.publisher(for: .browseArchive)) { note in
-            if let url = note.object as? URL { destination = .archive(url) }
+    }
+
+    private func bootstrap() {
+        if store.files.isEmpty {
+            let home = FileManager.default.homeDirectoryForCurrentUser
+            store.startIndexing(folders: [home.appendingPathComponent("Downloads"),
+                                          home.appendingPathComponent("Documents"),
+                                          home.appendingPathComponent("Desktop")])
         }
-        .onReceive(NotificationCenter.default.publisher(for: .showCommandPalette)) { _ in
-            showPalette = true
+        if !museTokenProviderSet {
+            museClient.tokenProvider = { [museAuth] in try await museAuth.validAccessToken() }
+            museTokenProviderSet = true
         }
-        .onReceive(NotificationCenter.default.publisher(for: .toggleDualPane)) { _ in
-            dualPaneEnabled.toggle()
+        if museChatViewModel == nil {
+            museChatViewModel = ChatViewModel(
+                store: store,
+                trash: trash,
+                auth: museAuth,
+                client: museClient,
+                voice: museVoice,
+                isLicensed: { [license] in license.isUnlocked },
+                destination: $destination,
+                contextTitle: destination.title,
+                contextFileNames: museContextFileNames(for: destination))
         }
-        .onReceive(NotificationCenter.default.publisher(for: .showLicenseSheet)) { _ in
-            showLicense = true
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .pinToSidebar)) { note in
-            if let url = note.object as? URL, !store.pinnedFolderURLs.contains(url) {
-                store.pinnedFolderURLs.append(url)
-            }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .toggleFavorite)) { note in
-            if let url = note.object as? URL { favorites.toggle(url) }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .exportParcel)) { note in
-            let files: [FileItem]
-            if let batch = note.object as? [FileItem] {
-                files = batch
-            } else {
-                files = store.files.filter { store.selectedIDs.contains($0.id) }
-            }
-            guard !files.isEmpty else { return }
-            ParcelExportUI.export(files: files, license: license)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .moveToTrash)) { note in
-            if let file = note.object as? FileItem {
-                _ = trash.trash([file])
-                store.files.removeAll { $0.id == file.id }
-            }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .applySavedSearch)) { note in
-            if let query = note.object as? String {
-                searchText = query
-                destination = .search
-            }
-        }
-        .onAppear {
-            if store.files.isEmpty {
-                let home = FileManager.default.homeDirectoryForCurrentUser
-                store.startIndexing(folders: [home.appendingPathComponent("Downloads"),
-                                              home.appendingPathComponent("Documents"),
-                                              home.appendingPathComponent("Desktop")])
-            }
-            if !museTokenProviderSet {
-                museClient.tokenProvider = { [museAuth] in try await museAuth.validAccessToken() }
-                museTokenProviderSet = true
-            }
-            if museChatViewModel == nil {
-                museChatViewModel = ChatViewModel(
-                    store: store,
-                    trash: trash,
-                    auth: museAuth,
-                    client: museClient,
-                    voice: museVoice,
-                    isLicensed: { [license] in license.isUnlocked },
-                    destination: $destination,
-                    contextTitle: destination.title,
-                    contextFileNames: museContextFileNames(for: destination))
-            }
-            museChatViewModel?.updateContext(title: destination.title,
-                                             fileNames: museContextFileNames(for: destination))
-            license.refreshEntitlements()
-        }
-        .onChange(of: destination) { _, new in
-            museChatViewModel?.updateContext(title: new.title,
-                                             fileNames: museContextFileNames(for: new))
-            if case .savedSearch(let id) = new,
-               let item = savedSearches.items.first(where: { $0.id == id }) {
-                searchText = item.query
-                destination = .search
-            }
-        }
-        .onKeyPress(.space) {
-            if let first = store.files.first(where: { store.selectedIDs.contains($0.id) }) {
-                QuickLookHelper.shared.show(files: [first])
-                return .handled
-            }
-            return .ignored
-        }
+        museChatViewModel?.updateContext(title: destination.title,
+                                         fileNames: museContextFileNames(for: destination))
+        license.refreshEntitlements()
+    }
+
+    private var selectedFiles: [FileItem] {
+        store.files.filter { store.selectedIDs.contains($0.id) }
+    }
+
+    private var selectedFile: FileItem? { selectedFiles.first }
+
+    private func chooseRightPaneFolder() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.prompt = "Use as right pane"
+        guard panel.runModal() == .OK, let folder = panel.url else { return }
+        tabState.setSecondFolder(folder)
+        activeIsRight = true
+    }
+
+    private func trashSelected() {
+        let items = selectedFiles
+        guard !items.isEmpty else { return }
+        let moved = trash.trash(items)
+        let movedPaths = Set(moved.map { $0.originalURL.path })
+        store.files.removeAll { file in movedPaths.contains(file.id) }
+        store.selectedIDs = store.selectedIDs.subtracting(movedPaths)
+    }
+
+    private func selectAllVisible() {
+        let visible = folderFiles(for: destination)
+        let ids: [String] = visible.isEmpty ? store.files.map(\.id) : visible.map(\.id)
+        store.selectedIDs = Set(ids)
     }
 
     @ViewBuilder
@@ -370,6 +415,13 @@ struct ContentView: View {
             case .list: store.viewMode = .columns
             case .columns: store.viewMode = .grid
             }
+        case .batchRename:
+            showBatchRename = true
+        case .quickLookSelection:
+            let selected = selectedFiles
+            if !selected.isEmpty { QuickLookHelper.shared.show(files: selected) }
+        case .togglePreviewStrip:
+            previewStripEnabled.toggle()
         }
     }
 
@@ -395,5 +447,99 @@ struct ContentView: View {
         default:
             return TagService.smartCollections(in: store.files).first { $0.title == name }?.files ?? []
         }
+    }
+}
+
+// MARK: - Body factoring (keeps the type-checker happy)
+
+private struct ContentSheetsModifier: ViewModifier {
+    @Binding var showLicense: Bool
+    @Binding var showPalette: Bool
+    @Binding var showBatchRename: Bool
+    var selectedFiles: [FileItem]
+    var onPalette: (PaletteAction) -> Void
+    var onRenameApplied: ([FileItem]) -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(isPresented: $showLicense) { LicenseEntryView() }
+            .sheet(isPresented: $showPalette) { CommandPaletteView(onSelect: onPalette) }
+            .sheet(isPresented: $showBatchRename) {
+                BatchRenameSheet(files: selectedFiles, onApplied: onRenameApplied)
+            }
+    }
+}
+
+private struct ContentNotificationsModifier: ViewModifier {
+    @Binding var destination: Destination
+    @Binding var searchText: String
+    @Binding var showBatchRename: Bool
+    @Binding var showPalette: Bool
+    @Binding var showLicense: Bool
+    @Binding var dualPaneEnabled: Bool
+    @Binding var previewStripEnabled: Bool
+    var store: FileStore
+    var favorites: FavoritesStore
+    var trash: TrashService
+    var license: LicenseManager
+    var onSelectAll: () -> Void
+    var onTrashSelection: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .onReceive(NotificationCenter.default.publisher(for: .browseArchive)) { note in
+                if let url = note.object as? URL { destination = .archive(url) }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .showBatchRename)) { _ in
+                showBatchRename = true
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .togglePreviewStrip)) { _ in
+                previewStripEnabled.toggle()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .showCommandPalette)) { _ in
+                showPalette = true
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .toggleDualPane)) { _ in
+                dualPaneEnabled.toggle()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .showLicenseSheet)) { _ in
+                showLicense = true
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .pinToSidebar)) { note in
+                if let url = note.object as? URL, !store.pinnedFolderURLs.contains(url) {
+                    store.pinnedFolderURLs.append(url)
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .toggleFavorite)) { note in
+                if let url = note.object as? URL { favorites.toggle(url) }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .exportParcel)) { note in
+                let files: [FileItem]
+                if let batch = note.object as? [FileItem] {
+                    files = batch
+                } else {
+                    files = store.files.filter { store.selectedIDs.contains($0.id) }
+                }
+                guard !files.isEmpty else { return }
+                ParcelExportUI.export(files: files, license: license)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .moveToTrash)) { note in
+                if let file = note.object as? FileItem {
+                    _ = trash.trash([file])
+                    store.files.removeAll { $0.id == file.id }
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .applySavedSearch)) { note in
+                if let query = note.object as? String {
+                    searchText = query
+                    destination = .search
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .selectAllVisible)) { _ in
+                onSelectAll()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .trashSelection)) { _ in
+                onTrashSelection()
+            }
     }
 }

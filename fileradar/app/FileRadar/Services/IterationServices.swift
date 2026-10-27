@@ -108,6 +108,17 @@ final class TransferQueue: ObservableObject {
         }
     }
 
+    /// Cancel one queued job. A job already `working` finishes the current
+    /// file, then stops (same between-file limit as pause/cancel-all).
+    func cancelItem(id: UUID) {
+        guard let index = items.firstIndex(where: { $0.id == id }) else { return }
+        if items[index].status == .queued {
+            items[index].status = .cancelled
+        } else if items[index].status == .working {
+            cancelRequested = true
+        }
+    }
+
     func clearFinished() {
         items.removeAll { $0.status == .done || $0.status == .cancelled || $0.status == .failed }
     }
@@ -241,6 +252,17 @@ final class TabState: ObservableObject {
     var secondFolder: URL {
         if tabs.count > 1 { return tabs[1].folder }
         return FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Downloads")
+    }
+
+    /// Pin the dual-pane right side to a chosen folder (creates/selects a tab).
+    func setSecondFolder(_ folder: URL) {
+        if tabs.count > 1 {
+            var next = tabs
+            next[1].folder = folder
+            tabs = next
+        } else {
+            addTab(folder: folder)
+        }
     }
 
     func addTab(folder: URL) {
@@ -694,6 +716,7 @@ enum GitStatusService {
 enum PaletteAction: String, CaseIterable, Identifiable {
     case goHome, goSearch, goTimeline, goDiskMap, goWorkspaces, goSyncCompare
     case toggleDualPane, toggleInspector, newTab, toggleViewMode
+    case batchRename, quickLookSelection, togglePreviewStrip
 
     var id: String { rawValue }
 
@@ -709,6 +732,9 @@ enum PaletteAction: String, CaseIterable, Identifiable {
         case .toggleInspector: return "Toggle inspector"
         case .newTab: return "New tab for this folder"
         case .toggleViewMode: return "Toggle grid / list view"
+        case .batchRename: return "Batch rename selection…"
+        case .quickLookSelection: return "Quick Look selection"
+        case .togglePreviewStrip: return "Toggle preview strip"
         }
     }
 
@@ -718,7 +744,10 @@ enum PaletteAction: String, CaseIterable, Identifiable {
         case .toggleDualPane: return "Panes"
         case .toggleInspector: return "Cmd-Opt-I"
         case .newTab: return "Tabs"
-        case .toggleViewMode: return "Cmd-1 / Cmd-2"
+        case .toggleViewMode: return "Cmd-1 / Cmd-2 / Cmd-3"
+        case .batchRename: return "Shift-Cmd-R"
+        case .quickLookSelection: return "Space"
+        case .togglePreviewStrip: return "Shift-Cmd-P"
         }
     }
 }

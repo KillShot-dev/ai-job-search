@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 /// Principle 7: two looks from one system. One type scale, one accent
 /// system; the look only changes palette and surface treatment, in both
@@ -77,4 +78,35 @@ enum FileRadarMotion {
     static let chip = Animation.easeOut(duration: 0.22)
     static let selection = Animation.easeInOut(duration: 0.16)
     static let panel = Animation.spring(response: 0.32, dampingFraction: 0.86)
+}
+
+/// Quiet atmosphere for detail chrome — soft vertical wash, not flat fill
+/// and not a purple/glow dashboard look. Uses semantic materials so light
+/// and dark stay native.
+struct FileRadarAtmosphere: ViewModifier {
+    var look: AppLook
+
+    func body(content: Content) -> some View {
+        content.background {
+            ZStack {
+                Color(nsColor: .windowBackgroundColor)
+                LinearGradient(
+                    colors: [
+                        look.accent.opacity(look == .colourful ? 0.06 : 0.03),
+                        Color.clear
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            }
+            .ignoresSafeArea()
+            .allowsHitTesting(false)
+        }
+    }
+}
+
+extension View {
+    func fileRadarAtmosphere(_ look: AppLook) -> some View {
+        modifier(FileRadarAtmosphere(look: look))
+    }
 }

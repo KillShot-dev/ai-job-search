@@ -274,10 +274,23 @@ keys), `LicenseManager` (paid gating), `FileRadarApp` (menu), and
   Leaving it out cleanly beats shipping a half-working remote browser
   that weakens the on-device promise.
 
+## Iteration 3 — competitive premium polish (2026-10-27)
+
+Against ForkLift / Path Finder / Commander One / QSpace / Bloom (see
+`docs/fileradar-competitive-analysis.md`). Still no remotes; still optional
+dual-pane.
+
+- `Views/IterationViews.swift` — Transfer HUD (ForkLift feel), per-item
+  cancel, dual-pane right-folder picker + copy-on-drop, tab chrome.
+- `Views/ShipReadyViews.swift` — selection Batch Rename sheet; preview strip.
+- `Views/FileViews.swift` — drop-zone wash, Drop Stack / rename in menus.
+- `Views/ContentView.swift` + `FileRadarApp.swift` — Space multi-QL,
+  Shift-Cmd-R / Shift-Cmd-P / Cmd-Delete / Cmd-A wired.
+- `Models/Theme.swift` — quiet atmosphere wash (not flat, not glow).
+
 ## Iteration 2 — ship-ready polish (2026-10-27)
 
-Still uncompiled on a Mac. Focus: beauty + sellability + MAS/direct
-monetization, not feature spam.
+Focus: beauty + sellability + MAS/direct monetization, not feature spam.
 
 ### Beauty / density
 - `Models/Theme.swift` — copper accent (Colourful), compact density
