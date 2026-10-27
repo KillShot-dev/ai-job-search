@@ -4,11 +4,23 @@ import AppKit
 // MARK: - Home (principle 2: shelves + recents, one job)
 
 struct HomeView: View {
+    @Binding var destination: Destination
     @EnvironmentObject var store: FileStore
     @EnvironmentObject var license: LicenseManager
     @State private var showLicense = false
 
     var body: some View {
+        Group {
+            if store.viewMode == .showcase {
+                ShowcaseHomeView(destination: $destination)
+            } else {
+                classicHome
+            }
+        }
+        .sheet(isPresented: $showLicense) { LicenseEntryView() }
+    }
+
+    private var classicHome: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 Text("Home").font(FileRadarFont.title())
@@ -26,6 +38,12 @@ struct HomeView: View {
                             HStack(spacing: 16) {
                                 ForEach(store.recents.prefix(20)) { file in
                                     FileCardView(file: file, size: store.cardSize)
+                                        .onTapGesture {
+                                            withAnimation(FileRadarMotion.selection) {
+                                                store.selectedIDs = [file.id]
+                                            }
+                                        }
+                                        .onTapGesture(count: 2) { NSWorkspace.shared.open(file.url) }
                                 }
                             }
                         }
@@ -39,6 +57,11 @@ struct HomeView: View {
                                 HStack(spacing: 16) {
                                     ForEach(files.prefix(20)) { file in
                                         FileCardView(file: file, size: store.cardSize)
+                                            .onTapGesture {
+                                                withAnimation(FileRadarMotion.selection) {
+                                                    store.selectedIDs = [file.id]
+                                                }
+                                            }
                                     }
                                 }
                             }
@@ -77,7 +100,445 @@ struct HomeView: View {
                 }
             }.padding()
         }
+    }
+}
+
+// MARK: - Showcase Home (Cmd-4): mockup-style shelves + recents, real data
+
+private enum ShowcaseRecentsLayout: String, CaseIterable {
+    case grid, list
+}
+
+struct ShowcaseHomeView: View {
+    @Binding var destination: Destination
+    @EnvironmentObject var store: FileStore
+    @EnvironmentObject var theme: ThemeSettings
+    @EnvironmentObject var favorites: FavoritesStore
+    @EnvironmentObject var license: LicenseManager
+    @State private var recentsLayout: ShowcaseRecentsLayout = .grid
+    @State private var showLicense = false
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 28) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Home").font(FileRadarFont.title())
+                    if store.isIndexing {
+                        Label("Indexing your files in the background…", systemImage: "arrow.triangle.2.circlepath")
+                            .font(FileRadarFont.caption()).foregroundStyle(.secondary)
+                    }
+                }
+
+                shelvesSection
+                recentsSection
+
+                if !license.isUnlocked {
+                    Button("Enter serial number to unlock the full version") { showLicense = true }
+                        .buttonStyle(.bordered)
+                }
+            }
+            .padding(20)
+        }
         .sheet(isPresented: $showLicense) { LicenseEntryView() }
+    }
+
+    private var shelvesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Shelves").font(FileRadarFont.heading())
+                    Text("Curated groups of your files")
+                        .font(FileRadarFont.caption())
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button("Edit Shelves") {
+                    // Shelves are kind- and smart-collection-derived; open Kinds via Images.
+                    destination = .kind(.image)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .help("Shelves map to kinds and smart collections. Open a kind shelf to browse.")
+            }
+
+            if albumShelves.isEmpty {
+                EmptyStateView(title: "No shelves yet",
+                               message: "Once FileRadar indexes your folders, kind shelves and smart collections appear here as album cards.")
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 16) {
+                        ForEach(albumShelves) { album in
+                            ShelfAlbumCard(album: album)
+                                .onTapGesture {
+                                    withAnimation(FileRadarMotion.panel) {
+                                        destination = album.destination
+                                    }
+                                }
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+            }
+        }
+    }
+
+    private var recentsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Recents").font(FileRadarFont.heading())
+                    Text("Recently accessed files")
+                        .font(FileRadarFont.caption())
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Picker("Recents layout", selection: $recentsLayout) {
+                    Image(systemName: "square.grid.2x2").tag(ShowcaseRecentsLayout.grid)
+                    Image(systemName: "list.bullet").tag(ShowcaseRecentsLayout.list)
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 88)
+                .accessibilityLabel("Recents grid or list")
+
+                Picker("Sort", selection: $store.sort) {
+                    ForEach(FileStore.SortOrder.allCases, id: \.self) {
+                        Text($0.rawValue.capitalized).tag($0)
+                    }
+                }
+                .pickerStyle(.menu)
+                .frame(width: 110)
+            }
+
+            let recentFiles = store.sorted(Array(store.recents.prefix(24)))
+            if recentFiles.isEmpty {
+                EmptyStateView(title: "No recent files yet",
+                               message: "Once FileRadar finishes its first background index, your newest files will live here.")
+            } else if recentsLayout == .grid {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 168), spacing: 16)], spacing: 16) {
+                    ForEach(recentFiles) { file in
+                        ShowcaseRecentCard(file: file)
+                            .onTapGesture {
+                                withAnimation(FileRadarMotion.selection) {
+                                    store.selectedIDs = [file.id]
+                                }
+                            }
+                            .onTapGesture(count: 2) { NSWorkspace.shared.open(file.url) }
+                    }
+                }
+            } else {
+                VStack(spacing: 0) {
+                    ForEach(recentFiles) { file in
+                        ShowcaseRecentRow(file: file)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                withAnimation(FileRadarMotion.selection) {
+                                    store.selectedIDs = [file.id]
+                                }
+                            }
+                            .onTapGesture(count: 2) { NSWorkspace.shared.open(file.url) }
+                        Divider().opacity(0.35)
+                    }
+                }
+                .background(
+                    RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
+                        .fill(Color.primary.opacity(0.03))
+                )
+            }
+        }
+    }
+
+    private var albumShelves: [ShelfAlbum] {
+        var albums: [ShelfAlbum] = []
+        for (kind, files) in store.shelves where !files.isEmpty {
+            albums.append(ShelfAlbum(
+                id: "kind-\(kind.rawValue)",
+                title: kind.displayName,
+                subtitle: "\(files.count) file\(files.count == 1 ? "" : "s")",
+                cover: files.first(where: { $0.kind == .image && !$0.isICloudOnly }) ?? files.first,
+                systemImage: kind.systemImage,
+                destination: .kind(kind)
+            ))
+        }
+        for col in TagService.smartCollections(in: store.files) where !col.files.isEmpty {
+            albums.append(ShelfAlbum(
+                id: "smart-\(col.title)",
+                title: col.title,
+                subtitle: "\(col.files.count) file\(col.files.count == 1 ? "" : "s")",
+                cover: col.files.first(where: { $0.kind == .image && !$0.isICloudOnly }) ?? col.files.first,
+                systemImage: "sparkles.rectangle.stack",
+                destination: .smartFolder(col.title)
+            ))
+        }
+        if !favorites.paths.isEmpty {
+            let favFiles = store.files.filter { favorites.paths.contains($0.url.path) }
+            if !favFiles.isEmpty {
+                albums.append(ShelfAlbum(
+                    id: "favorites",
+                    title: "Favorites",
+                    subtitle: "\(favFiles.count) file\(favFiles.count == 1 ? "" : "s")",
+                    cover: favFiles.first(where: { $0.kind == .image && !$0.isICloudOnly }) ?? favFiles.first,
+                    systemImage: "star.fill",
+                    destination: .favorite(URL(fileURLWithPath: favorites.paths[0]))
+                ))
+            }
+        }
+        return albums
+    }
+}
+
+struct ShelfAlbum: Identifiable {
+    let id: String
+    let title: String
+    let subtitle: String
+    let cover: FileItem?
+    let systemImage: String
+    let destination: Destination
+}
+
+struct ShelfAlbumCard: View {
+    var album: ShelfAlbum
+    @EnvironmentObject var theme: ThemeSettings
+    @State private var hovering = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ZStack {
+                RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
+                    .fill(Color.secondary.opacity(0.12))
+                if let cover = album.cover {
+                    AsyncFileThumbnail(file: cover, size: CGSize(width: 200, height: 140))
+                } else {
+                    Image(systemName: album.systemImage)
+                        .font(.system(size: 36, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .frame(width: 200, height: 140)
+            .clipShape(RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
+                    .strokeBorder(Color.primary.opacity(hovering ? 0.18 : 0.06), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(hovering ? 0.18 : 0.08), radius: hovering ? 10 : 4, y: 3)
+
+            Text(album.title).font(FileRadarFont.body()).lineLimit(1)
+            Text(album.subtitle).font(FileRadarFont.caption()).foregroundStyle(.secondary)
+        }
+        .frame(width: 200, alignment: .leading)
+        .scaleEffect(hovering ? 1.02 : 1)
+        .animation(FileRadarMotion.selection, value: hovering)
+        .onHover { hovering = $0 }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(album.title), \(album.subtitle)")
+        .accessibilityHint("Opens this shelf.")
+    }
+}
+
+struct ShowcaseRecentCard: View {
+    var file: FileItem
+    @EnvironmentObject var store: FileStore
+    @EnvironmentObject var theme: ThemeSettings
+    @State private var hovering = false
+
+    private var selected: Bool { store.selectedIDs.contains(file.id) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            AsyncFileThumbnail(file: file, size: CGSize(width: 200, height: 140))
+                .frame(maxWidth: .infinity)
+                .frame(height: 140)
+                .clipShape(RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous))
+            Text(file.name).font(FileRadarFont.body()).lineLimit(2)
+            Text(file.modifiedDate.formatted(date: .abbreviated, time: .shortened))
+                .font(FileRadarFont.caption())
+                .foregroundStyle(.secondary)
+        }
+        .padding(8)
+        .background(
+            RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
+                .fill(selected || hovering ? Color.accentColor.opacity(0.08) : Color.primary.opacity(0.03))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
+                .strokeBorder(selected ? Color.accentColor.opacity(0.45) : Color.clear, lineWidth: 1.5)
+        )
+        .animation(FileRadarMotion.selection, value: hovering)
+        .animation(FileRadarMotion.selection, value: selected)
+        .onHover { hovering = $0 }
+        .contextMenu { fileContextMenu(for: file) }
+        .onDrag { NSItemProvider(object: file.url as NSURL) }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(file.name), \(file.modifiedDate.formatted())")
+    }
+}
+
+struct ShowcaseRecentRow: View {
+    var file: FileItem
+    @EnvironmentObject var store: FileStore
+
+    private var selected: Bool { store.selectedIDs.contains(file.id) }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            AsyncFileThumbnail(file: file, size: CGSize(width: 44, height: 44))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(file.name).font(FileRadarFont.body()).lineLimit(1)
+                Text(file.modifiedDate.formatted(date: .abbreviated, time: .shortened))
+                    .font(FileRadarFont.caption()).foregroundStyle(.secondary)
+            }
+            Spacer()
+            Text(ByteCountFormatter.string(fromByteCount: file.size, countStyle: .file))
+                .font(FileRadarFont.caption()).foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, 10).padding(.vertical, 8)
+        .background(selected ? Color.accentColor.opacity(0.08) : Color.clear)
+        .contextMenu { fileContextMenu(for: file) }
+    }
+}
+
+/// Rich inspector used in Showcase mode — preview-first, calm EXIF/tags, Finder.
+struct ShowcaseInspectorView: View {
+    var file: FileItem
+    @EnvironmentObject var license: LicenseManager
+    @EnvironmentObject var theme: ThemeSettings
+    @EnvironmentObject var tags: ManualTagStore
+    @State private var showLicense = false
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                AsyncFileThumbnail(file: file, size: CGSize(width: 320, height: 220))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 220)
+                    .clipShape(RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(file.name).font(FileRadarFont.heading()).textSelection(.enabled)
+                    Text(file.modifiedDate.formatted(date: .abbreviated, time: .shortened))
+                        .font(FileRadarFont.caption())
+                        .foregroundStyle(.secondary)
+                }
+
+                VStack(spacing: 8) {
+                    showcaseRow("Dimensions", dimensionsText)
+                    showcaseRow("File Size", ByteCountFormatter.string(fromByteCount: file.size, countStyle: .file))
+                    if let cam = file.cameraModel { showcaseRow("Camera", cam) }
+                    showcaseRow("Kind", file.kind.displayName)
+                    showcaseRow("Downloaded from", file.downloadSource.displayName)
+                }
+
+                let allTags = file.tags.map(\.name) + tags.tags(for: file.url.path).map(\.name)
+                if !allTags.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Tags").font(FileRadarFont.caption()).foregroundStyle(.secondary)
+                        FlowTagRow(names: allTags)
+                    }
+                }
+
+                ManualTagEditor(file: file)
+
+                Button {
+                    NSWorkspace.shared.activateFileViewerSelecting([file.url])
+                } label: {
+                    Label("Show in Finder", systemImage: "folder")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+
+                if file.isICloudOnly {
+                    Label("iCloud only — FileRadar will not download this file.", systemImage: "icloud")
+                        .font(FileRadarFont.caption())
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(16)
+        }
+        .sheet(isPresented: $showLicense) { LicenseEntryView() }
+    }
+
+    private var dimensionsText: String {
+        if let w = file.width, let h = file.height { return "\(w) × \(h)" }
+        return "—"
+    }
+
+    private func showcaseRow(_ label: String, _ value: String) -> some View {
+        HStack {
+            Text(label).font(FileRadarFont.body()).foregroundStyle(.secondary)
+            Spacer()
+            Text(value).font(FileRadarFont.body()).multilineTextAlignment(.trailing)
+        }
+    }
+}
+
+private struct FlowTagRow: View {
+    var names: [String]
+
+    var body: some View {
+        // Simple wrapping via LazyVGrid keeps dependencies light.
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 64), spacing: 6)], alignment: .leading, spacing: 6) {
+            ForEach(names, id: \.self) { name in
+                Text(name)
+                    .font(FileRadarFont.caption())
+                    .padding(.horizontal, 10).padding(.vertical, 4)
+                    .background(Capsule().fill(Color.accentColor.opacity(0.14)))
+            }
+        }
+    }
+}
+
+/// Sidebar disk free indicator (mockup Macintosh HD bar).
+struct DiskFreeBar: View {
+    @EnvironmentObject var theme: ThemeSettings
+    @State private var free: Int64 = 0
+    @State private var total: Int64 = 0
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Image(systemName: "internaldrive")
+                    .foregroundStyle(.secondary)
+                Text(volumeName).font(FileRadarFont.caption())
+                Spacer()
+            }
+            Text(capacityLabel)
+                .font(FileRadarFont.caption())
+                .foregroundStyle(.secondary)
+            ProgressView(value: usedFraction)
+                .tint(theme.look.accent)
+                .accessibilityLabel("Disk used")
+                .accessibilityValue("\(Int(usedFraction * 100)) percent")
+        }
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
+                .fill(Color.primary.opacity(0.04))
+        )
+        .onAppear(perform: refresh)
+    }
+
+    private var volumeName: String {
+        FileManager.default.displayName(atPath: "/")
+    }
+
+    private var capacityLabel: String {
+        guard total > 0 else { return "Disk capacity unavailable" }
+        let freeText = ByteCountFormatter.string(fromByteCount: free, countStyle: .file)
+        let totalText = ByteCountFormatter.string(fromByteCount: total, countStyle: .file)
+        return "\(freeText) free of \(totalText)"
+    }
+
+    private var usedFraction: Double {
+        guard total > 0 else { return 0 }
+        return min(1, max(0, Double(total - free) / Double(total)))
+    }
+
+    private func refresh() {
+        let home = URL(fileURLWithPath: NSHomeDirectory())
+        if let values = try? home.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey, .volumeTotalCapacityKey]) {
+            free = Int64(values.volumeAvailableCapacityForImportantUsage ?? 0)
+            total = Int64(values.volumeTotalCapacity ?? 0)
+        }
     }
 }
 

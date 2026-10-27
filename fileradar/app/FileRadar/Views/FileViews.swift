@@ -192,12 +192,14 @@ struct FileCollectionView: View {
                            message: "Files of this kind will appear here once they are indexed. Nothing has been moved or deleted.")
         } else if store.viewMode == .columns {
             ColumnBrowserView(rootFiles: files)
-        } else if store.viewMode == .grid {
+        } else if store.viewMode == .grid || store.viewMode == .showcase {
+            // Showcase is a Home-first layout; elsewhere it keeps a larger grid.
+            let minSize = store.viewMode == .showcase ? max(store.cardSize, 180) : store.cardSize
             ScrollView {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: store.cardSize), spacing: theme.compactDensity ? 10 : 16)],
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: minSize), spacing: theme.compactDensity ? 10 : 16)],
                           spacing: theme.compactDensity ? 10 : 16) {
                     ForEach(sortedFiles) { file in
-                        FileCardView(file: file, size: store.cardSize)
+                        FileCardView(file: file, size: minSize)
                             .onTapGesture(count: 2) { handleOpen(file) }
                             .onTapGesture {
                                 withAnimation(FileRadarMotion.selection) {

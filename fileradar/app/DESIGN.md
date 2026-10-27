@@ -9,8 +9,9 @@ project, not to aspirations.
 ## 1. Native macOS controls, full keyboard navigation, standard shortcuts, menu bar extra
 
 - `FileRadarApp.swift` — `MenuBarExtra`, standard `CommandMenu`s
-  (View: Cmd+/Cmd- card size, Cmd-1/Cmd-2 grid/list; Go: Shift-Cmd-Space
-  Quick Search), a real `Settings` scene. No iOS layout reused.
+  (View: Cmd+/Cmd- card size, Cmd-1/2/3/4 grid/list/columns/showcase;
+  Go: Shift-Cmd-Space Quick Search), a real `Settings` scene. No iOS
+  layout reused.
 - `Views/ContentView.swift` — `NavigationSplitView` (the macOS sidebar
   pattern), `.inspector` pane, Cmd-Opt-I inspector shortcut.
 - `Services/PlatformServices.swift` — AppKit where SwiftUI falls short:

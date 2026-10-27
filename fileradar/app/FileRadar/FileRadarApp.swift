@@ -56,6 +56,7 @@ struct FileRadarApp: App {
                 Button("Grid View") { store.viewMode = .grid }.keyboardShortcut("1", modifiers: .command)
                 Button("List View") { store.viewMode = .list }.keyboardShortcut("2", modifiers: .command)
                 Button("Column View") { store.viewMode = .columns }.keyboardShortcut("3", modifiers: .command)
+                Button("Showcase View") { store.viewMode = .showcase }.keyboardShortcut("4", modifiers: .command)
             }
             CommandMenu("Go") {
                 Button("Quick Search…") { QuickSearchPanel.shared.show() }

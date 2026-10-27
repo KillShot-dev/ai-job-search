@@ -21,7 +21,7 @@ final class FileStore: ObservableObject {
     /// Kept as a closure so FileStore does not hard-depend on ManualTagStore.
     var manualTagNames: ((String) -> [String])?
 
-    enum ViewMode: String, CaseIterable { case grid, list, columns }
+    enum ViewMode: String, CaseIterable { case grid, list, columns, showcase }
     enum SortOrder: String, CaseIterable { case name, date, size, kind, dateAdded }
 
     /// Sort a list with the current sort order (iteration 1: shared by

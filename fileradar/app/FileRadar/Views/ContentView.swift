@@ -181,6 +181,11 @@ struct ContentView: View {
             }
             .listStyle(.sidebar)
             .navigationTitle("FileRadar")
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                DiskFreeBar()
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+            }
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     if let current = playback.current {
@@ -231,9 +236,18 @@ struct ContentView: View {
             }
             .inspector(isPresented: $showInspector) {
                 if let first = store.files.first(where: { store.selectedIDs.contains($0.id) }) {
-                    InspectorView(file: first)
+                    if store.viewMode == .showcase {
+                        ShowcaseInspectorView(file: first)
+                    } else {
+                        InspectorView(file: first)
+                    }
                 } else {
                     Text("Select a file to inspect it.").padding()
+                }
+            }
+            .onChange(of: store.viewMode) { _, mode in
+                if mode == .showcase, destination == .home {
+                    showInspector = true
                 }
             }
             .toolbar {
@@ -280,9 +294,10 @@ struct ContentView: View {
                         Text("Grid").tag(FileStore.ViewMode.grid)
                         Text("List").tag(FileStore.ViewMode.list)
                         Text("Columns").tag(FileStore.ViewMode.columns)
+                        Text("Showcase").tag(FileStore.ViewMode.showcase)
                     }
                     .pickerStyle(.segmented)
-                    .accessibilityLabel("Grid, list, or columns")
+                    .accessibilityLabel("Grid, list, columns, or showcase")
                 }
             }
         }
@@ -350,7 +365,7 @@ struct ContentView: View {
     @ViewBuilder
     private var detailView: some View {
         switch destination {
-        case .home: HomeView()
+        case .home: HomeView(destination: $destination)
         case .search, .savedSearch: SearchView(searchText: $searchText)
         case .cleanup: CleanupView(trash: trash)
         case .duplicates: DuplicatesView(trash: trash)
@@ -413,7 +428,8 @@ struct ContentView: View {
             switch store.viewMode {
             case .grid: store.viewMode = .list
             case .list: store.viewMode = .columns
-            case .columns: store.viewMode = .grid
+            case .columns: store.viewMode = .showcase
+            case .showcase: store.viewMode = .grid
             }
         case .batchRename:
             showBatchRename = true

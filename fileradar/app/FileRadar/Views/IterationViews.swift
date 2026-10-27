@@ -166,14 +166,15 @@ struct TransferHUDView: View {
                         .controlSize(.small)
                 }
             }
-            .padding(.horizontal, 14).padding(.vertical, 10)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous))
+            .padding(.horizontal, 18).padding(.vertical, 12)
+            .frame(maxWidth: 420)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
                     .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
             )
-            .shadow(color: .black.opacity(0.12), radius: 12, y: 4)
-            .padding(.horizontal, 16).padding(.bottom, 12)
+            .shadow(color: .black.opacity(0.16), radius: 14, y: 5)
+            .padding(.horizontal, 16).padding(.bottom, 14)
             .transition(.move(edge: .bottom).combined(with: .opacity))
             .animation(FileRadarMotion.panel, value: queue.activeCount)
             .accessibilityElement(children: .contain)
