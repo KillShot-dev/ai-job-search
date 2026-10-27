@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FileRadar — Web Demo (Sample Library)</title>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body data-look="colourful" data-theme="light">
+<a class="sr-only" href="#main">Skip to main content</a>
+
+<div class="banner" role="note">
+  <strong>Demo — sample library, nothing leaves your browser.</strong>
+  This is a demo of the FileRadar concept with invented sample files, not the real Mac app and not your real files.
+  <a href="../site/index.html">Visit the FileRadar sales site</a> (placeholder link — the sales site is a separate page).
+</div>
+
+<header class="topbar">
+  <div class="logo" aria-label="FileRadar">📁 File<span>Radar</span></div>
+  <div class="searchwrap">
+    <label class="sr-only" for="search">Search files</label>
+    <input id="search" type="search" placeholder="Search files… try “images from last week over 100 MB”" aria-describedby="searchhint" autocomplete="off">
+    <div class="searchhint" id="searchhint">Cmd/Ctrl + F focuses search · Cmd/Ctrl + K opens the command palette · Space previews a focused file · Arrow keys move between files · Esc closes the inspector.</div>
+  </div>
+  <div class="toggles" role="group" aria-label="Tools">
+    <button id="paletteBtn">⌘K Commands</button>
+    <button id="dualPaneBtn" aria-pressed="false">Dual pane</button>
+    <button id="columnsBtn" aria-pressed="false">Columns</button>
+    <button id="saveSearchBtn" title="Save the current search (demo-local)">Save search</button>
+  </div>
+  <div class="toggles" role="group" aria-label="Appearance">
+    <button data-look-btn="colourful" aria-pressed="true">🎨 Colourful look</button>
+    <button data-look-btn="minimal" aria-pressed="false">⬜ Minimal look</button>
+    <button data-theme-btn="light" aria-pressed="true">☀️ Light</button>
+    <button data-theme-btn="dark" aria-pressed="false">🌙 Dark</button>
+  </div>
+</header>
+
+<div class="tabbar" id="tabbar" aria-label="Open locations"></div>
+
+<div class="layout">
+  <nav class="sidebar" aria-label="Library">
+    <h2>Library</h2>
+    <button class="navbtn active" data-view="home">🏠 Home</button>
+    <button class="navbtn" data-filter="recents">🕐 Recents</button>
+    <button class="navbtn" data-filter="all">📂 All Files</button>
+
+    <h2>By kind</h2>
+    <button class="navbtn" data-filter="kind" data-kind="Images">🖼️ Images</button>
+    <button class="navbtn" data-filter="kind" data-kind="Videos">🎬 Videos</button>
+    <button class="navbtn" data-filter="kind" data-kind="Music">🎵 Music</button>
+    <button class="navbtn" data-filter="kind" data-kind="Documents">📄 Documents</button>
+    <button class="navbtn" data-filter="kind" data-kind="Archives">📦 Archives</button>
+    <button class="navbtn" data-filter="kind" data-kind="Apps">🧩 Apps</button>
+
+    <h2>Favorites</h2>
+    <div id="favoritesList"></div>
+    <p style="font-size:12px;color:var(--muted);padding:0 8px">Star files from the inspector. Favorites stay in this browser only.</p>
+
+    <h2>Saved searches</h2>
+    <div id="savedSearchesList"></div>
+
+    <h2>Smart Folders</h2>
+    <button class="navbtn" data-filter="large">💾 Large Files (over 100 MB)</button>
+    <button class="navbtn" data-filter="screenshots">📸 Screenshots</button>
+
+    <h2>Smart Collections</h2>
+    <button class="navbtn" data-view="collections-receipts">🧾 Receipts &amp; Invoices</button>
+    <button class="navbtn" data-view="collections-drafts">✏️ Unfinished Drafts</button>
+    <button class="navbtn" data-view="collections-screenshots">🔎 Screenshots with Text</button>
+
+    <h2>Views</h2>
+    <button class="navbtn" data-view="timeline">📅 Timeline</button>
+    <button class="navbtn" data-view="diskmap">🗺️ Disk Map</button>
+
+    <h2>Pinned folders — drop files here</h2>
+    <button class="navbtn" data-filter="pinned" data-kind="Downloads" data-drop="Downloads">⬇️ Downloads</button>
+    <button class="navbtn" data-filter="pinned" data-kind="Desktop" data-drop="Desktop">🖥️ Desktop</button>
+    <button class="navbtn" data-filter="pinned" data-kind="Documents" data-drop="Documents">📁 Documents</button>
+    <button class="navbtn" data-filter="pinned" data-kind="Documents/Projects" data-drop="Documents/Projects">💼 Projects</button>
+
+    <h2>Drop Stack</h2>
+    <div class="dropstack" id="dropstack" data-drop="dropstack" draggable="true" role="region" aria-label="Drop Stack tray">
+      <div id="dropstackBody"></div>
+    </div>
+    <p style="font-size:12px;color:var(--muted);padding:8px">Drag files onto the tray to hold them, then drag the tray onto a pinned folder, a tab, or a dual pane to move the whole stack.</p>
+
+    <h2>Folder sizes</h2>
+    <p style="font-size:12px;color:var(--muted);padding:0 8px">Sizes are calculated on demand, in the background — the demo never blocks while counting.</p>
+    <div id="foldersizes"></div>
+    <p style="padding:0 8px"><button class="pill" id="calcAllSizes">Calculate all folder sizes</button></p>
+
+    <h2>Muse</h2>
+    <button class="navbtn" data-view="muse">💬 Muse — not connected</button>
+
+    <h2>Tools</h2>
+    <button class="navbtn" data-view="duplicates">👯 Duplicates — locked</button>
+    <button class="navbtn" data-view="cleanup">🧹 Clean Up — locked</button>
+    <button class="navbtn" data-view="sync">🔄 Folder Sync &amp; Compare — locked</button>
+    <button class="navbtn" data-view="archive-browse">📦 Browse Archives — locked</button>
+    <button class="navbtn" data-view="workspaces">🗂️ Workspaces — locked</button>
+    <button class="navbtn" data-view="trash">🗑️ Demo Trash</button>
+
+    <div class="trashzone" data-drop="trash" role="region" aria-label="Demo Trash drop zone">
+      🗑️ Drag files here to move them to demo Trash.<br><small>Demo-local only. Undo is always offered.</small>
+    </div>
+    <p style="font-size:12px;color:var(--muted);padding:8px">Contact: support@metaphasic.net<br>FileRadar by metaPhasic Group.</p>
+  </nav>
+
+  <main id="main" tabindex="-1"></main>
+
+  <aside id="inspector" aria-label="File inspector"></aside>
+</div>
+
+<footer>
+  FileRadar web demo · Sample library only — no real files, no uploads, nothing leaves your browser.<br>
+  Duplicates, Clean Up, folder sync/compare, archive browsing, and workspaces are locked in this demo and unlock with a paid licence in the full Mac app. No purchase form is included here.
+</footer>
+
+<div class="palette-overlay" id="palette" hidden>
+  <div class="palette-box" role="dialog" aria-modal="true" aria-label="Command palette">
+    <label class="sr-only" for="paletteInput">Type a command</label>
+    <input id="paletteInput" type="text" placeholder="Type a command…" autocomplete="off">
+    <div id="paletteList"></div>
+    <p class="subtitle" style="margin:12px 0 0">Arrow keys to move · Enter to run · Esc to close.</p>
+  </div>
+</div>
+
+<script src="sample-data.js"></script>
+<script src="demo.js"></script>
+</body>
+</html>
