@@ -30,6 +30,11 @@ linkedin_Profile.pdf
 *.jpeg
 *.png
 !cover_letters/OpenFonts/fonts/**
+# metaPhasic website brand + product assets (required for static deploy)
+!metaphasic-website/public/**/*.png
+!metaphasic-website/public/**/*.jpg
+!metaphasic-website/public/**/*.jpeg
+!metaphasic-website/public/**/*.svg
 
 # OS files
 .DS_Store
