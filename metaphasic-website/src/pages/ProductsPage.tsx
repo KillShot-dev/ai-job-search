@@ -1,5 +1,6 @@
 import { useEffect, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
+import { Marquee } from '../components/Marquee'
 import { Reveal } from '../components/Reveal'
 import { APPS } from '../data/apps'
 
@@ -15,7 +16,7 @@ export function ProductsPage() {
     <div className="products-page">
       <section className="section products-hero" aria-labelledby="products-title">
         <div className="container">
-          <Reveal className="section-head">
+          <Reveal className="section-head" variant="clip">
             <p className="eyebrow">Products · Luma</p>
             <h1 className="section-title" id="products-title">
               Seven finishes. One considered home screen.
@@ -31,7 +32,11 @@ export function ProductsPage() {
         </div>
       </section>
 
-      <hr className="divider" />
+      <Marquee
+        items={APPS.map((a) => a.finish)}
+        label="Luma finish names"
+      />
+      <hr className="divider divider-animated" />
 
       <section className="section products-grid-section" aria-label="Luma finishes">
         <div className="container">

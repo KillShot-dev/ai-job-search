@@ -6,7 +6,7 @@ export function About() {
       <div className="container">
         <div className="about-grid">
           <div>
-            <Reveal className="section-head">
+            <Reveal className="section-head" variant="clip">
               <p className="eyebrow">The studio</p>
               <h2 className="section-title" id="about-title">
                 World-class work. No shortcuts.

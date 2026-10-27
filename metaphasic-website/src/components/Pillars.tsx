@@ -41,7 +41,7 @@ export function Pillars() {
   return (
     <section className="section" id="work" aria-label="What we do">
       <div className="container">
-        <Reveal className="section-head">
+        <Reveal className="section-head" variant="clip">
           <p className="eyebrow">What we do</p>
           <h2 className="section-title">Products. Craft. Partnership.</h2>
           <div className="line-accent" aria-hidden="true" />

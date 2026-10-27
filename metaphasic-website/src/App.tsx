@@ -1,7 +1,9 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
+import { Cursor } from './components/Cursor'
 import { Footer } from './components/Footer'
 import { Nav } from './components/Nav'
+import { ScrollProgress } from './components/ScrollProgress'
 import { HomePage } from './pages/HomePage'
 import { ProductsPage } from './pages/ProductsPage'
 
@@ -11,7 +13,6 @@ function ScrollManager() {
   useEffect(() => {
     if (hash) {
       const id = hash.replace('#', '')
-      // Allow layout to paint before scrolling to home anchors
       requestAnimationFrame(() => {
         const el = document.getElementById(id)
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -29,6 +30,8 @@ export default function App() {
     <>
       <div className="atmosphere" aria-hidden="true" />
       <div className="grain" aria-hidden="true" />
+      <ScrollProgress />
+      <Cursor />
       <a className="skip-link" href="#main">
         Skip to content
       </a>

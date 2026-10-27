@@ -29,7 +29,7 @@ export function Approach() {
       <div className="container">
         <div className="approach-layout">
           <div>
-            <Reveal className="section-head">
+            <Reveal className="section-head" variant="clip">
               <p className="eyebrow">Approach</p>
               <h2 className="section-title" id="approach-title">
                 Discipline from sketch to pixel.

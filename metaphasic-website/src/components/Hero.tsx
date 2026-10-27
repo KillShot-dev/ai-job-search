@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { BrandMark } from './BrandMark'
+import { Magnetic } from './Magnetic'
 
 export function Hero() {
   return (
@@ -16,7 +17,7 @@ export function Hero() {
         <div className="hero-lockup">
           <BrandMark className="hero-mark" size={120} alt="" />
           <h1 className="hero-brand" id="hero-brand">
-            metaPhasic
+            <span className="hero-brand-line">metaPhasic</span>
             <span className="hero-brand-sub">Group</span>
           </h1>
         </div>
@@ -26,12 +27,16 @@ export function Hero() {
           plus asset management and consulting.
         </p>
         <div className="hero-actions">
-          <Link className="btn btn-primary" to="/products">
-            View products
-          </Link>
-          <a className="btn btn-ghost" href="#about">
-            About the studio
-          </a>
+          <Magnetic strength={0.22}>
+            <Link className="btn btn-primary" to="/products">
+              View products
+            </Link>
+          </Magnetic>
+          <Magnetic strength={0.22}>
+            <a className="btn btn-ghost" href="#about">
+              About the studio
+            </a>
+          </Magnetic>
         </div>
       </div>
 
