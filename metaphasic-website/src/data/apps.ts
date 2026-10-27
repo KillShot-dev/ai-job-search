@@ -18,6 +18,9 @@ export type AppEntry = {
 const play = (packageId: string) =>
   `https://play.google.com/store/apps/details?id=${packageId}`
 
+/** Generic Play home until the developer listing / packs are live — swap later. */
+export const PLAY_STORE_HOME = 'https://play.google.com/store'
+
 const SHARED_HIGHLIGHTS = [
   '315 icons as one family',
   'Dashboard, wallpapers, and Luma widgets',

@@ -2,7 +2,7 @@ import { useEffect, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { Marquee } from '../components/Marquee'
 import { Reveal } from '../components/Reveal'
-import { APPS } from '../data/apps'
+import { APPS, PLAY_STORE_HOME } from '../data/apps'
 
 export function ProductsPage() {
   useEffect(() => {
@@ -36,6 +36,27 @@ export function ProductsPage() {
               per finish, built-in dashboard, wallpapers, and widgets. Each listing
               is <strong>$2.49</strong>. Switch finishes by installing the set you
               want and selecting it in your launcher.
+            </p>
+            <p className="products-play-row">
+              <a
+                className="btn btn-primary products-play-btn"
+                href={PLAY_STORE_HOME}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span className="play-badge" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="18" height="18" focusable="false">
+                    <path
+                      fill="currentColor"
+                      d="M3.6 2.3c-.4.2-.6.6-.6 1.1v17.2c0 .5.2.9.6 1.1l.1.1 9.6-9.6v-.4L3.7 2.2l-.1.1zm12.1 7L12.4 12l3.3 2.7 3.9-2.2c.7-.4.7-1.1 0-1.5l-3.9-2.7zM4.3 21.5l8.5-8.5 2.6 2.1-9.9 5.6c-.5.3-1 .2-1.2-.2zm0-19l3.6 3.6L7 8.7 4.3 3.7c.1-.2.2-.2 0-.2z"
+                    />
+                  </svg>
+                </span>
+                Google Play
+                <span className="btn-arrow" aria-hidden="true">
+                  ↗
+                </span>
+              </a>
             </p>
           </Reveal>
         </div>
