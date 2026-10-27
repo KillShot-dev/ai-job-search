@@ -59,6 +59,7 @@ are in `src/data/apps.ts`. Store CTAs use
 
 ## Legal
 
-**METAPHASIC GROUP CORPORATION**  
-1991 Crocker Rd, Westlake, OH 44145-6969, United States  
+**metaPhasic Group** / METAPHASIC GROUP CORPORATION  
 https://metaphasic.net
+
+Privacy note: the public site intentionally omits street address, phone, and email.

@@ -29,8 +29,8 @@ export function About() {
                   <div className="stat-label">Luma finishes</div>
                 </div>
                 <div className="stat" role="listitem">
-                  <div className="stat-value">OH</div>
-                  <div className="stat-label">Westlake, United States</div>
+                  <div className="stat-value">315</div>
+                  <div className="stat-label">Icons per Luma finish</div>
                 </div>
                 <div className="stat" role="listitem">
                   <div className="stat-value">∞</div>

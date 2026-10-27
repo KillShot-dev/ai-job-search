@@ -13,23 +13,15 @@ export function Contact() {
         </Reveal>
 
         <Reveal delay={120} variant="scale">
-          <div className="contact-panel">
+          <div className="contact-panel contact-panel-simple">
             <div className="contact-details">
+              <p className="contact-lead">
+                For product partnerships, consulting, and Luma inquiries — reach
+                out through <a href="https://metaphasic.net">metaphasic.net</a>.
+              </p>
               <div className="contact-block">
-                <h3>Office</h3>
-                <p>
-                  1991 Crocker Rd
-                  <br />
-                  Westlake, OH 44145-6969
-                  <br />
-                  United States
-                </p>
-              </div>
-              <div className="contact-block">
-                <h3>Online</h3>
-                <p>
-                  <a href="https://metaphasic.net">metaphasic.net</a>
-                </p>
+                <h3>Studio</h3>
+                <p>metaPhasic Group</p>
               </div>
               <div className="contact-block">
                 <h3>Legal entity</h3>
@@ -37,8 +29,9 @@ export function Contact() {
               </div>
             </div>
             <div className="contact-map-hint">
-              Based in Westlake, Ohio — for product partnerships, consulting, and
-              asset management inquiries. Reach out via metaphasic.net.
+              We keep engagements focused on the work: thoughtful design, solid
+              engineering, and products people enjoy using. Prefer starting via
+              the public site — no forms required here.
             </div>
           </div>
         </Reveal>

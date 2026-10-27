@@ -14,7 +14,6 @@ export function Footer() {
           </Link>
           <div className="footer-legal">
             <strong>METAPHASIC GROUP CORPORATION</strong>
-            1991 Crocker Rd, Westlake, OH 44145-6969, United States
           </div>
         </div>
         <div className="footer-meta">
