@@ -12,6 +12,15 @@ export function ProductsPage() {
     }
   }, [])
 
+  // Scroll to hash targets after paint (e.g. marquee → finish card)
+  useEffect(() => {
+    const hash = window.location.hash.replace('#', '')
+    if (!hash) return
+    requestAnimationFrame(() => {
+      document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }, [])
+
   return (
     <div className="products-page">
       <section className="section products-hero" aria-labelledby="products-title">
@@ -19,7 +28,7 @@ export function ProductsPage() {
           <Reveal className="section-head" variant="clip">
             <p className="eyebrow">Products · Luma</p>
             <h1 className="section-title" id="products-title">
-              Seven finishes. One considered home screen.
+              Seven finishes. One home screen.
             </h1>
             <div className="line-accent" aria-hidden="true" />
             <p className="section-lead" style={{ marginTop: '1.5rem' }}>
@@ -33,8 +42,8 @@ export function ProductsPage() {
       </section>
 
       <Marquee
-        items={APPS.map((a) => a.finish)}
-        label="Luma finish names"
+        items={APPS.map((a) => ({ label: a.finish, href: `#${a.id}` }))}
+        label="Luma finish names — jump to a pack"
       />
       <hr className="divider divider-animated" />
 
@@ -42,55 +51,57 @@ export function ProductsPage() {
         <div className="container">
           <div className="apps-grid">
             {APPS.map((app, i) => (
-              <Reveal key={app.id} delay={(i % 3) * 80} variant="scale" as="article">
-                <article
-                  className="app-card"
-                  id={app.id}
-                  style={{ '--app-accent': app.accent } as CSSProperties}
+              <Reveal
+                key={app.id}
+                id={app.id}
+                delay={(i % 3) * 80}
+                variant="scale"
+                as="article"
+                className="app-card"
+                style={{ '--app-accent': app.accent } as CSSProperties}
+              >
+                <a
+                  className="app-shot"
+                  href={app.storeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${app.name} on Google Play`}
                 >
+                  <img
+                    src={app.screenshot}
+                    alt={`${app.finish} finish — icon grid preview`}
+                    loading={i < 2 ? 'eager' : 'lazy'}
+                    decoding="async"
+                  />
+                </a>
+                <div className="app-body">
+                  <div className="app-meta">
+                    <span className="app-slot">{app.slot}</span>
+                    <span className="app-price">{app.price}</span>
+                  </div>
+                  <h2 className="app-name">{app.name}</h2>
+                  <p className="app-tagline">{app.tagline}</p>
+                  <p className="app-desc">{app.description}</p>
+                  <ul className="app-highlights">
+                    {app.highlights.map((h) => (
+                      <li key={h}>{h}</li>
+                    ))}
+                  </ul>
+                  <p className="app-package">
+                    <span className="app-package-label">Package</span> {app.packageId}
+                  </p>
                   <a
-                    className="app-shot"
+                    className="btn btn-primary app-store-btn"
                     href={app.storeUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label={`${app.name} on Google Play`}
                   >
-                    <img
-                      src={app.screenshot}
-                      alt={`${app.finish} finish — icon grid preview`}
-                      loading={i < 2 ? 'eager' : 'lazy'}
-                      decoding="async"
-                    />
+                    {app.storeLabel}
+                    <span className="btn-arrow" aria-hidden="true">
+                      ↗
+                    </span>
                   </a>
-                  <div className="app-body">
-                    <div className="app-meta">
-                      <span className="app-slot">{app.slot}</span>
-                      <span className="app-price">{app.price}</span>
-                    </div>
-                    <h2 className="app-name">{app.name}</h2>
-                    <p className="app-tagline">{app.tagline}</p>
-                    <p className="app-desc">{app.description}</p>
-                    <ul className="app-highlights">
-                      {app.highlights.map((h) => (
-                        <li key={h}>{h}</li>
-                      ))}
-                    </ul>
-                    <p className="app-package">
-                      <span className="app-package-label">Package</span> {app.packageId}
-                    </p>
-                    <a
-                      className="btn btn-primary app-store-btn"
-                      href={app.storeUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {app.storeLabel}
-                      <span className="btn-arrow" aria-hidden="true">
-                        ↗
-                      </span>
-                    </a>
-                  </div>
-                </article>
+                </div>
               </Reveal>
             ))}
           </div>

@@ -12,6 +12,7 @@ type Props = {
   id?: string
   /** Stagger direct children with data-stagger */
   stagger?: boolean
+  style?: CSSProperties
 }
 
 const variantClass: Record<Variant, string> = {
@@ -30,16 +31,17 @@ export function Reveal({
   as: Tag = 'div',
   id,
   stagger = false,
+  style,
 }: Props) {
   const ref = useReveal<HTMLDivElement>()
-  const style = { '--delay': `${delay}ms` } as CSSProperties
+  const mergedStyle = { '--delay': `${delay}ms`, ...style } as CSSProperties
 
   return (
     <Tag
       ref={ref as never}
       id={id}
       className={`reveal ${variantClass[variant]} ${stagger ? 'reveal-stagger' : ''} ${className}`.trim()}
-      style={style}
+      style={mergedStyle}
     >
       {children}
     </Tag>
