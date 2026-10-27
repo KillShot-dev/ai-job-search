@@ -15,10 +15,15 @@ export type AppEntry = {
   accent: string
 }
 
-const play = (packageId: string) =>
+/** Per-app details URL — use when packs are live: storeUrl: play(packageId) */
+export const play = (packageId: string) =>
   `https://play.google.com/store/apps/details?id=${packageId}`
 
-/** Generic Play home until the developer listing / packs are live — swap later. */
+/**
+ * Generic Play Store home until listings / developer page are published.
+ * Swap PLAY_STORE_HOME (hero) and each app.storeUrl to play(packageId) or the
+ * developer listing URL when ready.
+ */
 export const PLAY_STORE_HOME = 'https://play.google.com/store'
 
 const SHARED_HIGHLIGHTS = [
@@ -41,7 +46,7 @@ export const APPS: AppEntry[] = [
     highlights: SHARED_HIGHLIGHTS,
     screenshot: '/assets/apps/01-luma-regular.png',
     storeLabel: 'Get on Google Play',
-    storeUrl: play('com.metaphasicgroup.luma.regular'),
+    storeUrl: PLAY_STORE_HOME,
     accent: '#c8d8f0',
   },
   {
@@ -57,7 +62,7 @@ export const APPS: AppEntry[] = [
     highlights: SHARED_HIGHLIGHTS,
     screenshot: '/assets/apps/02-luma-dark.png',
     storeLabel: 'Get on Google Play',
-    storeUrl: play('com.metaphasicgroup.luma.dark'),
+    storeUrl: PLAY_STORE_HOME,
     accent: '#8a9bb0',
   },
   {
@@ -73,7 +78,7 @@ export const APPS: AppEntry[] = [
     highlights: SHARED_HIGHLIGHTS,
     screenshot: '/assets/apps/03-luma-gradient.png',
     storeLabel: 'Get on Google Play',
-    storeUrl: play('com.metaphasicgroup.luma.gradient'),
+    storeUrl: PLAY_STORE_HOME,
     accent: '#e8a0c8',
   },
   {
@@ -89,7 +94,7 @@ export const APPS: AppEntry[] = [
     highlights: SHARED_HIGHLIGHTS,
     screenshot: '/assets/apps/04-luma-glyph.png',
     storeLabel: 'Get on Google Play',
-    storeUrl: play('com.metaphasicgroup.luma.glyph'),
+    storeUrl: PLAY_STORE_HOME,
     accent: '#7ec8e8',
   },
   {
@@ -105,7 +110,7 @@ export const APPS: AppEntry[] = [
     highlights: SHARED_HIGHLIGHTS,
     screenshot: '/assets/apps/05-luma-clear.png',
     storeLabel: 'Get on Google Play',
-    storeUrl: play('com.metaphasicgroup.luma.clear'),
+    storeUrl: PLAY_STORE_HOME,
     accent: '#d0e4f8',
   },
   {
@@ -121,7 +126,7 @@ export const APPS: AppEntry[] = [
     highlights: SHARED_HIGHLIGHTS,
     screenshot: '/assets/apps/06-luma-prism.png',
     storeLabel: 'Get on Google Play',
-    storeUrl: play('com.metaphasicgroup.luma.prism'),
+    storeUrl: PLAY_STORE_HOME,
     accent: '#b8a0c8',
   },
   {
@@ -137,7 +142,7 @@ export const APPS: AppEntry[] = [
     highlights: SHARED_HIGHLIGHTS,
     screenshot: '/assets/apps/07-luma-midnight.png',
     storeLabel: 'Get on Google Play',
-    storeUrl: play('com.metaphasicgroup.luma.midnight'),
+    storeUrl: PLAY_STORE_HOME,
     accent: '#6a8ab0',
   },
 ]
