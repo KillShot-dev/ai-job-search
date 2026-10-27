@@ -12,7 +12,7 @@ struct PDFDocumentShim {
         for i in 0..<doc.pageCount {
             guard let page = doc.page(at: i) else { continue }
             let rect = page.bounds(for: .mediaBox)
-            guard let image = page.thumbnail(of: CGSize(width: rect.width, height: rect.height), for: .mediaBox) else { continue }
+            let image = page.thumbnail(of: CGSize(width: rect.width, height: rect.height), for: .mediaBox)
             if let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil) {
                 pages.append(cg)
             }

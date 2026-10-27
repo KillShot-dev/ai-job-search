@@ -49,7 +49,7 @@ extension Notification.Name {
 /// sibling type and is not assumed to be Codable, so history is stored
 /// through this shape and mapped back on load. Role strings are the
 /// ChatRole case names ("system", "user", "assistant", "tool").
-private struct MuseChatHistoryEntry: Codable {
+struct MuseChatHistoryEntry: Codable {
     var role: String
     var content: String
     var toolCallId: String?

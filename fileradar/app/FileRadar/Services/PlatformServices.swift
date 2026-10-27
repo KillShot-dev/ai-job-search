@@ -1,5 +1,6 @@
 import Foundation
 import AppKit
+import SwiftUI
 import QuickLookUI
 import AppIntents
 

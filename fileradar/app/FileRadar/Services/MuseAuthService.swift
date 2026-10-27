@@ -495,7 +495,7 @@ final class MuseAuthService: NSObject, ObservableObject {
             // fall back to UUID-derived entropy rather than a fixed value.
             return (0..<2).map { _ in UUID().uuidString.replacingOccurrences(of: "-", with: "") }.joined()
         }
-        return bytes.map { alphabet[Int($0) % alphabet.count] }.joined()
+        return bytes.map { String(alphabet[Int($0) % alphabet.count]) }.joined()
     }
 
     /// base64url(SHA256(verifier)), without padding, per RFC 7636 S256.
@@ -551,8 +551,8 @@ final class MuseAuthService: NSObject, ObservableObject {
 
 // MARK: - ASWebAuthenticationSession presentation (macOS)
 
-extension MuseAuthService: ASWebAuthenticationSessionPresentationContextProviding {
-    func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
+extension MuseAuthService: ASWebAuthenticationPresentationContextProviding {
+    @objc func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
         // Prefer the key window, fall back to main, then any window, so
         // the browser sheet always has an anchor even from the menu bar.
         if let window = NSApp.keyWindow ?? NSApp.mainWindow ?? NSApp.windows.first {
