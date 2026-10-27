@@ -1,0 +1,490 @@
+import SwiftUI
+import AppKit
+import UniformTypeIdentifiers
+
+// MARK: - Iteration 1 views (Finder-replacement features, Apple-design lens)
+//
+// One job per view (principle 2), native controls only, chrome kept to a
+// minimum (principle: beauty by removal). Paid surfaces use the existing
+// LockedFeatureView pattern; nothing here invents a new lock screen.
+
+// MARK: - Drop Stack tray (sidebar; principle 4)
+
+struct DropStackView: View {
+    @ObservedObject var stack = DropStack.shared
+    @ObservedObject var queue = TransferQueue.shared
+    @State private var isTargeted = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Label("Drop Stack", systemImage: "tray.and.arrow.down")
+                    .font(FileRadarFont.body())
+                Spacer()
+                if !stack.urls.isEmpty {
+                    Button("Clear") { stack.clear() }
+                        .buttonStyle(.plain).font(FileRadarFont.caption())
+                        .accessibilityLabel("Clear the Drop Stack")
+                }
+            }
+            if stack.urls.isEmpty {
+                Text("Drag files here to hold them, then place the whole stack elsewhere.")
+                    .font(FileRadarFont.caption()).foregroundStyle(.secondary)
+            } else {
+                ForEach(stack.urls, id: \.self) { url in
+                    HStack {
+                        Image(systemName: "doc").font(FileRadarFont.caption())
+                        Text(url.lastPathComponent).font(FileRadarFont.caption()).lineLimit(1)
+                        Spacer()
+                        Button(action: { stack.remove(url) }) {
+                            Image(systemName: "xmark")
+                        }
+                        .buttonStyle(.plain).font(FileRadarFont.caption())
+                        .accessibilityLabel("Remove \(url.lastPathComponent) from the Drop Stack")
+                    }
+                    .onDrag { NSItemProvider(object: url as NSURL) }
+                }
+                Button("Place stack in a folder…") { placeStack() }
+                    .font(FileRadarFont.caption())
+                    .accessibilityHint("Choose a folder; the stacked files are moved there through the transfer queue.")
+            }
+        }
+        .padding(8)
+        .background(RoundedRectangle(cornerRadius: 8).fill(isTargeted ? Color.accentColor.opacity(0.15) : Color.secondary.opacity(0.08)))
+        .onDrop(of: [.fileURL], isTargeted: $isTargeted) { providers in
+            DropUtilities.loadURLs(from: providers) { stack.add($0) }
+            return true
+        }
+        .accessibilityLabel("Drop Stack: a temporary tray for files you are moving.")
+    }
+
+    private func placeStack() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.prompt = "Place stack here"
+        guard panel.runModal() == .OK, let folder = panel.url else { return }
+        queue.enqueueMove(stack.urls, to: folder)
+        stack.clear()
+    }
+}
+
+// MARK: - Transfer queue (sidebar strip + progress; principle 10)
+
+struct TransferQueueView: View {
+    @ObservedObject var queue = TransferQueue.shared
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Label("Transfers", systemImage: "arrow.left.arrow.right")
+                    .font(FileRadarFont.body())
+                Spacer()
+                if queue.activeCount > 0 {
+                    Button(queue.isPaused ? "Resume" : "Pause") { queue.isPaused.toggle() }
+                        .buttonStyle(.plain).font(FileRadarFont.caption())
+                    Button("Cancel") { queue.cancelAll() }
+                        .buttonStyle(.plain).font(FileRadarFont.caption())
+                } else if !queue.items.isEmpty {
+                    Button("Clear") { queue.clearFinished() }
+                        .buttonStyle(.plain).font(FileRadarFont.caption())
+                }
+            }
+            if queue.items.isEmpty {
+                Text("Copies and moves appear here with progress. Nothing is running.")
+                    .font(FileRadarFont.caption()).foregroundStyle(.secondary)
+            }
+            ForEach(queue.items) { item in
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(item.title).font(FileRadarFont.caption()).lineLimit(1)
+                    ProgressView(value: item.progress)
+                    HStack {
+                        Text(item.status.rawValue.capitalized).font(FileRadarFont.caption()).foregroundStyle(.secondary)
+                        if let error = item.error {
+                            Text(error).font(FileRadarFont.caption()).foregroundStyle(.red).lineLimit(1)
+                        }
+                    }
+                }
+            }
+        }
+        .padding(8)
+        .background(RoundedRectangle(cornerRadius: 8).fill(Color.secondary.opacity(0.08)))
+        .accessibilityLabel("Transfer queue.")
+    }
+}
+
+// MARK: - Tab strip (restored on relaunch via TabState)
+
+struct TabBarView: View {
+    @ObservedObject var tabState: TabState
+    var onSelectFolder: (URL) -> Void
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(tabState.tabs) { tab in
+                HStack(spacing: 4) {
+                    Button(tab.title) {
+                        tabState.selectedID = tab.id
+                        onSelectFolder(tab.folder)
+                    }
+                    .buttonStyle(.plain)
+                    .font(FileRadarFont.caption())
+                    .padding(.horizontal, 8).padding(.vertical, 4)
+                    .background(tabState.selectedID == tab.id
+                                ? Capsule().fill(Color.accentColor.opacity(0.18))
+                                : Capsule().fill(Color.clear))
+                    if tabState.tabs.count > 1 {
+                        Button(action: { tabState.closeTab(tab) }) {
+                            Image(systemName: "xmark").font(.system(size: 8))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Close tab \(tab.title)")
+                    }
+                }
+            }
+            Button(action: {
+                let panel = NSOpenPanel()
+                panel.canChooseDirectories = true
+                panel.canChooseFiles = false
+                panel.prompt = "Open in new tab"
+                if panel.runModal() == .OK, let folder = panel.url {
+                    tabState.addTab(folder: folder)
+                    onSelectFolder(folder)
+                }
+            }) {
+                Image(systemName: "plus")
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Open a folder in a new tab")
+            Spacer()
+        }
+        .padding(.horizontal, 8).padding(.vertical, 4)
+    }
+}
+
+// MARK: - Dual pane (OPTIONAL, off by default; principle 2: default stays shelves + search)
+//
+// Two file collections side by side. Drag a file from one pane to the
+// other: the drop enqueues a move through the transfer queue (never a
+// silent overwrite — an existing name is skipped and reported). The
+// active pane is the highlighted one; the Jump Panes button (Ctrl-Tab)
+// moves the highlight. Focus here is the active-pane marker, not AppKit
+// first-responder focus — see README UNTESTED.
+
+struct DualPaneView: View {
+    var leftTitle: String
+    var leftFiles: [FileItem]
+    var rightFolder: URL
+    var rightFiles: [FileItem]
+    @Binding var activeIsRight: Bool
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 0) {
+            pane(title: leftTitle, files: leftFiles, isActive: !activeIsRight,
+                 dropFolder: nil, onTap: { activeIsRight = false })
+            Divider()
+            pane(title: rightFolder.lastPathComponent, files: rightFiles, isActive: activeIsRight,
+                 dropFolder: rightFolder, onTap: { activeIsRight = true })
+        }
+    }
+
+    private func pane(title: String, files: [FileItem], isActive: Bool, dropFolder: URL?, onTap: @escaping () -> Void) -> some View {
+        FileCollectionView(title: title, files: files, dropTargetFolder: dropFolder)
+            .border(isActive ? Color.accentColor : Color.clear, width: isActive ? 1 : 0)
+            .onTapGesture(perform: onTap)
+    }
+}
+
+// MARK: - Workspaces (PAID; QSpace / Bloom lesson)
+
+struct WorkspacesView: View {
+    @ObservedObject var tabState: TabState
+    @Binding var dualPaneEnabled: Bool
+    @EnvironmentObject var store: FileStore
+    @EnvironmentObject var license: LicenseManager
+    @StateObject private var workspaceStore = WorkspaceStore()
+    @State private var newName = ""
+    @State private var showLicense = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Workspaces").font(FileRadarFont.title()).padding(.horizontal)
+            if !license.isAllowed(.workspaces) {
+                LockedFeatureView(feature: .workspaces) { showLicense = true }
+            } else {
+                Text("A workspace restores your tabs, panes, and pinned folders in one click. Workspaces remember locations only — they never move files.")
+                    .font(FileRadarFont.body()).foregroundStyle(.secondary).padding(.horizontal)
+                HStack {
+                    TextField("Workspace name — e.g. Photos, Projects", text: $newName)
+                        .textFieldStyle(.roundedBorder)
+                    Button("Save current layout") {
+                        workspaceStore.save(name: newName,
+                                            tabFolders: tabState.tabs.map(\.folder),
+                                            dualPaneEnabled: dualPaneEnabled,
+                                            pinnedFolders: store.pinnedFolderURLs)
+                        newName = ""
+                    }
+                    .disabled(newName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }.padding(.horizontal)
+                if workspaceStore.workspaces.isEmpty {
+                    EmptyStateView(title: "No workspaces yet",
+                                   message: "Arrange your tabs and panes, then save the layout under a name like Photos or Projects.")
+                } else {
+                    List(workspaceStore.workspaces) { workspace in
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text(workspace.name).font(FileRadarFont.heading())
+                                Text("\(workspace.tabFolders.count) tab\(workspace.tabFolders.count == 1 ? "" : "s") · \(workspace.dualPaneEnabled ? "dual pane" : "single pane")")
+                                    .font(FileRadarFont.caption()).foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Button("Restore") { apply(workspace) }
+                            Button("Delete") { workspaceStore.delete(workspace) }
+                                .accessibilityHint("Deletes only the saved workspace name, not any files.")
+                        }.padding(.vertical, 4)
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showLicense) { LicenseEntryView() }
+    }
+
+    private func apply(_ workspace: SavedWorkspace) {
+        tabState.tabs = workspace.tabFolders.map { TabState.TabItem(folder: $0) }
+        tabState.selectedID = tabState.tabs.first?.id
+        dualPaneEnabled = workspace.dualPaneEnabled
+        store.pinnedFolderURLs = workspace.pinnedFolders
+    }
+}
+
+// MARK: - Archive browser (PAID; Commander One lesson; read-only listing)
+
+struct ArchiveBrowserView: View {
+    var archive: URL
+    @EnvironmentObject var license: LicenseManager
+    @State private var entries: [ArchiveEntry] = []
+    @State private var extractMessage: String?
+    @State private var showLicense = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(archive.lastPathComponent).font(FileRadarFont.title()).padding(.horizontal)
+            if !license.isAllowed(.archiveBrowse) {
+                LockedFeatureView(feature: .archiveBrowse) { showLicense = true }
+            } else {
+                Text("Browsing read-only, as if this archive were a folder. Nothing inside it is changed. Extract only when you ask.")
+                    .font(FileRadarFont.body()).foregroundStyle(.secondary).padding(.horizontal)
+                Button("Extract archive to a folder…") { extract() }
+                    .padding(.horizontal)
+                if let message = extractMessage {
+                    Text(message).font(FileRadarFont.body()).padding(.horizontal)
+                }
+                if entries.isEmpty {
+                    EmptyStateView(title: "No entries listed",
+                                   message: "This archive listed no entries, or its listing could not be read. Nothing was changed.")
+                } else {
+                    List(entries) { entry in
+                        HStack {
+                            Image(systemName: entry.isDirectory ? "folder" : "doc")
+                            Text(entry.name).font(FileRadarFont.body()).lineLimit(1)
+                            Spacer()
+                            if let size = entry.size {
+                                Text(ByteCountFormatter.string(fromByteCount: size, countStyle: .file))
+                                    .font(FileRadarFont.caption()).foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showLicense) { LicenseEntryView() }
+        .onAppear {
+            entries = ArchiveBrowser.listEntries(of: archive)
+        }
+    }
+
+    private func extract() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.prompt = "Extract here"
+        guard panel.runModal() == .OK, let folder = panel.url else { return }
+        if let error = ArchiveBrowser.extract(archive, to: folder) {
+            extractMessage = error
+        } else {
+            extractMessage = "Extracted to \(folder.lastPathComponent). The archive itself was not changed."
+        }
+    }
+}
+
+// MARK: - Folder sync / compare, P1 stretch (PAID; preview + Trash-only)
+
+struct SyncCompareView: View {
+    @EnvironmentObject var license: LicenseManager
+    @StateObject private var trash = TrashService()
+    @State private var leftFolder: URL?
+    @State private var rightFolder: URL?
+    @State private var comparison: SyncComparison?
+    @State private var comparing = false
+    @State private var confirmingTrash = false
+    @State private var showLicense = false
+    @State private var doneMessage: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Compare folders").font(FileRadarFont.title()).padding(.horizontal)
+            if !license.isAllowed(.folderSyncCompare) {
+                LockedFeatureView(feature: .folderSyncCompare) { showLicense = true }
+            } else {
+                Text("Preview only: see what differs between two folders before anything moves. The only action offered is moving previewed extras to Trash — nothing is deleted outright, and nothing syncs on its own.")
+                    .font(FileRadarFont.body()).foregroundStyle(.secondary).padding(.horizontal)
+                HStack {
+                    Button("Choose left folder…") { leftFolder = pickFolder() }
+                    Text(leftFolder?.lastPathComponent ?? "No folder chosen").font(FileRadarFont.caption()).foregroundStyle(.secondary)
+                    Button("Choose right folder…") { rightFolder = pickFolder() }
+                    Text(rightFolder?.lastPathComponent ?? "No folder chosen").font(FileRadarFont.caption()).foregroundStyle(.secondary)
+                    Button(comparing ? "Comparing…" : "Compare") { runCompare() }
+                        .disabled(leftFolder == nil || rightFolder == nil || comparing)
+                }.padding(.horizontal)
+                if let doneMessage {
+                    Text(doneMessage).font(FileRadarFont.body()).padding(.horizontal)
+                }
+                if let comparison {
+                    if comparison.isEmpty {
+                        EmptyStateView(title: "Folders match",
+                                       message: "No files are only on one side, and no shared file differs in size or date.")
+                    } else {
+                        List {
+                            if !comparison.onlyLeft.isEmpty {
+                                Section("Only on the left (\(comparison.onlyLeft.count))") {
+                                    ForEach(comparison.onlyLeft, id: \.self) { Text($0.lastPathComponent) }
+                                }
+                            }
+                            if !comparison.onlyRight.isEmpty {
+                                Section("Only on the right (\(comparison.onlyRight.count))") {
+                                    ForEach(comparison.onlyRight, id: \.self) { Text($0.lastPathComponent) }
+                                }
+                            }
+                            if !comparison.differing.isEmpty {
+                                Section("Different (\(comparison.differing.count))") {
+                                    ForEach(comparison.differing, id: \.self) { Text($0.lastPathComponent) }
+                                }
+                            }
+                        }
+                        Button("Move left-only files to Trash") { confirmingTrash = true }
+                            .padding(.horizontal)
+                            .disabled(comparison.onlyLeft.isEmpty)
+                            .accessibilityHint("Moves only the previewed left-only files to Trash, where they can be restored.")
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showLicense) { LicenseEntryView() }
+        .alert("Move these files to Trash?", isPresented: $confirmingTrash) {
+            Button("Move to Trash", role: .destructive) { trashLeftOnly() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Files in Trash can be restored. This does not delete anything outright, and it does not touch the right folder.")
+        }
+    }
+
+    private func pickFolder() -> URL? {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        guard panel.runModal() == .OK else { return nil }
+        return panel.url
+    }
+
+    private func runCompare() {
+        guard let left = leftFolder, let right = rightFolder else { return }
+        comparing = true
+        Task.detached {
+            let result = SyncCompareService.compare(left: left, right: right)
+            await MainActor.run {
+                comparison = result
+                comparing = false
+            }
+        }
+    }
+
+    private func trashLeftOnly() {
+        guard let urls = comparison?.onlyLeft else { return }
+        let items = urls.compactMap { SyncCompareService.fileItem(for: $0) }
+        let moved = trash.trash(items)
+        doneMessage = "\(moved.count) file\(moved.count == 1 ? "" : "s") moved to Trash. Restore them from Finder if needed."
+        comparison = nil
+    }
+}
+
+// MARK: - Command palette (Cmd-K; principle 1 + 9)
+
+struct CommandPaletteView: View {
+    var onSelect: (PaletteAction) -> Void
+    @Environment(\.dismiss) var dismiss
+    @State private var query = ""
+    @State private var selection: PaletteAction?
+
+    private var filtered: [PaletteAction] {
+        let q = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !q.isEmpty else { return PaletteAction.allCases }
+        return PaletteAction.allCases.filter { $0.title.lowercased().contains(q) }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            TextField("Type an action — e.g. dual pane, workspaces, tabs", text: $query)
+                .textFieldStyle(.roundedBorder)
+                .font(FileRadarFont.body())
+                .accessibilityLabel("Command palette search")
+                .onSubmit { confirmSelection() }
+            List(filtered, selection: $selection) { action in
+                HStack {
+                    Text(action.title).font(FileRadarFont.body())
+                    Spacer()
+                    Text(action.shortcutHint).font(FileRadarFont.caption()).foregroundStyle(.secondary)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture(count: 2) { choose(action) }
+            }
+            .frame(minHeight: 220)
+            Text("Use the arrow keys to move, Return to run, Escape to close. Every action here is also reachable from the menus and toolbar.")
+                .font(FileRadarFont.caption()).foregroundStyle(.secondary)
+        }
+        .padding()
+        .frame(width: 520)
+        .onAppear { selection = filtered.first }
+        .onChange(of: query) { _, _ in selection = filtered.first }
+        .onKeyPress(.return) { confirmSelection(); return .handled }
+        .onKeyPress(.escape) { dismiss(); return .handled }
+    }
+
+    private func confirmSelection() {
+        if let action = selection ?? filtered.first { choose(action) }
+    }
+
+    private func choose(_ action: PaletteAction) {
+        onSelect(action)
+        dismiss()
+    }
+}
+
+// MARK: - Folder size label (list rows; background, on-demand)
+
+struct FolderSizeText: View {
+    var folder: URL
+    @ObservedObject var sizes = FolderSizeService.shared
+
+    var body: some View {
+        Group {
+            if let size = sizes.size(for: folder) {
+                Text(ByteCountFormatter.string(fromByteCount: size, countStyle: .file))
+                    .foregroundStyle(.secondary)
+            } else {
+                Text("Sizing…").foregroundStyle(.secondary)
+            }
+        }
+        .font(FileRadarFont.caption())
+        .onAppear { sizes.requestSize(for: folder) }
+    }
+}

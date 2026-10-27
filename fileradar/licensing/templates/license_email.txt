@@ -1,0 +1,15 @@
+Hello,
+
+Thank you for purchasing FileRadar.
+
+Your license serial is:
+
+  {{SERIAL}}
+
+To activate: open FileRadar on your Mac, go to License, and enter this serial.
+
+This license covers one Mac at a time. To move to a new Mac, deactivate FileRadar on the old Mac first (or contact support), then activate on the new Mac.
+
+Questions? Contact {{SUPPORT_EMAIL}}.
+
+Price paid: {{PRICE}} (one-time purchase).
