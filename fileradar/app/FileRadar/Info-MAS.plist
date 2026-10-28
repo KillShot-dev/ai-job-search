@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Mac App Store archive overlay values. Prefer setting these via the
+	     FileRadarMAS scheme / xcconfig rather than hand-editing the shipping
+	     Info.plist. Keep FRDistribution=mas so serial unlock is disabled. -->
+	<key>FRDistribution</key>
+	<string>mas</string>
+	<key>FRStoreKitProductID</key>
+	<string>com.metaphasicgroup.fileradar.full</string>
+	<key>FRLicensingBaseURL</key>
+	<string></string>
+	<!-- Export compliance: only HTTPS; no proprietary crypto beyond system APIs. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+</dict>
+</plist>

@@ -173,7 +173,9 @@ struct LicenseEntryView: View {
                 Text("Your free trial is active (\(trial.daysRemaining) day\(trial.daysRemaining == 1 ? "" : "s") left). Paid features are unlocked until it ends.")
                     .font(FileRadarFont.caption()).foregroundStyle(.secondary)
             } else if !license.isUnlocked, !trial.isActive {
-                Text("The free trial has ended. Enter a serial or buy on the App Store to keep using paid features.")
+                Text(channel == .macAppStore
+                     ? "The free trial has ended. Buy on the App Store to keep using paid features."
+                     : "The free trial has ended. Enter a serial or buy on the App Store to keep using paid features.")
                     .font(FileRadarFont.caption()).foregroundStyle(.secondary)
             }
 

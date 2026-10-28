@@ -116,52 +116,64 @@ struct ContentView: View {
             }
     }
 
+    /// Sidebar row that sets `destination` directly. Avoids both
+    /// `NavigationLink(value:)` (swallows clicks with `List(selection:)`)
+    /// and tag-selection (also failed to update on this OS) — Buttons fire.
+    @ViewBuilder
+    private func sidebarItem(_ title: String, systemImage: String, _ dest: Destination) -> some View {
+        Button {
+            destination = dest
+        } label: {
+            Label(title, systemImage: systemImage)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .listRowBackground(destination == dest ? theme.look.accent.opacity(0.14) : Color.clear)
+        .accessibilityAddTraits(destination == dest ? .isSelected : [])
+        .accessibilityLabel(title)
+    }
+
     private var splitChrome: some View {
         NavigationSplitView {
-            List(selection: $destination) {
+            List {
                 // Four sidebar sections — Library, Collections, Tools, Places.
                 Section("Library") {
-                    NavigationLink(value: Destination.home) { Label("Home", systemImage: "house") }
-                    NavigationLink(value: Destination.search) { Label("Search", systemImage: "magnifyingglass") }
-                    NavigationLink(value: Destination.timeline) { Label("Timeline", systemImage: "calendar") }
-                    NavigationLink(value: Destination.diskMap) { Label("Disk Map", systemImage: "square.grid.3x3") }
-                    NavigationLink(value: Destination.muse) { Label("Muse", systemImage: "sparkles") }
+                    sidebarItem("Home", systemImage: "house", .home)
+                    sidebarItem("Search", systemImage: "magnifyingglass", .search)
+                    sidebarItem("Timeline", systemImage: "calendar", .timeline)
+                    sidebarItem("Disk Map", systemImage: "square.grid.3x3", .diskMap)
+                    sidebarItem("Muse", systemImage: "sparkles", .muse)
                 }
                 Section("Collections") {
                     ForEach([FileKind.image, .video, .audio, .document, .archive, .app], id: \.self) { kind in
-                        NavigationLink(value: Destination.kind(kind)) {
-                            Label(kind.displayName, systemImage: kind.systemImage)
-                        }
+                        sidebarItem(kind.displayName, systemImage: kind.systemImage, .kind(kind))
                     }
-                    NavigationLink(value: Destination.smartFolder("Large Files")) { Label("Large Files", systemImage: "doc.fill") }
-                    NavigationLink(value: Destination.smartFolder("Screenshots")) { Label("Screenshots", systemImage: "camera") }
-                    NavigationLink(value: Destination.smartFolder("Receipts & invoices")) { Label("Receipts & invoices", systemImage: "receipt") }
-                    NavigationLink(value: Destination.smartFolder("Unfinished drafts")) { Label("Unfinished drafts", systemImage: "pencil") }
+                    sidebarItem("Large Files", systemImage: "doc.fill", .smartFolder("Large Files"))
+                    sidebarItem("Screenshots", systemImage: "camera", .smartFolder("Screenshots"))
+                    sidebarItem("Receipts & invoices", systemImage: "receipt", .smartFolder("Receipts & invoices"))
+                    sidebarItem("Unfinished drafts", systemImage: "pencil", .smartFolder("Unfinished drafts"))
                     if !favorites.paths.isEmpty {
                         ForEach(favorites.paths, id: \.self) { path in
                             let url = URL(fileURLWithPath: path)
-                            NavigationLink(value: Destination.favorite(url)) {
-                                Label(url.lastPathComponent, systemImage: "star.fill")
-                            }
+                            sidebarItem(url.lastPathComponent, systemImage: "star.fill", .favorite(url))
                         }
                     }
                     if license.isAllowed(.savedSearches) {
                         ForEach(savedSearches.items) { item in
-                            NavigationLink(value: Destination.savedSearch(item.id)) {
-                                Label(item.name, systemImage: "bookmark")
-                            }
-                            .contextMenu {
-                                Button("Delete", role: .destructive) { savedSearches.remove(item.id) }
-                            }
+                            sidebarItem(item.name, systemImage: "bookmark", .savedSearch(item.id))
+                                .contextMenu {
+                                    Button("Delete", role: .destructive) { savedSearches.remove(item.id) }
+                                }
                         }
                     }
                 }
                 Section("Tools") {
-                    NavigationLink(value: Destination.cleanup) { Label("Clean Up", systemImage: "trash") }
-                    NavigationLink(value: Destination.duplicates) { Label("Duplicates", systemImage: "doc.on.doc") }
-                    NavigationLink(value: Destination.workspaces) { Label("Workspaces", systemImage: "square.grid.2x2") }
-                    NavigationLink(value: Destination.syncCompare) { Label("Compare Folders", systemImage: "arrow.left.arrow.right") }
-                    NavigationLink(value: Destination.extras) { Label("Extras", systemImage: "wand.and.stars") }
+                    sidebarItem("Clean Up", systemImage: "trash", .cleanup)
+                    sidebarItem("Duplicates", systemImage: "doc.on.doc", .duplicates)
+                    sidebarItem("Workspaces", systemImage: "square.grid.2x2", .workspaces)
+                    sidebarItem("Compare Folders", systemImage: "arrow.left.arrow.right", .syncCompare)
+                    sidebarItem("Extras", systemImage: "wand.and.stars", .extras)
                 }
                 Section("Places") {
                     if store.pinnedFolderURLs.isEmpty {
@@ -170,25 +182,20 @@ struct ContentView: View {
                             .foregroundStyle(.secondary)
                     } else {
                         ForEach(store.pinnedFolderURLs, id: \.self) { url in
-                            NavigationLink(value: Destination.pinned(url)) {
-                                Label(url.lastPathComponent, systemImage: "pin")
-                            }
+                            sidebarItem(url.lastPathComponent, systemImage: "pin", .pinned(url))
                         }
                     }
+                }
+                // Keep Drop Stack / disk bar inside the list — NOT safeAreaInset.
+                // On this OS, sidebar safeAreaInset was an invisible hit plate over
+                // the outline (rows received AX hits but never activated).
+                Section {
+                    DropStackView()
+                    DiskFreeBar()
                 }
             }
             .listStyle(.sidebar)
             .navigationTitle("FileRadar")
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                VStack(spacing: 8) {
-                    DropStackView()
-                        .padding(.horizontal, 10)
-                    DiskFreeBar()
-                        .padding(.horizontal, 12)
-                }
-                .padding(.vertical, 10)
-                .background(theme.look.chromeMaterial)
-            }
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     if let current = playback.current {
@@ -211,6 +218,7 @@ struct ContentView: View {
                         Button("Unlock") { showLicense = true }
                             .buttonStyle(.borderedProminent)
                             .controlSize(.small)
+                            .accessibilityLabel("Unlock")
                     }
                     .padding(.horizontal, 12).padding(.vertical, 6)
                     .background(.bar)
@@ -237,7 +245,11 @@ struct ContentView: View {
                             SelectionPreviewStrip(file: selectedFile)
                         }
                     }
+                    // HUD is conditional inside; keep the ZStack layer from
+                    // eating clicks when no transfer is active.
                     TransferHUDView()
+                        .allowsHitTesting(transferQueue.activeCount > 0
+                                          || transferQueue.items.contains { $0.status == .failed })
                 }
             }
             .inspector(isPresented: $showInspector) {
@@ -267,6 +279,7 @@ struct ContentView: View {
             }
             .toolbar { detailToolbar }
         }
+        .navigationSplitViewStyle(.balanced)
     }
 
     /// Tab strip only when tabs exist or the current destination is folder-scoped.

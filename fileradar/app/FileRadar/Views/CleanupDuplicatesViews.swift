@@ -251,7 +251,10 @@ struct LockedFeatureView: View {
                 .multilineTextAlignment(.center).frame(maxWidth: 420)
             Text("Browsing, searching, and previewing are free in demo mode.")
                 .font(FileRadarFont.caption()).foregroundStyle(.secondary)
-            Button("Enter serial number") { onUnlock() }.buttonStyle(.borderedProminent)
+            Button(DistributionChannel.current == .macAppStore ? "Unlock Full Version" : "Enter serial number") {
+                onUnlock()
+            }
+            .buttonStyle(.borderedProminent)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()

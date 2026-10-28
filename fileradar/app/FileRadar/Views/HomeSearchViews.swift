@@ -139,7 +139,11 @@ struct HomeView: View {
                     }
                 }
                 if !license.isUnlocked {
-                    Button("Enter serial number to unlock the full version") { showLicense = true }
+                    Button(DistributionChannel.current == .macAppStore
+                           ? "Unlock the full version"
+                           : "Enter serial number to unlock the full version") {
+                        showLicense = true
+                    }
                 }
             }.padding()
         }
@@ -272,7 +276,11 @@ struct ShowcaseHomeView: View {
                 recentsSection
 
                 if !license.isUnlocked {
-                    Button("Enter serial number to unlock the full version") { showLicense = true }
+                    Button(DistributionChannel.current == .macAppStore
+                           ? "Unlock the full version"
+                           : "Enter serial number to unlock the full version") {
+                        showLicense = true
+                    }
                         .buttonStyle(.bordered)
                 }
             }

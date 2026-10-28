@@ -261,19 +261,20 @@ final class TabState: ObservableObject {
         didSet { save() }
     }
 
-    private let key = "com.metaphasicgroup.fileradar.tabs.v1"
+    private let key = "com.metaphasicgroup.fileradar.tabs.v2"
 
     init() {
+        // v2: empty by default. Ignore v1 payloads that auto-seeded
+        // Downloads + Documents on every install (always-on tab strip).
         if let data = UserDefaults.standard.data(forKey: key),
            let saved = try? JSONDecoder().decode([TabItem].self, from: data),
            !saved.isEmpty {
             tabs = saved
             selectedID = saved.first?.id
         } else {
-            let home = FileManager.default.homeDirectoryForCurrentUser
-            tabs = [TabItem(folder: home.appendingPathComponent("Downloads")),
-                    TabItem(folder: home.appendingPathComponent("Documents"))]
-            selectedID = tabs.first?.id
+            tabs = []
+            selectedID = nil
+            UserDefaults.standard.removeObject(forKey: "com.metaphasicgroup.fileradar.tabs.v1")
         }
     }
 

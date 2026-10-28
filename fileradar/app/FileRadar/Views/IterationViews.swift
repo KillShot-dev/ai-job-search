@@ -296,25 +296,40 @@ struct DualPaneView: View {
 
             HStack(alignment: .top, spacing: 0) {
                 pane(title: leftTitle, files: leftFiles, isActive: !activeIsRight,
-                     dropFolder: nil, copyOnDrop: false, onTap: { activeIsRight = false })
+                     dropFolder: nil, copyOnDrop: false, onActivate: { activeIsRight = false })
                 Divider()
                 pane(title: rightFolder.lastPathComponent, files: rightFiles, isActive: activeIsRight,
-                     dropFolder: rightFolder, copyOnDrop: preferCopy, onTap: { activeIsRight = true })
+                     dropFolder: rightFolder, copyOnDrop: preferCopy, onActivate: { activeIsRight = true })
             }
         }
     }
 
     private func pane(title: String, files: [FileItem], isActive: Bool,
-                      dropFolder: URL?, copyOnDrop: Bool, onTap: @escaping () -> Void) -> some View {
-        FileCollectionView(title: title, files: files,
-                           dropTargetFolder: dropFolder, preferCopyOnDrop: copyOnDrop)
-            .overlay(
-                RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
-                    .strokeBorder(isActive ? theme.look.accent.opacity(0.55) : Color.clear, lineWidth: 1.5)
-                    .padding(2)
-            )
-            .background(isActive ? theme.look.accent.opacity(0.03) : Color.clear)
-            .onTapGesture(perform: onTap)
+                      dropFolder: URL?, copyOnDrop: Bool, onActivate: @escaping () -> Void) -> some View {
+        // Activate on the title chrome only — a full-pane onTapGesture sat
+        // above FileCollectionView and stole clicks from cards/buttons.
+        VStack(spacing: 0) {
+            HStack {
+                Text(title).font(FileRadarFont.caption()).foregroundStyle(isActive ? theme.look.accent : .secondary)
+                Spacer()
+            }
+            .padding(.horizontal, 12).padding(.vertical, 4)
+            .contentShape(Rectangle())
+            .onTapGesture(perform: onActivate)
+            .accessibilityAddTraits(isActive ? .isSelected : [])
+            .accessibilityLabel("\(title) pane")
+            .accessibilityHint("Click to make this pane active")
+
+            FileCollectionView(title: title, files: files,
+                               dropTargetFolder: dropFolder, preferCopyOnDrop: copyOnDrop)
+                .overlay(
+                    RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
+                        .strokeBorder(isActive ? theme.look.accent.opacity(0.55) : Color.clear, lineWidth: 1.5)
+                        .padding(2)
+                        .allowsHitTesting(false)
+                )
+                .background(isActive ? theme.look.accent.opacity(0.03) : Color.clear)
+        }
     }
 }
 

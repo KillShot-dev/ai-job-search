@@ -35,7 +35,12 @@ enum PaidFeature: String, CaseIterable {
     case workspaces = "Workspaces"
 
     var lockedMessage: String {
-        "This is a full-version feature. Unlock with a serial, an App Store purchase, or the free trial."
+        switch DistributionChannel.current {
+        case .macAppStore:
+            return "This is a full-version feature. Unlock with an App Store purchase or the free trial."
+        case .direct:
+            return "This is a full-version feature. Unlock with a serial, an App Store purchase, or the free trial."
+        }
     }
 }
 
@@ -187,7 +192,9 @@ final class LicenseManager: ObservableObject {
             statusMessage = "Unlocked via Mac App Store purchase."
             return
         }
-        if let saved = serial, Self.canonical(saved) != nil {
+        // Ignore Keychain serials in MAS builds — StoreKit / trial only.
+        if DistributionChannel.current == .direct,
+           let saved = serial, Self.canonical(saved) != nil {
             source = .serial
             isUnlocked = true
             statusMessage = nil
@@ -209,6 +216,11 @@ final class LicenseManager: ObservableObject {
 
     @discardableResult
     func activate(_ raw: String) -> Bool {
+        // MAS binary must not accept website serials (Guideline 3.1.1).
+        guard DistributionChannel.current == .direct else {
+            statusMessage = "This Mac App Store build unlocks via in-app purchase only."
+            return false
+        }
         guard let cleaned = Self.canonical(raw) else {
             statusMessage = "That serial number did not check out."
             return false
@@ -230,6 +242,10 @@ final class LicenseManager: ObservableObject {
     /// Async activation that prefers server authority when a base URL is set.
     /// Sends `machine_hash` (SHA-256 of hardware UUID) via LicenseServerClient.
     func activateOnline(_ raw: String) async -> Bool {
+        guard DistributionChannel.current == .direct else {
+            statusMessage = "This Mac App Store build unlocks via in-app purchase only."
+            return false
+        }
         guard let cleaned = Self.canonical(raw) else {
             statusMessage = "That serial number did not check out."
             return false

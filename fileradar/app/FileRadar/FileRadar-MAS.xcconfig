@@ -1,0 +1,21 @@
+// Mac App Store archive settings (prepare path — do not upload from agents).
+// Usage: duplicate the FileRadar scheme as FileRadarMAS and set
+//   Xcode → Scheme → Archive → Build Configuration = Release
+//   plus this xcconfig on the Release configuration, OR pass:
+//   xcodebuild … -xcconfig FileRadar/FileRadar-MAS.xcconfig
+//
+// Forces FRDistribution=mas so website serial unlock is disabled in the binary.
+// Sarang still must select the Apple Distribution team / profile in Xcode.
+
+FR_DISTRIBUTION = mas
+INFOPLIST_PREPROCESS = NO
+INFOPLIST_OTHER_PREPROCESSOR_FLAGS =
+// Merge MAS keys into the built Info.plist without replacing microphone strings.
+INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO
+// Public StoreKit product id (not a secret).
+PRODUCT_BUNDLE_IDENTIFIER = com.metaphasicgroup.fileradar
+MARKETING_VERSION = 1.0.0
+CURRENT_PROJECT_VERSION = 2
+ENABLE_HARDENED_RUNTIME = YES
+CODE_SIGN_ENTITLEMENTS = FileRadar/FileRadar.entitlements
+// Team ID left blank on purpose — Sarang sets DEVELOPMENT_TEAM in Xcode.

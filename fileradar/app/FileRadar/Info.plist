@@ -17,7 +17,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>1.0.0</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>2</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.productivity</string>
 	<key>LSMinimumSystemVersion</key>
@@ -66,6 +66,17 @@
 	<string>FileRadar uses the microphone for voice commands in Muse chat. Audio is never stored.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>FileRadar transcribes your voice commands for Muse chat. Audio is never stored.</string>
+	<!-- Folder access prompts (sandbox). Whole-disk / Full Disk Access is NOT
+	     entitled — users grant it in System Settings if they want it. -->
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>FileRadar indexes your Downloads folder to show recent files, shelves, and cleanup suggestions. Files stay on this Mac.</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>FileRadar can index Documents only after you add that folder. Access is stored as a security-scoped bookmark and never uploaded.</string>
+	<key>NSDesktopFolderUsageDescription</key>
+	<string>FileRadar can index Desktop only after you add that folder. Access is stored as a security-scoped bookmark and never uploaded.</string>
+	<!-- Export compliance: uses only system HTTPS / Apple crypto. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<!-- LSUIElement is intentionally NOT set: FileRadar is a normal windowed app
 	     that also provides a MenuBarExtra; it must stay visible in the Dock. -->
 	<!-- Monetization / distribution (public values only — never put Stripe
