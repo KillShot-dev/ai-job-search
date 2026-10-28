@@ -9,15 +9,34 @@
     Background="Transparent"
     KeyDown="Page_KeyDown">
 
-    <!-- ForkLift-first: compact sidebar | dual panes + path bars | optional inspector + Activities HUD -->
+    <!-- Four chrome views: radarGlass | previewTheater | commandRail | workspaceTabs -->
     <Grid x:Name="RootGrid" Background="Transparent">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Quiet toolbar — nav / view / sync / transfers -->
-        <Border Grid.Row="0" x:Name="TopBar" Padding="12,6,12,6"
+        <!-- D: Workspace tabs -->
+        <Border Grid.Row="0" x:Name="WorkspaceTabsBar" Padding="10,6,12,0"
+                Background="{StaticResource FrPanelBrush}" Visibility="Collapsed"
+                BorderBrush="{StaticResource FrBorderBrush}" BorderThickness="0,0,0,1">
+            <Grid ColumnSpacing="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel x:Name="WorkspaceTabsPanel" Orientation="Horizontal" Spacing="4" VerticalAlignment="Bottom" />
+                <Button Grid.Column="1" Content="+" Click="AddWorkspaceTab_Click" Style="{StaticResource FrQuietChip}"
+                        ToolTipService.ToolTip="New workspace tab"
+                        Background="Transparent" Foreground="{StaticResource FrMutedBrush}" />
+            </Grid>
+        </Border>
+
+        <!-- Quiet toolbar — nav / chrome / view / sync / transfers -->
+        <Border Grid.Row="1" x:Name="TopBar" Padding="12,6,12,6"
                 Background="{StaticResource FrPanelBrush}"
                 BorderBrush="{StaticResource FrBorderBrush}" BorderThickness="0,0,0,1">
             <Grid ColumnSpacing="10">
@@ -28,8 +47,8 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
-                    <FontIcon Glyph="&#xE71B;" FontSize="15" Foreground="{StaticResource FrAccentBrush}" />
-                    <TextBlock Text="FileRadar" FontSize="14" FontWeight="SemiBold"
+                    <Image x:Name="BrandIcon" Width="22" Height="22" Stretch="Uniform" />
+                    <TextBlock x:Name="BrandText" Text="FileRadar" FontSize="14" FontWeight="SemiBold"
                                Foreground="{StaticResource FrTextBrush}" />
                 </StackPanel>
 
@@ -45,60 +64,151 @@
                     <Button x:Name="AppearanceBtn" Click="AppearanceBtn_Click" Style="{StaticResource FrQuietChip}"
                             ToolTipService.ToolTip="Appearance  ·  Ctrl+Shift+A"
                             Background="Transparent" Foreground="{StaticResource FrMutedBrush}">
-                        <FontIcon x:Name="AppearanceIcon" Glyph="&#xE708;" FontSize="14" />
+                        <Image x:Name="AppearanceIconImg" Width="22" Height="22" Stretch="Uniform" />
+                    </Button>
+                    <Button x:Name="ChromeBtn" Click="ChromeBtn_Click" Style="{StaticResource FrQuietChip}"
+                            ToolTipService.ToolTip="Chrome / Layout  ·  Ctrl+Shift+C"
+                            Background="Transparent" Foreground="{StaticResource FrAccentBrush}">
+                        <Image x:Name="ChromeIconImg" Width="22" Height="22" Stretch="Uniform" />
                     </Button>
                     <Button x:Name="DualPaneBtn" Click="DualPaneBtn_Click" Style="{StaticResource FrQuietChip}"
                             ToolTipService.ToolTip="Dual pane  ·  Ctrl+\ "
                             Background="Transparent" Foreground="{StaticResource FrAccentBrush}">
-                        <FontIcon x:Name="DualPaneIcon" Glyph="&#xE7C4;" FontSize="14" />
+                        <Image x:Name="DualPaneIconImg" Width="22" Height="22" Stretch="Uniform" />
                     </Button>
                     <Button x:Name="ViewModeBtn" Click="ViewModeBtn_Click" Style="{StaticResource FrQuietChip}"
                             ToolTipService.ToolTip="List / grid  ·  Ctrl+1 / Ctrl+2"
                             Background="Transparent" Foreground="{StaticResource FrMutedBrush}">
-                        <FontIcon Glyph="&#xE8A9;" FontSize="14" />
+                        <Image x:Name="ViewModeIconImg" Width="22" Height="22" Stretch="Uniform" />
                     </Button>
                     <Button x:Name="SyncBtn" Click="CompareSync_Click" Style="{StaticResource FrQuietChip}"
                             ToolTipService.ToolTip="Compare / Sync between panes"
                             Background="Transparent" Foreground="{StaticResource FrMutedBrush}">
-                        <FontIcon Glyph="&#xE895;" FontSize="14" />
+                        <Image x:Name="SyncIconImg" Width="22" Height="22" Stretch="Uniform" />
                     </Button>
                     <Button x:Name="InspectorBtn" Click="InspectorBtn_Click" Style="{StaticResource FrQuietChip}"
                             ToolTipService.ToolTip="Toggle inspector  ·  Ctrl+Alt+I"
                             Background="Transparent" Foreground="{StaticResource FrMutedBrush}">
-                        <FontIcon Glyph="&#xE8A1;" FontSize="14" />
+                        <Image x:Name="InspectorIconImg" Width="22" Height="22" Stretch="Uniform" />
                     </Button>
                     <Button x:Name="TransfersBtn" Click="TransfersBtn_Click" Style="{StaticResource FrQuietChip}"
                             ToolTipService.ToolTip="Activities / Transfers  ·  Ctrl+Shift+T"
                             Background="Transparent" Foreground="{StaticResource FrMutedBrush}">
-                        <FontIcon Glyph="&#xE8AB;" FontSize="14" />
+                        <Image x:Name="TransfersIconImg" Width="22" Height="22" Stretch="Uniform" />
                     </Button>
                     <Button x:Name="OverflowBtn" Click="OverflowBtn_Click" Style="{StaticResource FrQuietChip}"
                             ToolTipService.ToolTip="More — rename, shortcuts, workspace, shelves"
                             Background="Transparent" Foreground="{StaticResource FrMutedBrush}">
-                        <FontIcon Glyph="&#xE712;" FontSize="14" />
+                        <Image x:Name="OverflowIconImg" Width="22" Height="22" Stretch="Uniform" />
                     </Button>
                 </StackPanel>
             </Grid>
         </Border>
 
-        <Grid Grid.Row="1">
+        <!-- B: Transfer top strip -->
+        <Border Grid.Row="2" x:Name="TransferTopStrip" Padding="14,8" Visibility="Collapsed"
+                Background="{StaticResource FrPanel2Brush}"
+                BorderBrush="{StaticResource FrBorderBrush}" BorderThickness="0,0,0,1">
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="TopStripHeadline" Text="Copying 1 item" FontSize="12" FontWeight="SemiBold"
+                           VerticalAlignment="Center" Foreground="{StaticResource FrTextBrush}" />
+                <ProgressBar x:Name="TopStripProgress" Grid.Column="1" Height="4" Minimum="0" Maximum="1" Value="0.33"
+                             VerticalAlignment="Center"
+                             Foreground="{StaticResource FrAccentBrush}" Background="#48484A" />
+                <TextBlock x:Name="TopStripPercent" Grid.Column="2" Text="33%" FontSize="11"
+                           VerticalAlignment="Center" MinWidth="36" TextAlignment="Right"
+                           Foreground="{StaticResource FrMutedBrush}" FontFamily="Consolas" />
+                <Button x:Name="TopStripPauseBtn" Grid.Column="3" Content="Pause" Click="HudPause_Click"
+                        Style="{StaticResource FrHudButton}" Foreground="{StaticResource FrTextBrush}" />
+                <Button x:Name="TopStripCancelBtn" Grid.Column="4" Content="Cancel" Click="HudCancel_Click"
+                        Style="{StaticResource FrHudButton}" Foreground="{StaticResource FrTextBrush}" />
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="CommandRailColumn" Width="0" />
                 <ColumnDefinition x:Name="SidebarColumn" Width="200" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition x:Name="InspectorColumn" Width="0" />
+                <ColumnDefinition x:Name="QueueColumn" Width="0" />
             </Grid.ColumnDefinitions>
 
+            <!-- C: Vertical command rail -->
+            <Border Grid.Column="0" x:Name="CommandRailBorder" Visibility="Collapsed"
+                    Background="{StaticResource FrPanelBrush}"
+                    BorderBrush="{StaticResource FrBorderBrush}" BorderThickness="0,0,1,0">
+                <StackPanel x:Name="CommandRailPanel" VerticalAlignment="Top" Padding="6,12" Spacing="8">
+                    <Button Tag="Home" Click="CommandRail_Click" Style="{StaticResource FrQuietChip}"
+                            ToolTipService.ToolTip="Home" HorizontalAlignment="Center"
+                            Background="Transparent" Foreground="{StaticResource FrAccentBrush}">
+                        <StackPanel Spacing="2" HorizontalAlignment="Center">
+                            <Image x:Name="RailHomeImg" Width="28" Height="28" Stretch="Uniform" HorizontalAlignment="Center" />
+                            <TextBlock Text="Home" FontSize="9" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Tag="Search" Click="CommandRail_Click" Style="{StaticResource FrQuietChip}"
+                            ToolTipService.ToolTip="Search" HorizontalAlignment="Center"
+                            Background="Transparent" Foreground="{StaticResource FrMutedBrush}">
+                        <StackPanel Spacing="2" HorizontalAlignment="Center">
+                            <Image x:Name="RailSearchImg" Width="28" Height="28" Stretch="Uniform" HorizontalAlignment="Center" />
+                            <TextBlock Text="Search" FontSize="9" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Tag="Sync" Click="CommandRail_Click" Style="{StaticResource FrQuietChip}"
+                            ToolTipService.ToolTip="Sync" HorizontalAlignment="Center"
+                            Background="Transparent" Foreground="{StaticResource FrMutedBrush}">
+                        <StackPanel Spacing="2" HorizontalAlignment="Center">
+                            <Image x:Name="RailSyncImg" Width="28" Height="28" Stretch="Uniform" HorizontalAlignment="Center" />
+                            <TextBlock Text="Sync" FontSize="9" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Tag="Transfers" Click="CommandRail_Click" Style="{StaticResource FrQuietChip}"
+                            ToolTipService.ToolTip="Transfers" HorizontalAlignment="Center"
+                            Background="Transparent" Foreground="{StaticResource FrMutedBrush}">
+                        <StackPanel Spacing="2" HorizontalAlignment="Center">
+                            <Image x:Name="RailXferImg" Width="28" Height="28" Stretch="Uniform" HorizontalAlignment="Center" />
+                            <TextBlock Text="Xfer" FontSize="9" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Tag="Settings" Click="CommandRail_Click" Style="{StaticResource FrQuietChip}"
+                            ToolTipService.ToolTip="Appearance" HorizontalAlignment="Center"
+                            Background="Transparent" Foreground="{StaticResource FrMutedBrush}">
+                        <StackPanel Spacing="2" HorizontalAlignment="Center">
+                            <Image x:Name="RailPrefsImg" Width="28" Height="28" Stretch="Uniform" HorizontalAlignment="Center" />
+                            <TextBlock Text="Prefs" FontSize="9" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+
             <!-- Compact sidebar — favorites + places; tools secondary -->
-            <Border Grid.Column="0" x:Name="SidebarBorder"
+            <Border Grid.Column="1" x:Name="SidebarBorder"
                     Background="{StaticResource FrPanelBrush}"
                     BorderBrush="{StaticResource FrBorderBrush}" BorderThickness="0,0,1,0">
                 <Grid Padding="8,10,8,10">
+                    <!-- A: Radar watermark -->
+                    <Canvas x:Name="RadarWatermark" IsHitTestVisible="False" Opacity="0.18" VerticalAlignment="Bottom"
+                            HorizontalAlignment="Left" Width="220" Height="220" Margin="-40,0,0,-40">
+                        <Ellipse Width="200" Height="200" Stroke="#66FFFFFF" StrokeThickness="1.5" Canvas.Left="10" Canvas.Top="10" />
+                        <Ellipse Width="140" Height="140" Stroke="#55FFFFFF" StrokeThickness="1.2" Canvas.Left="40" Canvas.Top="40" />
+                        <Ellipse Width="80" Height="80" Stroke="#44FFFFFF" StrokeThickness="1" Canvas.Left="70" Canvas.Top="70" />
+                        <Ellipse Width="20" Height="20" Fill="#33FFFFFF" Canvas.Left="100" Canvas.Top="100" />
+                    </Canvas>
+
                     <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,0,0,168">
                         <StackPanel x:Name="SidebarPanel" Spacing="1">
                             <Button x:Name="NavHome" Tag="Home" Click="Nav_Click" Style="{StaticResource FrNavButton}">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <FontIcon Glyph="&#xE8B7;" FontSize="13" />
-                                    <TextBlock Text="Browser" FontSize="12" />
+                                    <Image x:Name="NavHomeImg" Width="20" Height="20" Stretch="Uniform" />
+                                    <TextBlock Text="Browser" FontSize="12" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
 
@@ -114,44 +224,44 @@
                                        Foreground="{StaticResource FrMutedBrush}" Margin="10,14,6,4" />
                             <Button Tag="Shelves" Click="Nav_Click" Style="{StaticResource FrNavButton}">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <FontIcon Glyph="&#xE8B9;" FontSize="13" />
-                                    <TextBlock Text="Shelves" FontSize="12" />
+                                    <Image x:Name="NavShelvesImg" Width="20" Height="20" Stretch="Uniform" />
+                                    <TextBlock Text="Shelves" FontSize="12" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
                             <Button Tag="Search" Click="Nav_Click" Style="{StaticResource FrNavButton}">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <FontIcon Glyph="&#xE721;" FontSize="13" />
-                                    <TextBlock Text="Search" FontSize="12" />
+                                    <Image x:Name="NavSearchImg" Width="20" Height="20" Stretch="Uniform" />
+                                    <TextBlock Text="Search" FontSize="12" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
                             <Button Tag="Cleanup" Click="Nav_Click" Style="{StaticResource FrNavButton}">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <FontIcon Glyph="&#xE894;" FontSize="13" />
-                                    <TextBlock Text="Cleanup" FontSize="12" />
+                                    <Image x:Name="NavCleanupImg" Width="20" Height="20" Stretch="Uniform" />
+                                    <TextBlock Text="Cleanup" FontSize="12" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
                             <Button Tag="Duplicates" Click="Nav_Click" Style="{StaticResource FrNavButton}">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <FontIcon Glyph="&#xE8C8;" FontSize="13" />
-                                    <TextBlock Text="Duplicates" FontSize="12" />
+                                    <Image x:Name="NavDuplicatesImg" Width="20" Height="20" Stretch="Uniform" />
+                                    <TextBlock Text="Duplicates" FontSize="12" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
                             <Button Tag="Timeline" Click="Nav_Click" Style="{StaticResource FrNavButton}">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <FontIcon Glyph="&#xE787;" FontSize="13" />
-                                    <TextBlock Text="Timeline" FontSize="12" />
+                                    <Image x:Name="NavTimelineImg" Width="20" Height="20" Stretch="Uniform" />
+                                    <TextBlock Text="Timeline" FontSize="12" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
                             <Button Tag="Workspaces" Click="Nav_Click" Style="{StaticResource FrNavButton}">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <FontIcon Glyph="&#xE8A9;" FontSize="13" />
-                                    <TextBlock Text="Workspaces" FontSize="12" />
+                                    <Image x:Name="NavWorkspacesImg" Width="20" Height="20" Stretch="Uniform" />
+                                    <TextBlock Text="Workspaces" FontSize="12" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
                             <Button Tag="RecycleBin" Click="Nav_Click" Style="{StaticResource FrNavButton}">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <FontIcon Glyph="&#xE74D;" FontSize="13" />
-                                    <TextBlock Text="Recycle Bin" FontSize="12" />
+                                    <Image x:Name="NavRecycleImg" Width="20" Height="20" Stretch="Uniform" />
+                                    <TextBlock Text="Recycle Bin" FontSize="12" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
                         </StackPanel>
@@ -168,9 +278,9 @@
                             <StackPanel Spacing="4">
                                 <Grid>
                                     <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <FontIcon Glyph="&#xE74C;" FontSize="11" Foreground="{StaticResource FrMutedBrush}" />
+                                        <Image x:Name="DropStackIconImg" Width="18" Height="18" Stretch="Uniform" />
                                         <TextBlock Text="Drop Stack" FontSize="11" FontWeight="SemiBold"
-                                                   Foreground="{StaticResource FrTextBrush}" />
+                                                   Foreground="{StaticResource FrTextBrush}" VerticalAlignment="Center" />
                                     </StackPanel>
                                     <Button x:Name="DropStackClearBtn" Content="Clear" HorizontalAlignment="Right"
                                             Padding="4,1" FontSize="10" Background="Transparent" BorderThickness="0"
@@ -209,14 +319,13 @@
             </Border>
 
             <!-- Dual-pane browser + Activities HUD -->
-            <Grid Grid.Column="1">
+            <Grid Grid.Column="2">
                 <Grid x:Name="DetailRoot" Padding="0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <!-- Single-pane chrome for tools / shelves (hidden in dual browser) -->
                     <StackPanel x:Name="ToolHeader" Grid.Row="0" Margin="16,12,16,0" Spacing="2" Visibility="Collapsed">
                         <TextBlock x:Name="BreadcrumbText" Text="›  Browser" FontSize="11"
                                    Foreground="{StaticResource FrMutedBrush}" />
@@ -250,7 +359,6 @@
                             <ColumnDefinition x:Name="RightPaneCol" Width="*" />
                         </Grid.ColumnDefinitions>
 
-                        <!-- Left pane -->
                         <Grid Grid.Column="0" x:Name="LeftPaneShell">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -275,10 +383,14 @@
                                             Style="{StaticResource FrQuietChip}"
                                             Background="Transparent" Foreground="{StaticResource FrMutedBrush}"
                                             ToolTipService.ToolTip="User folder" />
-                                    <TextBox x:Name="LeftPathBox" Grid.Column="2" FontSize="12"
-                                             BorderThickness="0" Background="Transparent"
-                                             Foreground="{StaticResource FrTextBrush}"
-                                             KeyDown="LeftPathBox_KeyDown" />
+                                    <Border x:Name="LeftPathPill" Grid.Column="2" CornerRadius="999" Padding="10,2"
+                                            BorderThickness="1" BorderBrush="{StaticResource FrAccentBrush}"
+                                            Background="{StaticResource FrPanel2Brush}">
+                                        <TextBox x:Name="LeftPathBox" FontSize="12"
+                                                 BorderThickness="0" Background="Transparent"
+                                                 Foreground="{StaticResource FrTextBrush}"
+                                                 KeyDown="LeftPathBox_KeyDown" />
+                                    </Border>
                                     <TextBlock x:Name="LeftPaneHint" Grid.Column="3" Text="Left"
                                                FontSize="10" VerticalAlignment="Center"
                                                Foreground="{StaticResource FrAccentBrush}" />
@@ -292,10 +404,21 @@
                             </ScrollViewer>
                         </Grid>
 
-                        <Border Grid.Column="1" x:Name="DualDivider" Width="1"
-                                Background="{StaticResource FrBorderBrush}" />
+                        <Grid Grid.Column="1" x:Name="DualDividerHost" Width="1">
+                            <Border x:Name="DualDivider" Width="1"
+                                    Background="{StaticResource FrBorderBrush}"
+                                    HorizontalAlignment="Center" />
+                            <!-- C: Sync pill between panes -->
+                            <Button x:Name="SyncPillBtn" Click="CopyLeftToRight_Click"
+                                    Width="36" Height="36" CornerRadius="999" Padding="0"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                                    Background="{StaticResource FrAccentBrush}" Foreground="White"
+                                    BorderThickness="0" Visibility="Collapsed"
+                                    ToolTipService.ToolTip="Copy selection → right pane">
+                                <Image x:Name="SyncPillIconImg" Width="20" Height="20" Stretch="Uniform" />
+                            </Button>
+                        </Grid>
 
-                        <!-- Right pane -->
                         <Grid Grid.Column="2" x:Name="RightPaneShell">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -321,10 +444,14 @@
                                             Style="{StaticResource FrQuietChip}"
                                             Background="Transparent" Foreground="{StaticResource FrMutedBrush}"
                                             ToolTipService.ToolTip="Documents" />
-                                    <TextBox x:Name="RightPathBox" Grid.Column="2" FontSize="12"
-                                             BorderThickness="0" Background="Transparent"
-                                             Foreground="{StaticResource FrTextBrush}"
-                                             KeyDown="RightPathBox_KeyDown" />
+                                    <Border x:Name="RightPathPill" Grid.Column="2" CornerRadius="999" Padding="10,2"
+                                            BorderThickness="1" BorderBrush="{StaticResource FrBorderBrush}"
+                                            Background="{StaticResource FrPanel2Brush}">
+                                        <TextBox x:Name="RightPathBox" FontSize="12"
+                                                 BorderThickness="0" Background="Transparent"
+                                                 Foreground="{StaticResource FrTextBrush}"
+                                                 KeyDown="RightPathBox_KeyDown" />
+                                    </Border>
                                     <Button Grid.Column="3" Content="…" Click="ChooseRightFolder_Click" Padding="8,2"
                                             FontSize="12" Style="{StaticResource FrQuietChip}"
                                             Background="Transparent" Foreground="{StaticResource FrMutedBrush}"
@@ -344,7 +471,6 @@
                     </Grid>
                 </Grid>
 
-                <!-- Dual-pane ops strip -->
                 <Border x:Name="DualPaneChrome" VerticalAlignment="Top" HorizontalAlignment="Center"
                         Margin="0,40,0,0" Padding="10,4" CornerRadius="8"
                         Background="#AA2C2C2E" Visibility="Collapsed"
@@ -369,7 +495,7 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Activities / Transfer HUD (ForkLift signature) -->
+                <!-- A: Docked / floating transfer HUD -->
                 <Border x:Name="TransferHud" VerticalAlignment="Bottom" HorizontalAlignment="Center"
                         Margin="16,0,16,14" MaxWidth="480" CornerRadius="999"
                         Padding="18,12" Visibility="Collapsed"
@@ -384,8 +510,7 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <FontIcon x:Name="HudIcon" Glyph="&#xE8C8;" FontSize="18"
-                                  Foreground="{StaticResource FrAccentBrush}" VerticalAlignment="Center" />
+                        <Image x:Name="HudIconImg" Width="28" Height="28" Stretch="Uniform" VerticalAlignment="Center" />
                         <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center" MinWidth="180">
                             <TextBlock x:Name="HudHeadline" Text="Activities" FontSize="14" FontWeight="SemiBold"
                                        Foreground="{StaticResource FrTextBrush}" />
@@ -403,8 +528,8 @@
                 </Border>
             </Grid>
 
-            <!-- Optional inspector -->
-            <Border x:Name="InspectorBorder" Grid.Column="2"
+            <!-- B: Optional inspector / Quick Look -->
+            <Border x:Name="InspectorBorder" Grid.Column="3"
                     Background="{StaticResource FrPanelBrush}"
                     BorderBrush="{StaticResource FrBorderBrush}" BorderThickness="1,0,0,0"
                     Padding="14,14" Visibility="Collapsed">
@@ -421,9 +546,8 @@
                                 <Grid>
                                     <Image x:Name="InspectorImage" Stretch="UniformToFill"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" />
-                                    <FontIcon x:Name="InspectorGlyph" Glyph="&#xE8A5;" FontSize="36"
-                                              HorizontalAlignment="Center" VerticalAlignment="Center"
-                                              Foreground="{StaticResource FrMutedBrush}" />
+                                    <Image x:Name="InspectorGlyphImg" Width="72" Height="72" Stretch="Uniform"
+                                              HorizontalAlignment="Center" VerticalAlignment="Center" />
                                 </Grid>
                             </Border>
 
@@ -462,8 +586,8 @@
                                 BorderThickness="0" CornerRadius="8" Padding="10,8" FontSize="12"
                                 IsEnabled="False">
                             <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
-                                <FontIcon Glyph="&#xE8B7;" FontSize="13" />
-                                <TextBlock Text="Show in Explorer" />
+                                <Image x:Name="ShowInExplorerIconImg" Width="18" Height="18" Stretch="Uniform" />
+                                <TextBlock Text="Show in Explorer" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                         <Button Content="Add to Drop Stack" Click="AddToDropStack_Click"
@@ -473,7 +597,66 @@
                     </StackPanel>
                 </Grid>
             </Border>
+
+            <!-- D: Queue drawer -->
+            <Border x:Name="QueueDrawerBorder" Grid.Column="4" Visibility="Collapsed"
+                    Background="{StaticResource FrPanelBrush}"
+                    BorderBrush="{StaticResource FrBorderBrush}" BorderThickness="1,0,0,0"
+                    Padding="14,14">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid Margin="0,0,0,12">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Image x:Name="QueueIconImg" Width="22" Height="22" Stretch="Uniform" />
+                            <TextBlock Text="Queue" FontSize="14" FontWeight="SemiBold"
+                                       Foreground="{StaticResource FrTextBrush}" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <Button Content="✕" HorizontalAlignment="Right" Click="CloseQueue_Click"
+                                Style="{StaticResource FrQuietChip}"
+                                Background="Transparent" Foreground="{StaticResource FrMutedBrush}" />
+                    </Grid>
+                    <Border Grid.Row="1" Padding="12" CornerRadius="10" VerticalAlignment="Top"
+                            Background="{StaticResource FrPanel2Brush}"
+                            BorderBrush="{StaticResource FrBorderBrush}" BorderThickness="1">
+                        <StackPanel Spacing="8">
+                            <TextBlock x:Name="QueueHeadline" Text="Idle" FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{StaticResource FrTextBrush}" />
+                            <ProgressBar x:Name="QueueProgress" Height="6" Minimum="0" Maximum="1" Value="0"
+                                         Foreground="{StaticResource FrAccentBrush}" Background="#48484A" />
+                            <TextBlock x:Name="QueuePercent" Text="0%" FontSize="11"
+                                       Foreground="{StaticResource FrMutedBrush}" />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button x:Name="QueuePauseBtn" Content="Pause" Click="HudPause_Click"
+                                        Background="{StaticResource FrAccentBrush}" Foreground="White"
+                                        BorderThickness="0" CornerRadius="8" Padding="12,6" FontSize="12" />
+                                <Button Content="Cancel" Click="HudCancel_Click" Style="{StaticResource FrGhostButton}"
+                                        Background="Transparent" BorderBrush="{StaticResource FrBorderBrush}"
+                                        Foreground="{StaticResource FrTextBrush}" Padding="12,6" FontSize="12" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
         </Grid>
 
+        <!-- C: Keyboard legend -->
+        <Border Grid.Row="4" x:Name="KeyboardLegendBar" Padding="14,8" Visibility="Collapsed"
+                Background="{StaticResource FrPanelBrush}"
+                BorderBrush="{StaticResource FrBorderBrush}" BorderThickness="0,1,0,0">
+            <StackPanel Orientation="Horizontal" Spacing="16" HorizontalAlignment="Center">
+                <TextBlock Text="F5 Refresh" FontSize="11" Foreground="{StaticResource FrMutedBrush}" />
+                <TextBlock Text="|" FontSize="11" Foreground="{StaticResource FrBorderBrush}" />
+                <TextBlock Text="F8 Delete" FontSize="11" Foreground="{StaticResource FrMutedBrush}" />
+                <TextBlock Text="|" FontSize="11" Foreground="{StaticResource FrBorderBrush}" />
+                <TextBlock Text="F9 New Folder" FontSize="11" Foreground="{StaticResource FrMutedBrush}" />
+                <TextBlock Text="|" FontSize="11" Foreground="{StaticResource FrBorderBrush}" />
+                <TextBlock Text="Ctrl+, Preferences" FontSize="11" Foreground="{StaticResource FrMutedBrush}" />
+                <TextBlock Text="|" FontSize="11" Foreground="{StaticResource FrBorderBrush}" />
+                <TextBlock Text="Ctrl+Shift+C Chrome" FontSize="11" Foreground="{StaticResource FrAccentBrush}" />
+            </StackPanel>
+        </Border>
     </Grid>
 </Page>

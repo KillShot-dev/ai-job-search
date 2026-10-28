@@ -1,14 +1,18 @@
 # FileRadar for Windows
 
-WinUI 3 / .NET 8 Explorer replacement. **Default Home is Showcase** — unified Mac/Windows look (`docs/fileradar-unified-look.md`): sidebar | Shelves + Recents | Inspector.
+WinUI 3 / .NET 8 Explorer replacement. **Default chrome: Radar Glass** dual-pane (`radarGlass`). Four chrome views + rich icon system.
 
-## Unified look (v1)
+## Chrome views
 
-- Tokens: `FileRadarChrome` — accent `#007AFF`, radii 12/8, space 20/28/16, selection stroke + wash
-- Materials: Mica `BaseAlt`; frosted Transfer HUD capsule when jobs run
-- Drop Stack tray + disk bar in sidebar; dual-pane optional (off by default)
-- Inspector: preview-first Info / Tags / More modules; Show in Explorer
-- Quiet toolbar ≤6 + overflow (rename, compare/sync, workspace, shortcuts)
+IDs match Mac: `radarGlass` · `previewTheater` · `commandRail` · `workspaceTabs`.  
+Toolbar **Chrome** button / `Ctrl+Shift+C` / overflow **View → Chrome**. Persisted in `%LocalAppData%\FileRadar\settings.json`.
+
+## Look
+
+- Tokens: `FileRadarChrome` — accent follows chrome (blue / teal / amber)
+- Materials: Mica `BaseAlt`; docked / top-strip / Queue transfer surfaces
+- Rich PNG icons (`Assets/Icons`, `IconCatalog`) — not thin WinUI glyphs
+- Drop Stack + disk bar; dual-pane default; inspector for Preview Theater
 
 ## Run (portable exe)
 

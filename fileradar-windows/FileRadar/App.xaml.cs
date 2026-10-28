@@ -14,6 +14,7 @@ public partial class App : Application
 
     public static Window? MainWindow { get; private set; }
     public static Models.ThemeSettings Theme { get; } = new();
+    public static Services.SettingsStore Settings { get; } = new();
     public static Services.LibraryService Library { get; } = new();
     public static Services.TransferQueue Transfers { get; } = new();
     public static Services.DropStackService DropStack { get; } = new();
@@ -22,6 +23,7 @@ public partial class App : Application
     public App()
     {
         InitializeComponent();
+        Settings.LoadInto(Theme);
         UnhandledException += (_, e) =>
         {
             e.Handled = true;

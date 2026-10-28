@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices.WindowsRuntime;
 using FileRadar.Models;
 using FileRadar.Services;
+using IconCatalog = FileRadar.Services.IconCatalog;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
@@ -55,9 +56,8 @@ public sealed partial class MainPage : Page
             BuildPlaces();
             RefreshDiskBar();
             RefreshDropStackUi();
+            App.Theme.ChromeView = ChromeViewIds.Normalize(App.Theme.ChromeView);
             ApplyTheme();
-            InspectorColumn.Width = new GridLength(0);
-            InspectorBorder.Visibility = Visibility.Collapsed;
             DiskBarBorder.Visibility = Visibility.Visible;
             DiskNameText.Text = "System";
             DiskFreeText.Text = "Measuring free space…";
@@ -66,17 +66,15 @@ public sealed partial class MainPage : Page
             RefreshDiskBar();
             UpdateTransferHud();
             ApplyDualPaneLayout();
+            ApplyChromeView();
 
             var capture = string.Equals(Environment.GetEnvironmentVariable("FILERADAR_CAPTURE"), "1", StringComparison.Ordinal);
             if (capture)
             {
-                // ForkLift dual-pane home + Activities HUD for evidence
                 DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, async () =>
                 {
-                    App.Transfers.EnqueueDemo("Activities preview", 3);
-                    UpdateTransferHud();
-                    await Task.Delay(1800);
-                    await CaptureSelfAsync();
+                    await Task.Delay(1200);
+                    await CaptureChromeViewsAsync();
                 });
             }
         }
@@ -151,14 +149,15 @@ public sealed partial class MainPage : Page
             Foreground = (Brush)Application.Current.Resources["FrTextBrush"],
             Padding = new Thickness(10, 6, 10, 6)
         };
+        var iconKey = glyph == "\uE735" ? "star" : IconCatalog.ForPlace(place);
         btn.Content = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = 8,
             Children =
             {
-                new FontIcon { Glyph = glyph, FontSize = 12 },
-                new TextBlock { Text = name, FontSize = 12 }
+                IconCatalog.Make(iconKey, 20),
+                new TextBlock { Text = name, FontSize = 12, VerticalAlignment = VerticalAlignment.Center }
             }
         };
         btn.Click += Favorite_Click;
@@ -269,42 +268,31 @@ public sealed partial class MainPage : Page
     private void ApplyTheme()
     {
         var dark = App.Theme.IsDark(_systemDark);
-        var palette = ThemeCatalog.Resolve(AppLook.Modern, dark);
+        var chrome = ChromeViewIds.Normalize(App.Theme.ChromeView);
+        var palette = ThemeCatalog.Resolve(AppLook.Modern, dark, chrome);
         App.ApplyThemeResources(Application.Current.Resources, palette);
 
         RootGrid.Background = BrushFrom(palette.Bg);
         TopBar.Background = BrushFrom(palette.Panel);
+        WorkspaceTabsBar.Background = BrushFrom(palette.Panel);
         SidebarBorder.Background = BrushFrom(palette.Panel);
+        CommandRailBorder.Background = BrushFrom(palette.Panel);
         InspectorBorder.Background = BrushFrom(palette.Panel);
+        QueueDrawerBorder.Background = BrushFrom(palette.Panel);
+        KeyboardLegendBar.Background = BrushFrom(palette.Panel);
+        TransferTopStrip.Background = BrushFrom(palette.Panel2);
         TransferHud.Background = BrushFrom(dark ? "#CC2C2C2E" : "#CCF5F5F7");
+        BrandText.Foreground = BrushFrom(palette.Text);
 
-        AppearanceIcon.Glyph = App.Theme.Appearance switch
-        {
-            AppearanceMode.Light => "\uE706",
-            AppearanceMode.Dark => "\uE708",
-            _ => "\uE771"
-        };
+        AppearanceIconImg.Source = IconCatalog.Get(
+            App.Theme.Appearance == AppearanceMode.Light ? "sun" : "moon");
+        DualPaneIconImg.Opacity = App.Theme.DualPane ? 1.0 : 0.55;
 
-        DualPaneIcon.Foreground = App.Theme.DualPane
-            ? (Brush)Application.Current.Resources["FrAccentBrush"]
-            : (Brush)Application.Current.Resources["FrMutedBrush"];
-
-        if (App.Theme.InspectorOpen)
-        {
-            InspectorColumn.Width = new GridLength(300);
-            InspectorBorder.Visibility = Visibility.Visible;
-        }
-        else
-        {
-            InspectorColumn.Width = new GridLength(0);
-            InspectorBorder.Visibility = Visibility.Collapsed;
-        }
-
-        SidebarColumn.Width = new GridLength(FileRadarChrome.SidebarWidth);
         RequestedTheme = dark ? ElementTheme.Dark : ElementTheme.Light;
         App.SyncBackdropTheme(dark);
         if (_activeNav is not null) HighlightNav(_activeNav);
         ApplyDualPaneLayout();
+        ApplyChromeView();
     }
 
     private static SolidColorBrush BrushFrom(string hex)
@@ -758,14 +746,11 @@ public sealed partial class MainPage : Page
         };
 
         var coverGrid = new Grid();
-        var glyph = new FontIcon
-        {
-            Glyph = album.Cover?.KindGlyph ?? "\uE8B7",
-            FontSize = 36,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            Foreground = (Brush)Application.Current.Resources["FrMutedBrush"]
-        };
+        var glyph = IconCatalog.Make(
+            album.Cover is null ? "folder" : IconCatalog.ForFileItem(album.Cover, App.Theme.ChromeView),
+            48);
+        glyph.HorizontalAlignment = HorizontalAlignment.Center;
+        glyph.VerticalAlignment = VerticalAlignment.Center;
         coverGrid.Children.Add(glyph);
         var img = new Image { Stretch = Stretch.UniformToFill, Visibility = Visibility.Collapsed };
         coverGrid.Children.Add(img);
@@ -807,7 +792,7 @@ public sealed partial class MainPage : Page
         return card;
     }
 
-    private async Task LoadCoverAsync(FileItem? item, Image img, FontIcon glyph)
+    private async Task LoadCoverAsync(FileItem? item, Image img, FrameworkElement glyph)
     {
         if (item is null) return;
         var bmp = await ThumbnailService.TryLoadAsync(item.Path, 280);
@@ -863,14 +848,9 @@ public sealed partial class MainPage : Page
             Background = KindPlateBrush(item.Kind)
         };
         var thumbGrid = new Grid();
-        var glyph = new FontIcon
-        {
-            Glyph = item.KindGlyph,
-            FontSize = 40,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            Foreground = (Brush)Application.Current.Resources["FrAccentBrush"]
-        };
+        var glyph = IconCatalog.Make(IconCatalog.ForFileItem(item, App.Theme.ChromeView), 52);
+        glyph.HorizontalAlignment = HorizontalAlignment.Center;
+        glyph.VerticalAlignment = VerticalAlignment.Center;
         var img = new Image { Stretch = Stretch.UniformToFill, Visibility = Visibility.Collapsed };
         thumbGrid.Children.Add(glyph);
         thumbGrid.Children.Add(img);
@@ -977,18 +957,12 @@ public sealed partial class MainPage : Page
             Tag = item
         };
         var g = new Grid { ColumnSpacing = 10 };
-        g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(22) });
+        g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
         g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(72) });
         g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(88) });
 
-        g.Children.Add(new FontIcon
-        {
-            Glyph = item.IsDirectory ? "\uE8B7" : item.KindGlyph,
-            FontSize = 12,
-            VerticalAlignment = VerticalAlignment.Center,
-            Foreground = (Brush)Application.Current.Resources["FrMutedBrush"]
-        });
+        g.Children.Add(IconCatalog.Make(IconCatalog.ForFileItem(item, App.Theme.ChromeView), 22));
         var name = new TextBlock
         {
             Text = item.Name,
@@ -1064,14 +1038,9 @@ public sealed partial class MainPage : Page
             Background = (Brush)Application.Current.Resources["FrPanelBrush"]
         };
         var g = new Grid();
-        var glyph = new FontIcon
-        {
-            Glyph = item.KindGlyph,
-            FontSize = 16,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            Foreground = (Brush)Application.Current.Resources["FrMutedBrush"]
-        };
+        var glyph = IconCatalog.Make(IconCatalog.ForFileItem(item, App.Theme.ChromeView), 28);
+        glyph.HorizontalAlignment = HorizontalAlignment.Center;
+        glyph.VerticalAlignment = VerticalAlignment.Center;
         var img = new Image { Stretch = Stretch.UniformToFill, Visibility = Visibility.Collapsed };
         g.Children.Add(glyph);
         g.Children.Add(img);
@@ -1241,8 +1210,8 @@ public sealed partial class MainPage : Page
 
         InspectorName.Text = item.Name;
         InspectorModified.Text = item.RelativeTimeLabel;
-        InspectorGlyph.Glyph = item.KindGlyph;
-        InspectorGlyph.Visibility = Visibility.Visible;
+        InspectorGlyphImg.Source = IconCatalog.Get(IconCatalog.ForFileItem(item, App.Theme.ChromeView));
+        InspectorGlyphImg.Visibility = Visibility.Visible;
         InspectorImage.Visibility = Visibility.Collapsed;
         ShowInExplorerBtn.IsEnabled = true;
 
@@ -1336,7 +1305,7 @@ public sealed partial class MainPage : Page
         if (bmp is null) return;
         InspectorImage.Source = bmp;
         InspectorImage.Visibility = Visibility.Visible;
-        InspectorGlyph.Visibility = Visibility.Collapsed;
+        InspectorGlyphImg.Visibility = Visibility.Collapsed;
 
         if (item.CanThumbnail && bmp.PixelWidth > 0)
             AddMetaRow(InspectorMetaPanel, "Dimensions", $"{bmp.PixelWidth} × {bmp.PixelHeight}");
@@ -1371,15 +1340,61 @@ public sealed partial class MainPage : Page
     private void UpdateTransferHud()
     {
         var q = App.Transfers;
-        TransferHud.Visibility = q.HudVisible ? Visibility.Visible : Visibility.Collapsed;
-        if (!q.HudVisible) return;
+        var chrome = ChromeViewIds.Normalize(App.Theme.ChromeView);
+        var pct = $"{(int)Math.Round(q.AggregateProgress * 100)}%";
+        var pause = q.IsPaused ? "Resume" : "Pause";
+        if (q.ActiveCount == 0 && q.Items.Any(i => i.Status == TransferStatus.Failed))
+            pause = "Dismiss";
+
+        // B: top strip
+        var topStrip = chrome == ChromeViewIds.PreviewTheater && q.HudVisible;
+        TransferTopStrip.Visibility = topStrip ? Visibility.Visible : Visibility.Collapsed;
+        if (topStrip)
+        {
+            TopStripHeadline.Text = q.HudHeadline;
+            TopStripProgress.Value = q.AggregateProgress;
+            TopStripPercent.Text = pct;
+            TopStripPauseBtn.Content = pause;
+        }
+
+        // D: queue drawer
+        if (chrome == ChromeViewIds.WorkspaceTabs)
+        {
+            QueueHeadline.Text = q.HudVisible ? q.HudHeadline : "Queue idle";
+            QueueProgress.Value = q.AggregateProgress;
+            QueuePercent.Text = pct;
+            QueuePauseBtn.Content = pause;
+        }
+
+        // A/C: docked bottom drawer (Radar Glass) or floating capsule (Command Rail)
+        var showHud = q.HudVisible && chrome is ChromeViewIds.RadarGlass or ChromeViewIds.CommandRail;
+        TransferHud.Visibility = showHud ? Visibility.Visible : Visibility.Collapsed;
+        if (!showHud) return;
+
         HudHeadline.Text = q.HudHeadline;
         HudProgress.Value = q.AggregateProgress;
-        HudPercent.Text = $"{(int)Math.Round(q.AggregateProgress * 100)}%";
-        HudPauseBtn.Content = q.IsPaused ? "Resume" : "Pause";
-        HudIcon.Glyph = q.IsPaused ? "\uE769" : "\uE8C8";
-        if (q.ActiveCount == 0 && q.Items.Any(i => i.Status == TransferStatus.Failed))
-            HudPauseBtn.Content = "Dismiss";
+        HudPercent.Text = pct;
+        HudPauseBtn.Content = pause;
+        HudIconImg.Source = IconCatalog.Get(q.IsPaused ? "sync" : "transfers");
+
+        if (chrome == ChromeViewIds.RadarGlass)
+        {
+            TransferHud.HorizontalAlignment = HorizontalAlignment.Stretch;
+            TransferHud.VerticalAlignment = VerticalAlignment.Bottom;
+            TransferHud.CornerRadius = new CornerRadius(16);
+            TransferHud.Margin = new Thickness(12, 0, 12, 12);
+            TransferHud.MaxWidth = 10000;
+            TransferHud.Padding = new Thickness(18, 14, 18, 14);
+        }
+        else
+        {
+            TransferHud.HorizontalAlignment = HorizontalAlignment.Center;
+            TransferHud.VerticalAlignment = VerticalAlignment.Bottom;
+            TransferHud.CornerRadius = new CornerRadius(999);
+            TransferHud.Margin = new Thickness(16, 0, 16, 48);
+            TransferHud.MaxWidth = FileRadarChrome.HudMaxWidth;
+            TransferHud.Padding = new Thickness(18, 12, 18, 12);
+        }
     }
 
     // —— Event handlers ——
@@ -1408,24 +1423,28 @@ public sealed partial class MainPage : Page
     private void AppearanceBtn_Click(object sender, RoutedEventArgs e)
     {
         App.Theme.CycleAppearance();
+        PersistSettings();
         Refresh();
     }
 
     private void DualPaneBtn_Click(object sender, RoutedEventArgs e)
     {
         App.Theme.DualPane = !App.Theme.DualPane;
+        PersistSettings();
         Refresh();
     }
 
     private void ViewModeBtn_Click(object sender, RoutedEventArgs e)
     {
         App.Theme.ViewMode = App.Theme.ViewMode == ViewMode.Grid ? ViewMode.List : ViewMode.Grid;
+        PersistSettings();
         Refresh();
     }
 
     private void InspectorBtn_Click(object sender, RoutedEventArgs e)
     {
         App.Theme.InspectorOpen = !App.Theme.InspectorOpen;
+        PersistSettings();
         Refresh();
     }
 
@@ -1456,6 +1475,7 @@ public sealed partial class MainPage : Page
             panel.Children.Add(b);
             return b;
         }
+        Item("View → Chrome…          Ctrl+Shift+C", ChromeBtn_Click);
         Item("Copy selection → right pane", CopyLeftToRight_Click);
         Item("Copy selection ← left pane", CopyRightToLeft_Click);
         Item("Batch rename…          Ctrl+Shift+R", BatchRename_Click);
@@ -1674,7 +1694,7 @@ public sealed partial class MainPage : Page
         await new ContentDialog
         {
             Title = "Keyboard shortcuts",
-            Content = "Ctrl+\\  Dual pane\nCtrl+Shift+R  Batch rename\nCtrl+Shift+T  Transfers\nCtrl+Alt+I  Inspector\nCtrl+1 / Ctrl+2  Grid / List\nCtrl+Shift+A  Appearance\nDelete  Trash selection\nEnter  Open\nAlt+↑  Up",
+            Content = "Ctrl+\\  Dual pane\nCtrl+Shift+C  Chrome / Layout\nCtrl+Shift+R  Batch rename\nCtrl+Shift+T  Transfers\nCtrl+Alt+I  Inspector\nCtrl+1 / Ctrl+2  Grid / List\nCtrl+Shift+A  Appearance\nDelete  Trash selection\nEnter  Open\nAlt+↑  Up",
             CloseButtonText = "OK",
             XamlRoot = XamlRoot
         }.ShowAsync();
@@ -1690,6 +1710,7 @@ public sealed partial class MainPage : Page
             .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
 
         if (ctrl && shift && e.Key == VirtualKey.R) { _ = ShowBatchRenameAsync(); e.Handled = true; }
+        else if (ctrl && shift && e.Key == VirtualKey.C) { ChromeBtn_Click(this, new RoutedEventArgs()); e.Handled = true; }
         else if (ctrl && shift && e.Key == VirtualKey.T) { TransfersBtn_Click(this, new RoutedEventArgs()); e.Handled = true; }
         else if (ctrl && shift && e.Key == VirtualKey.A) { AppearanceBtn_Click(this, new RoutedEventArgs()); e.Handled = true; }
         else if (ctrl && alt && e.Key == VirtualKey.I) { InspectorBtn_Click(this, new RoutedEventArgs()); e.Handled = true; }
