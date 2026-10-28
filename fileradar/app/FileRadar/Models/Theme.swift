@@ -1,12 +1,16 @@
 import SwiftUI
 import AppKit
 
-/// Four looks from one system. Layout stays identical; only palette,
-/// corner radii, materials, and type design change — in both light and dark.
+/// Optional palette variants. **Modern** is the Apple-native default
+/// (electric blue, frosted glass, continuous corners). Layout never changes
+/// between looks — only accent, radii, materials, and title design.
+///
+/// Primary chrome is Appearance (System / Light / Dark), not these looks.
+/// Looks stay reachable from Settings / Look & Style as secondary polish.
 ///
 /// Visual direction (intentionally NOT purple-on-white, cream+terracotta,
 /// or newspaper density):
-/// - Modern — cool blue accent, soft glass chrome
+/// - Modern — system-like electric blue, ultraThinMaterial glass
 /// - Elegant — deep teal + serif titles, larger radii
 /// - Colourful — warm copper accent on soft stone materials
 /// - Minimal — near-monochrome with hairline separators
@@ -20,7 +24,8 @@ enum AppLook: String, CaseIterable, Identifiable {
 
     var accent: Color {
         switch self {
-        case .modern: return Color(red: 0.04, green: 0.42, blue: 1.0) // vivid blue
+        // Electric blue — close to macOS system accent, not purple.
+        case .modern: return Color(red: 0.0, green: 0.478, blue: 1.0)
         case .elegant: return Color(red: 0.12, green: 0.45, blue: 0.42) // deep teal
         case .colourful: return Color(red: 0.91, green: 0.42, blue: 0.24) // copper
         case .minimal: return .primary
@@ -29,7 +34,7 @@ enum AppLook: String, CaseIterable, Identifiable {
 
     var cardCorner: CGFloat {
         switch self {
-        case .modern: return 10
+        case .modern: return 12
         case .elegant: return 16
         case .colourful: return 12
         case .minimal: return 6
@@ -47,7 +52,8 @@ enum AppLook: String, CaseIterable, Identifiable {
 
     var titleDesign: Font.Design {
         switch self {
-        case .modern, .colourful: return .rounded
+        case .modern: return .default // SF Pro — calm native
+        case .colourful: return .rounded
         case .elegant: return .serif
         case .minimal: return .default
         }
@@ -55,7 +61,7 @@ enum AppLook: String, CaseIterable, Identifiable {
 
     var atmosphereOpacity: Double {
         switch self {
-        case .modern: return 0.05
+        case .modern: return 0.04
         case .elegant: return 0.07
         case .colourful: return 0.06
         case .minimal: return 0.03
@@ -64,7 +70,7 @@ enum AppLook: String, CaseIterable, Identifiable {
 
     var systemImage: String {
         switch self {
-        case .modern: return "circle.hexagongrid.fill"
+        case .modern: return "macwindow"
         case .elegant: return "seal.fill"
         case .colourful: return "paintpalette.fill"
         case .minimal: return "circle.lefthalf.filled"
@@ -72,8 +78,8 @@ enum AppLook: String, CaseIterable, Identifiable {
     }
 }
 
-/// System / Light / Dark — three appearance modes reachable from toolbar,
-/// View menu, Settings, Home pills, demo, and site.
+/// System / Light / Dark — primary appearance chrome (toolbar, Settings,
+/// View / Appearance menus). Looks are secondary.
 enum AppearanceMode: String, CaseIterable, Identifiable {
     case system = "System"
     case light = "Light"

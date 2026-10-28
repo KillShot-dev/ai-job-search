@@ -298,20 +298,6 @@ struct ContentView: View {
             .help("Appearance: \(theme.appearance.rawValue). Click to cycle System / Light / Dark.")
             .accessibilityLabel("Appearance \(theme.appearance.rawValue)")
 
-            Menu {
-                ForEach(AppLook.allCases) { look in
-                    Button {
-                        theme.look = look
-                    } label: {
-                        Label(look.rawValue, systemImage: look.systemImage)
-                    }
-                }
-            } label: {
-                Image(systemName: "paintpalette")
-            }
-            .help("Look: \(theme.look.rawValue). Shift-Cmd-L cycles looks.")
-            .accessibilityLabel("Look \(theme.look.rawValue)")
-
             Button {
                 dualPaneEnabled.toggle()
             } label: {

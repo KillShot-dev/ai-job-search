@@ -90,17 +90,18 @@ project, not to aspirations.
 - Nowhere in code or UI does the word "AI" describe a feature. Vision
   OCR is described as "recognised text", never branded.
 
-## 7. Two looks from one system: warm colourful look + minimal black-white-grey look, each in light and dark, one type scale, one accent system
+## 7. One native look by default; optional palettes; System / Light / Dark
 
-- `Models/Theme.swift` — `AppLook.colourful` (orange accent) vs
-  `.minimal` (primary/black-white-grey accent); `ThemeSettings`
-  (system appearance or forced light/dark); `FileRadarFont` — the single
-  type scale (title/heading/body/caption) used by every view.
-- `Views/SystemViews.swift` — Settings "Look" picker + appearance toggles.
-- The two looks change palette/accent only; layout, type scale, and
-  navigation are identical in both — that is the "one system" constraint,
-  and it is enforced by sharing every view between looks (no per-look
-  view variants exist).
+- `Models/Theme.swift` — **Modern** is the default Apple-native look
+  (electric blue accent, `ultraThinMaterial`, continuous 12pt corners,
+  SF Pro titles). Optional Elegant / Colourful / Minimal change palette
+  only. `AppearanceMode` is System / Light / Dark — primary chrome.
+- `Views/SystemViews.swift` — Settings **Appearance** (segmented) first;
+  Look is optional secondary.
+- `Views/HomeSearchViews.swift` — Home is shelves + recents + quiet rows
+  (no look pills, no bento tiles). Toolbar cycles Appearance only.
+- Layout, type scale, and `NavigationSplitView` navigation stay identical
+  across looks — no per-look view variants.
 
 ## 8. Micro-delight: kind empty states, satisfying cleanup completion, Timeline view as discovery
 

@@ -388,15 +388,20 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            Section("Look & Style") {
-                Picker("Look", selection: $theme.look) {
-                    ForEach(AppLook.allCases) { Text($0.rawValue).tag($0) }
-                }
+            Section("Appearance") {
                 Picker("Appearance", selection: $theme.appearance) {
                     ForEach(AppearanceMode.allCases) { Text($0.rawValue).tag($0) }
                 }
+                .pickerStyle(.segmented)
+                Text("System follows macOS. Light and Dark force the window scheme. Default look is Modern (native frosted glass).")
+                    .font(FileRadarFont.caption()).foregroundStyle(.secondary)
                 Toggle("Compact density", isOn: $theme.compactDensity)
-                Text("Four looks share one type scale and one accent system, each in System, Light, or Dark. Compact tightens sidebar and grid spacing. Cycle looks with Shift-Cmd-L.")
+            }
+            Section("Look (optional)") {
+                Picker("Look", selection: $theme.look) {
+                    ForEach(AppLook.allCases) { Text($0.rawValue).tag($0) }
+                }
+                Text("Modern is the Apple-like default. Elegant, Colourful, and Minimal only change accent and surface — layout stays the same. Shift-Cmd-L cycles looks.")
                     .font(FileRadarFont.caption()).foregroundStyle(.secondary)
             }
             Section("Quick Search") {
