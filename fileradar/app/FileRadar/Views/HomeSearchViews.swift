@@ -702,7 +702,7 @@ struct InspectorView: View {
                             .font(FileRadarFont.caption()).foregroundStyle(.secondary)
                     }
                 }
-                .onAppear { gitBadge = GitStatusService.badge(for: file.url) }
+                .task(id: file.url) { gitBadge = GitStatusService.badge(for: file.url) }
             }
             if let ocr = file.ocrText, !ocr.isEmpty {
                 Section("Text in this file") {

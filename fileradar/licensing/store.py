@@ -76,6 +76,10 @@ class OneActiveMacError(StoreError):
     pass
 
 
+_INITIALIZED_DBS: set[str] = set()
+_INIT_LOCK = __import__("threading").Lock()
+
+
 def _ensure_private_file(path: str) -> None:
     """Create (if missing) or tighten a state file to mode 0600.
 
@@ -105,8 +109,15 @@ class Store:
         _ensure_private_file(path)
         self.conn = sqlite3.connect(path, check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
-        self.conn.executescript(SCHEMA)
-        self.conn.commit()
+        # Schema runs once per process per DB path. :memory: always inits
+        # because each connection is a fresh database.
+        with _INIT_LOCK:
+            needs_schema = (path == ":memory:" or path not in _INITIALIZED_DBS)
+            if needs_schema:
+                self.conn.executescript(SCHEMA)
+                self.conn.commit()
+                if path != ":memory:":
+                    _INITIALIZED_DBS.add(path)
         # Re-tighten after creation: sqlite may have created -journal
         # files, and the DB file itself must end up 0600 regardless
         # of the umask in effect when the connection was opened.

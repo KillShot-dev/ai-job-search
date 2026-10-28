@@ -330,6 +330,7 @@ final class FileRadarToolService {
 
     private func performTrash(_ files: [FileItem]) -> String {
         let moved = trash.trash(files)
+        store.removeFiles(matching: Set(moved.map { $0.originalURL.path }))
         let movedIDs = Set(moved.map(\.originalURL))
         let unmoved = files.filter { !movedIDs.contains($0.url) }
         if moved.isEmpty {
@@ -391,6 +392,7 @@ final class FileRadarToolService {
             // approved folder itself was confinement-checked at staging.
             do {
                 try FileManager.default.moveItem(at: file.url, to: destination)
+                store.updateFileURL(from: file.url, to: destination)
                 moved.append(file.name)
             } catch {
                 failed.append(file.name)

@@ -111,11 +111,24 @@ struct ExtrasView: View {
                     LockedFeatureView(feature: .batchRename) { showLicense = true }
                 } else {
                     TextField("Pattern — {name}, {n}, {date}", text: $pattern)
-                    let plan = RenameService.preview(files: Array(store.files.prefix(20)), pattern: pattern)
+                    let selected = store.files.filter { store.selectedIDs.contains($0.id) }
+                    let targets = selected.isEmpty ? Array(store.files.prefix(20)) : selected
+                    let plan = RenameService.preview(files: targets, pattern: pattern)
                     ForEach(plan, id: \.file.id) { item in
                         HStack { Text(item.file.name); Spacer(); Text(item.newName).foregroundStyle(.secondary) }
                     }
-                    Text("Preview only shows the first 20 files. Collisions are refused, never overwritten.")
+                    Button("Apply Rename") {
+                        let refused = RenameService.apply(plan)
+                        let refusedIDs = Set(refused.map(\.id))
+                        for (file, newName) in plan where !refusedIDs.contains(file.id) {
+                            let dest = file.url.deletingLastPathComponent().appendingPathComponent(newName)
+                            store.updateFileURL(from: file.url, to: dest)
+                        }
+                    }
+                    .disabled(plan.allSatisfy { $0.newName == $0.file.name })
+                    Text(selected.isEmpty
+                          ? "No selection — preview shows the first 20 files. Collisions are refused, never overwritten."
+                          : "Applying renames the current selection. Collisions are refused, never overwritten.")
                         .font(FileRadarFont.caption()).foregroundStyle(.secondary)
                 }
             }

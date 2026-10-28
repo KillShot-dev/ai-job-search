@@ -51,11 +51,20 @@ struct MenuBarExtraView: View {
 // MARK: - Quick Search panel content
 
 struct QuickSearchPanelView: View {
+    var store: FileStore?
+    var license: LicenseManager?
     @State private var query = ""
     @State private var parsed = ParsedQuery(chips: [], freeText: "")
 
+    private var results: [FileItem] {
+        guard let store, license?.isAllowed(.quickSearch) == true else { return [] }
+        let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !q.isEmpty else { return [] }
+        return Array(store.search(parsed).prefix(40))
+    }
+
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 10) {
             TextField("Quick Search — type in plain words", text: $query)
                 .textFieldStyle(.roundedBorder)
                 .onChange(of: query) { _, new in
@@ -68,9 +77,31 @@ struct QuickSearchPanelView: View {
                         .background(Capsule().fill(Color.accentColor.opacity(0.15)))
                 } }
             }
-            Text("Quick Search is a full-version feature. In demo mode, use Search in the main window.")
-                .font(FileRadarFont.caption()).foregroundStyle(.secondary)
-            Spacer()
+            if license?.isAllowed(.quickSearch) != true {
+                Text("Quick Search is a full-version feature. Unlock to search from this panel.")
+                    .font(FileRadarFont.caption()).foregroundStyle(.secondary)
+            } else if query.isEmpty {
+                Text("Results appear as you type.").font(FileRadarFont.caption()).foregroundStyle(.secondary)
+            } else if results.isEmpty {
+                Text("No matches.").font(FileRadarFont.caption()).foregroundStyle(.secondary)
+            } else {
+                List(results) { file in
+                    HStack {
+                        Image(systemName: file.kind.systemImage)
+                        VStack(alignment: .leading) {
+                            Text(file.name).lineLimit(1)
+                            Text(file.url.deletingLastPathComponent().lastPathComponent)
+                                .font(FileRadarFont.caption()).foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        NSWorkspace.shared.activateFileViewerSelecting([file.url])
+                    }
+                }
+            }
+            Spacer(minLength: 0)
         }.padding()
     }
 }
@@ -248,7 +279,8 @@ struct SettingsView: View {
     @EnvironmentObject var storeKit: StoreKitLicense
     @EnvironmentObject var trial: TrialManager
     @AppStorage("gitBadgesEnabled") private var gitBadgesEnabled = false
-    @State private var rules: [CleanupRule] = CleanupCardType.allCases.map { CleanupRule(type: $0) }
+    @State private var rules: [CleanupRule] = CleanupRulesStore.load()
+    @State private var museAPIKey = ""
     @State private var updateStatus = ""
     @State private var showLicense = false
 
@@ -278,9 +310,10 @@ struct SettingsView: View {
             Section("Automatic clean-up rules (all off by default)") {
                 ForEach($rules) { $rule in
                     Toggle(rule.type.rawValue, isOn: $rule.isEnabled)
+                        .onChange(of: rule.isEnabled) { _, _ in CleanupRulesStore.save(rules) }
                     Text(rule.type.explanation).font(FileRadarFont.caption()).foregroundStyle(.secondary)
                 }
-                Text("Rules only ever move files to Trash, never delete them.")
+                Text("Rules only ever move files to Trash, never delete them. Preferences persist in UserDefaults.")
                     .font(FileRadarFont.caption()).foregroundStyle(.secondary)
             }
             Section("Privacy") {
@@ -313,7 +346,9 @@ struct SettingsView: View {
             }
             Section("Muse") {
                 if museAuth.isConnected {
-                    Text("Muse is connected.")
+                    Text(museAuth.apiKeyConfigured()
+                         ? "Muse is connected via API key."
+                         : "Muse is connected.")
                     Button("Log out of Muse") {
                         Task { await museAuth.logout() }
                     }
@@ -331,11 +366,26 @@ struct SettingsView: View {
                     Text("Connection failed. Please try again.")
                         .font(FileRadarFont.caption()).foregroundStyle(.red)
                 }
+                SecureField("API key (optional fallback)", text: $museAPIKey)
+                    .textFieldStyle(.roundedBorder)
+                    .onSubmit { saveMuseAPIKey() }
+                HStack {
+                    Button("Save API key") { saveMuseAPIKey() }
+                        .disabled(museAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    if museAuth.apiKeyConfigured() {
+                        Button("Clear API key") {
+                            _ = museAuth.setAPIKey(nil)
+                            museAPIKey = ""
+                        }
+                    }
+                }
+                Text("Prefer Connect for OAuth. An API key is a Keychain-only fallback when OAuth is unavailable. Never paste secrets into tickets or logs.")
+                    .font(FileRadarFont.caption()).foregroundStyle(.secondary)
                 Button("Delete chat history") {
                     ChatHistoryStore.deleteHistoryFile()
                     NotificationCenter.default.post(name: .museChatHistoryDeleted, object: nil)
                 }
-                Text("Logging out removes Muse sign-in tokens only. Chat history is kept until you delete it.")
+                Text("Logging out removes Muse sign-in tokens only. Chat history is kept until you delete it. Clearing the API key is separate.")
                     .font(FileRadarFont.caption()).foregroundStyle(.secondary)
             }
             Section("Updates") {
@@ -351,7 +401,13 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 540, height: 620)
+        .frame(width: 540, height: 680)
         .sheet(isPresented: $showLicense) { LicenseEntryView() }
+    }
+
+    private func saveMuseAPIKey() {
+        if museAuth.setAPIKey(museAPIKey) {
+            museAPIKey = ""
+        }
     }
 }

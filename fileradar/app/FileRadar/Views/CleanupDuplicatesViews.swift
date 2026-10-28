@@ -20,7 +20,13 @@ struct CleanupView: View {
                 VStack(spacing: 8) {
                     Image(systemName: "checkmark.circle.fill").font(.largeTitle).foregroundStyle(.green)
                     Text(message).font(FileRadarFont.heading())
-                    Button("Undo") { trash.undoLastBatch(); completedMessage = nil }
+                    Button("Undo") {
+                        let before = trash.recentTrashed
+                        trash.undoLastBatch()
+                        let restored = before.filter { entry in !trash.recentTrashed.contains(where: { $0.id == entry.id }) }
+                        store.restoreFiles(restored.compactMap { SyncCompareService.fileItem(for: $0.originalURL) })
+                        completedMessage = nil
+                    }
                         .keyboardShortcut("z", modifiers: .command)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -53,7 +59,7 @@ struct CleanupView: View {
                 guard let card = confirmingCard else { return }
                 // Principle 5: the completion message names where files went.
                 let moved = trash.trash(card.files)
-                store.files.removeAll { card.files.map(\.id).contains($0.id) }
+                store.removeFiles(matching: Set(moved.map { $0.originalURL.path }))
                 completedMessage = "\(moved.count) files moved to Trash. You can restore them from Finder, or undo here."
                 confirmingCard = nil
             }
@@ -83,9 +89,12 @@ struct DuplicatesView: View {
             } else {
                 Button(scanning ? "Scanning…" : "Scan for duplicates") {
                     scanning = true
+                    let snapshot = store.files
                     Task {
-                        let exact = DuplicateFinder.exactGroups(in: store.files)
-                        let alike = await DuplicateFinder.lookAlikeGroups(in: store.files)
+                        let exact = await Task.detached(priority: .userInitiated) {
+                            DuplicateFinder.exactGroups(in: snapshot)
+                        }.value
+                        let alike = await DuplicateFinder.lookAlikeGroups(in: snapshot)
                         groups = exact + alike
                         scanning = false
                     }
@@ -125,8 +134,8 @@ struct DuplicatesView: View {
             Button("Move to Trash", role: .destructive) {
                 guard let group = confirmingGroup, let keeper = group.keeper else { return }
                 let rest = group.files.filter { $0.id != keeper.id }
-                _ = trash.trash(rest)
-                store.files.removeAll { rest.map(\.id).contains($0.id) }
+                let moved = trash.trash(rest)
+                store.removeFiles(matching: Set(moved.map { $0.originalURL.path }))
                 groups.removeAll { $0.id == group.id }
                 confirmingGroup = nil
             }

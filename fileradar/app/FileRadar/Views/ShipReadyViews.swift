@@ -245,7 +245,8 @@ extension Notification.Name {
 /// Collisions and path-escaping names are refused — never overwritten.
 struct BatchRenameSheet: View {
     var files: [FileItem]
-    var onApplied: ([FileItem]) -> Void
+    /// Successful renames as (old item, new URL) so FileStore can update paths.
+    var onApplied: ([(FileItem, URL)]) -> Void
     @EnvironmentObject var license: LicenseManager
     @Environment(\.dismiss) private var dismiss
     @State private var pattern = "{name}-{n}"
@@ -294,8 +295,13 @@ struct BatchRenameSheet: View {
                     Button("Rename \(files.count)") {
                         let refused = RenameService.apply(plan)
                         failedNames = refused.map(\.name)
-                        let ok = files.filter { f in !refused.contains(where: { $0.id == f.id }) }
-                        onApplied(ok)
+                        let refusedIDs = Set(refused.map(\.id))
+                        var succeeded: [(FileItem, URL)] = []
+                        for (file, newName) in plan where !refusedIDs.contains(file.id) {
+                            let dest = file.url.deletingLastPathComponent().appendingPathComponent(newName)
+                            succeeded.append((file, dest))
+                        }
+                        onApplied(succeeded)
                         if refused.isEmpty { dismiss() }
                     }
                     .buttonStyle(.borderedProminent)

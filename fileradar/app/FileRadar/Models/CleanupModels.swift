@@ -3,7 +3,7 @@ import Foundation
 /// A Cleanup card: one decision, one group of files, one action (Trash).
 /// Principle 2 (Cleanup = decisions) and principle 10 (Trash only, never
 /// outright delete; bulk actions confirm first — enforced in CleanupView).
-enum CleanupCardType: String, CaseIterable {
+enum CleanupCardType: String, CaseIterable, Codable {
     case oldInstallers = "Old installers"
     case forgottenDownloads = "Forgotten downloads"
     case oldScreenshots = "Old screenshots"

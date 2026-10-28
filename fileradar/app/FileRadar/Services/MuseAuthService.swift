@@ -33,18 +33,14 @@ import Security
 ///   in `MuseConfig` are conventional OAuth2 paths that the developer must
 ///   verify in their Meta developer dashboard before shipping.
 ///
-/// SECURITY POSTURE (mirrors `LicenseManager`'s Keychain pattern, with
-/// biometric access control added for tokens):
+/// SECURITY POSTURE (mirrors `LicenseManager`'s Keychain pattern):
 ///   - Tokens live ONLY in the macOS Keychain, service
 ///     `com.metaphasicgroup.fileradar.muse`, accounts `muse-access-token`
-///     (JSON `{token, expiresAt}`) and `muse-refresh-token` (the token
-///     string). No access group, so no extra entitlement is needed, and
-///     items are never synced.
-///   - Access control: SecAccessControl with `.biometryCurrentSet` and
-///     `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` — this-device-only,
-///     and items become inaccessible if the biometric enrollment set
-///     changes, in which case refresh fails closed (tokens wiped, user
-///     reconnects) rather than silently falling back to weaker storage.
+///     (JSON `{token, expiresAt}`), `muse-refresh-token`, and optional
+///     `muse-api-key` (developer API-key fallback). No access group.
+///   - Accessibility: `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`
+///     — this-device-only, no biometry gate (Touch ID prompts blocked
+///     background refresh). Items are never synced.
 ///   - NOTHING secret is ever written to UserDefaults, logs, analytics,
 ///     crash reports, or plaintext files. Error strings shown to the user
 ///     are generic: server response bodies, URLs containing authorization
@@ -116,22 +112,15 @@ private struct StoredAccessToken: Codable {
 
 /// Minimal Keychain wrapper for Muse tokens only. Follows the
 /// `LicenseManager` pattern (SecItemAdd/Update/CopyMatching/Delete, bare
-/// success flags, no secret in any error), plus biometric access control.
-/// A missing item counts as absent, not an error, for reads and deletes.
+/// success flags, no secret in any error). No biometry — accessibility is
+/// `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` so background refresh
+/// and Settings edits do not prompt for Touch ID. A missing item counts
+/// as absent, not an error, for reads and deletes.
 private enum MuseTokenStore {
     private static let service = "com.metaphasicgroup.fileradar.muse"
     private static let accessAccount = "muse-access-token"
     private static let refreshAccount = "muse-refresh-token"
-
-    /// Biometric access control: current biometric set only, unlocked
-    /// device only, never synced. Creation failure means "fail closed":
-    /// callers treat a nil control as a store failure.
-    private static func accessControl() -> SecAccessControl? {
-        SecAccessControlCreateWithFlags(nil,
-                                        kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
-                                        .biometryCurrentSet,
-                                        nil)
-    }
+    private static let apiKeyAccount = "muse-api-key"
 
     private static func baseQuery(account: String) -> [String: Any] {
         [kSecClass as String: kSecClassGenericPassword,
@@ -148,6 +137,7 @@ private enum MuseTokenStore {
 
     static func accessTokenExists() -> Bool { exists(account: accessAccount) }
     static func refreshTokenExists() -> Bool { exists(account: refreshAccount) }
+    static func apiKeyExists() -> Bool { exists(account: apiKeyAccount) }
 
     private static func readData(account: String) -> Data? {
         var query = baseQuery(account: account)
@@ -160,24 +150,20 @@ private enum MuseTokenStore {
     }
 
     private static func writeData(_ data: Data, account: String) -> Bool {
-        guard let control = accessControl() else { return false }
         var attributes = baseQuery(account: account)
         attributes[kSecValueData as String] = data
-        attributes[kSecAttrAccessControl as String] = control
+        attributes[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
         let addStatus = SecItemAdd(attributes as CFDictionary, nil)
         if addStatus == errSecSuccess { return true }
         guard addStatus == errSecDuplicateItem else { return false }
-        // Update path must carry the same access control, or the item
-        // would keep whatever control it was created with.
         let updateStatus = SecItemUpdate(baseQuery(account: account) as CFDictionary,
                                          [kSecValueData as String: data,
-                                          kSecAttrAccessControl as String: control] as CFDictionary)
+                                          kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly] as CFDictionary)
         return updateStatus == errSecSuccess
     }
 
     private static func delete(account: String) {
-        let status = SecItemDelete(baseQuery(account: account) as CFDictionary)
-        _ = status // errSecItemNotFound and any other status both mean "not stored"
+        _ = SecItemDelete(baseQuery(account: account) as CFDictionary)
     }
 
     static func readAccessToken() -> StoredAccessToken? {
@@ -202,7 +188,24 @@ private enum MuseTokenStore {
         return writeData(data, account: refreshAccount)
     }
 
-    /// Wipes ALL Muse tokens. Used by `logout()` and by refresh failure.
+    static func readAPIKey() -> String? {
+        guard let data = readData(account: apiKeyAccount),
+              let key = String(data: data, encoding: .utf8),
+              !key.isEmpty else { return nil }
+        return key
+    }
+
+    static func writeAPIKey(_ key: String) -> Bool {
+        let trimmed = key.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, let data = trimmed.data(using: .utf8) else { return false }
+        return writeData(data, account: apiKeyAccount)
+    }
+
+    static func deleteAPIKey() {
+        delete(account: apiKeyAccount)
+    }
+
+    /// Wipes OAuth Muse tokens (not the optional API key — that has its own clear).
     static func deleteAll() {
         delete(account: accessAccount)
         delete(account: refreshAccount)
@@ -234,7 +237,7 @@ final class MuseAuthService: NSObject, ObservableObject {
     override init() {
         super.init()
         // Presence only — no secret is loaded into memory at launch.
-        isConnected = MuseTokenStore.refreshTokenExists()
+        isConnected = MuseTokenStore.refreshTokenExists() || MuseTokenStore.apiKeyExists()
     }
 
     // MARK: - Sign-in
@@ -339,7 +342,30 @@ final class MuseAuthService: NSObject, ObservableObject {
     /// are stored at all. The returned token must be used only in an
     /// `Authorization` header for the configured HTTPS endpoint and must
     /// never be logged or persisted elsewhere.
+    /// Store or clear a developer API-key fallback (Settings SecureField).
+    /// When set, Muse chat uses this bearer token instead of OAuth.
+    @discardableResult
+    func setAPIKey(_ raw: String?) -> Bool {
+        guard let raw, !raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            MuseTokenStore.deleteAPIKey()
+            isConnected = MuseTokenStore.refreshTokenExists()
+            return true
+        }
+        guard MuseTokenStore.writeAPIKey(raw) else {
+            lastError = "Could not store the API key securely."
+            return false
+        }
+        isConnected = true
+        lastError = nil
+        return true
+    }
+
+    func apiKeyConfigured() -> Bool { MuseTokenStore.apiKeyExists() }
+
     func validAccessToken() async throws -> String {
+        if let apiKey = MuseTokenStore.readAPIKey() {
+            return apiKey
+        }
         if let stored = MuseTokenStore.readAccessToken(),
            stored.expiresAt.timeIntervalSinceNow > 60 {
             return stored.token
@@ -374,7 +400,7 @@ final class MuseAuthService: NSObject, ObservableObject {
     /// separate, explicit button, not a side effect of signing out.
     func logout() async {
         MuseTokenStore.deleteAll()
-        isConnected = false
+        isConnected = MuseTokenStore.apiKeyExists()
         lastError = nil
     }
 

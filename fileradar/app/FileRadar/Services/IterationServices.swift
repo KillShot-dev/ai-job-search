@@ -32,17 +32,39 @@ final class DropStack: ObservableObject {
 /// Used by the Drop Stack tray and by dual-pane drops alike, so a drag
 /// behaves the same everywhere (principle 4).
 enum DropUtilities {
+    private static let lock = NSLock()
+
     static func loadURLs(from providers: [NSItemProvider], completion: @escaping ([URL]) -> Void) {
         var found: [URL] = []
         let group = DispatchGroup()
         for provider in providers where provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
             group.enter()
             provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, _ in
-                if let url = item as? URL { found.append(url) }
+                let url = decodeFileURL(item)
+                if let url {
+                    lock.lock()
+                    found.append(url)
+                    lock.unlock()
+                }
                 group.leave()
             }
         }
         group.notify(queue: .main) { completion(found) }
+    }
+
+    /// NSItemProvider may hand back URL, NSURL, or bookmark/file-URL Data.
+    private static func decodeFileURL(_ item: NSSecureCoding?) -> URL? {
+        if let url = item as? URL { return url }
+        if let ns = item as? NSURL { return ns as URL }
+        if let data = item as? Data {
+            if let url = URL(dataRepresentation: data, relativeTo: nil) { return url }
+            if let s = String(data: data, encoding: .utf8), let url = URL(string: s) { return url }
+            var stale = false
+            if let url = try? URL(resolvingBookmarkData: data, options: [.withoutUI], relativeTo: nil, bookmarkDataIsStale: &stale) {
+                return url
+            }
+        }
+        return nil
     }
 }
 
@@ -187,6 +209,15 @@ final class TransferQueue: ObservableObject {
                 }
             }.value
             if let error = result, firstError == nil { firstError = error }
+            else if result == nil, item.isMove {
+                await MainActor.run {
+                    NotificationCenter.default.post(
+                        name: .fileURLDidChange,
+                        object: nil,
+                        userInfo: ["old": source, "new": destination]
+                    )
+                }
+            }
             completed += 1
             let done = completed
             await MainActor.run { items[index].completedFiles = done }
@@ -459,8 +490,10 @@ enum ArchiveBrowser {
         process.standardOutput = pipe
         process.standardError = FileHandle.nullDevice
         guard (try? process.run()) != nil else { return "" }
+        // Read before waitUntilExit so a full pipe buffer cannot deadlock.
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
         process.waitUntilExit()
-        return String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+        return String(data: data, encoding: .utf8) ?? ""
     }
 
     private static func listZip(_ archive: URL) -> [ArchiveEntry] {
@@ -660,28 +693,38 @@ enum SyncCompareService {
 // not run on a Mac, and git may not be installed on every Mac — a
 // missing git binary simply yields no badge, never an error surface.
 
+@MainActor
 enum GitStatusService {
+    /// Cache keyed by repo root path → relative filename → porcelain code.
     private static var cache: [String: [String: String]] = [:]
 
     static func badge(for file: URL) -> String? {
-        let folder = file.deletingLastPathComponent()
-        if cache[folder.path] == nil { cache[folder.path] = statusMap(for: folder) }
-        return cache[folder.path]?[file.lastPathComponent]
+        guard let root = repoRoot(for: file) else { return nil }
+        if cache[root.path] == nil {
+            cache[root.path] = statusMap(forRoot: root)
+        }
+        // Prefer path relative to repo root; fall back to last path component.
+        let relative = file.path.hasPrefix(root.path + "/")
+            ? String(file.path.dropFirst(root.path.count + 1))
+            : file.lastPathComponent
+        return cache[root.path]?[relative] ?? cache[root.path]?[file.lastPathComponent]
     }
 
-    private static func statusMap(for folder: URL) -> [String: String] {
-        var dir: URL? = folder
-        var repoRoot: URL?
-        for _ in 0..<6 {
+    private static func repoRoot(for file: URL) -> URL? {
+        var dir: URL? = file.deletingLastPathComponent()
+        for _ in 0..<12 {
             guard let current = dir else { break }
             if FileManager.default.fileExists(atPath: current.appendingPathComponent(".git").path) {
-                repoRoot = current
-                break
+                return current
             }
-            dir = current.deletingLastPathComponent()
-            if dir == current { break }
+            let parent = current.deletingLastPathComponent()
+            if parent == current { break }
+            dir = parent
         }
-        guard let root = repoRoot else { return [:] }
+        return nil
+    }
+
+    private static func statusMap(forRoot root: URL) -> [String: String] {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
         process.arguments = ["-C", root.path, "status", "--porcelain"]
@@ -689,19 +732,21 @@ enum GitStatusService {
         process.standardOutput = pipe
         process.standardError = FileHandle.nullDevice
         guard (try? process.run()) != nil else { return [:] }
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
         process.waitUntilExit()
-        let output = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+        let output = String(data: data, encoding: .utf8) ?? ""
         var map: [String: String] = [:]
         for line in output.components(separatedBy: .newlines) where line.count > 3 {
             let code = String(line.prefix(2)).trimmingCharacters(in: .whitespaces)
             var name = String(line.dropFirst(3)).trimmingCharacters(in: .whitespaces)
-            // Renames print as "old -> new": the badge belongs to the new name.
             if let arrow = name.range(of: " -> ") { name = String(name[arrow.upperBound...]) }
-            // Git quotes paths containing unusual characters.
             if name.hasPrefix("\""), name.hasSuffix("\""), name.count >= 2 {
                 name = String(name.dropFirst().dropLast())
             }
-            if !code.isEmpty, !name.isEmpty { map[URL(fileURLWithPath: name).lastPathComponent] = code }
+            if !code.isEmpty, !name.isEmpty {
+                map[name] = code
+                map[URL(fileURLWithPath: name).lastPathComponent] = code
+            }
         }
         return map
     }

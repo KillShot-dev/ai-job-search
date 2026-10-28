@@ -116,9 +116,11 @@ class BodyTooLarge(Exception):
 class RateLimiter:
     """Fixed-window, per-IP rate limiter (stdlib only, thread-safe)."""
 
-    def __init__(self, limits: dict | None = None, window_seconds: int = 60):
+    def __init__(self, limits: dict | None = None, window_seconds: int = 60,
+                 max_keys: int = 10_000):
         self.limits = dict(limits or RATE_LIMITS)
         self.window = window_seconds
+        self.max_keys = max_keys
         self._lock = threading.Lock()
         self._hits: dict[tuple[str, str], deque] = {}
 
@@ -129,13 +131,31 @@ class RateLimiter:
         now = time.monotonic()
         key = (client_ip, path)
         with self._lock:
+            self._evict_locked(now)
             queue = self._hits.setdefault(key, deque())
             while queue and queue[0] <= now - self.window:
                 queue.popleft()
+            if not queue and key in self._hits and len(queue) == 0:
+                # Keep the key for this check; empty keys are evicted next pass.
+                pass
             if len(queue) >= limit:
                 return False
             queue.append(now)
             return True
+
+    def _evict_locked(self, now: float) -> None:
+        """Drop empty / fully-expired keys so the map cannot grow without bound."""
+        stale = [k for k, q in self._hits.items()
+                 if not q or q[-1] <= now - self.window]
+        for k in stale:
+            del self._hits[k]
+        if len(self._hits) <= self.max_keys:
+            return
+        # Bound worst-case growth: drop oldest-by-last-hit until under cap.
+        ordered = sorted(self._hits.items(), key=lambda kv: kv[1][-1] if kv[1] else 0)
+        overflow = len(self._hits) - self.max_keys
+        for k, _ in ordered[:overflow]:
+            self._hits.pop(k, None)
 
 
 _DEFAULT_LIMITER = RateLimiter()
@@ -202,6 +222,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Referrer-Policy", "no-referrer")
         self.send_header("Cache-Control", "no-store")
         self.send_header("Content-Security-Policy", "default-src 'none'")
+        self.send_header("Access-Control-Allow-Origin", "*")
         if extra_headers:
             for key, value in extra_headers.items():
                 self.send_header(key, value)
@@ -239,6 +260,22 @@ class Handler(BaseHTTPRequestHandler):
         return self.client_address[0] if self.client_address else "unknown"
 
     # -- routing ------------------------------------------------------
+
+    def do_OPTIONS(self):
+        # CORS preflight for browser-based admin/tools. Credentials are never
+        # reflected; allowlist is methods + content-type / admin headers only.
+        path = urlsplit(self.path).path
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers",
+                         "Content-Type, X-Admin-Token, Authorization, Stripe-Signature")
+        self.send_header("Access-Control-Max-Age", "600")
+        self.send_header("Content-Length", "0")
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        _ = path  # path reserved for future per-route allowlists
+
     def do_GET(self):
         try:
             path = urlsplit(self.path).path
@@ -262,12 +299,13 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         path = urlsplit(self.path).path
+        # Rate-limit BEFORE opening the store so a flood never touches SQLite.
+        if path in RATE_LIMITS and not _limiter_for(self).allowed(self._client_ip(), path):
+            self._send_json(429, {"error": "rate limit exceeded"},
+                            extra_headers={"Retry-After": "60"})
+            return
         store = _store()
         try:
-            if path in RATE_LIMITS and not _limiter_for(self).allowed(self._client_ip(), path):
-                self._send_json(429, {"error": "rate limit exceeded"},
-                                extra_headers={"Retry-After": "60"})
-                return
             if path in ADMIN_ENDPOINTS and not _admin_authorized(self):
                 # Generic 403: identical whether the token is missing,
                 # wrong, or simply not configured server-side.

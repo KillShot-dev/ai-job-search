@@ -1,4 +1,8 @@
 import Foundation
+import ImageIO
+import CoreGraphics
+import AppKit
+import CoreServices
 
 /// On-device file index. Runs on a background queue and never blocks the UI
 /// (principle 10). Search reads the in-memory index, so it feels instant
@@ -24,14 +28,15 @@ final class FileStore: ObservableObject {
     enum ViewMode: String, CaseIterable { case grid, list, columns, showcase }
     enum SortOrder: String, CaseIterable { case name, date, size, kind, dateAdded }
 
+    private let indexer = Indexer()
+    private var folderWatcher: FolderWatcher?
+
     /// Sort a list with the current sort order (iteration 1: shared by
     /// search results and by every file collection, so sort keys behave
     /// the same everywhere: name, date modified, size, kind, date added).
     func sorted(_ files: [FileItem]) -> [FileItem] {
         files.sorted(by: sortComparator)
     }
-
-    private let indexer = Indexer()
 
     var recents: [FileItem] {
         files.sorted { $0.modifiedDate > $1.modifiedDate }.prefix(50).map { $0 }
@@ -52,18 +57,119 @@ final class FileStore: ObservableObject {
     func startIndexing(folders: [URL]) {
         guard !isIndexing else { return }
         isIndexing = true
+        let scoped = SecurityBookmarkStore.startAccessing(folders)
+        folderWatcher?.stop()
+        folderWatcher = FolderWatcher(folders: scoped) { [weak self] in
+            Task { @MainActor in self?.refreshIndex() }
+        }
+        folderWatcher?.start()
         Task.detached { [indexer] in
-            let found = await indexer.index(folders: folders) { _ in }
+            let found = await indexer.index(folders: scoped) { _ in }
             await MainActor.run {
                 self.files = found
                 self.indexedCount = found.count
                 self.isIndexing = false
             }
+            await MainActor.run { self.enrichInBackground(found) }
         }
+    }
+
+    /// Re-index currently pinned + bookmarked folders (FSEvents / Add Folder).
+    func refreshIndex() {
+        var folders = SecurityBookmarkStore.resolvedFolders()
+        folders.append(contentsOf: pinnedFolderURLs)
+        if folders.isEmpty {
+            let home = FileManager.default.homeDirectoryForCurrentUser
+            folders = [home.appendingPathComponent("Downloads"),
+                       home.appendingPathComponent("Documents"),
+                       home.appendingPathComponent("Desktop")]
+        }
+        // Deduplicate by path
+        var seen = Set<String>()
+        folders = folders.filter { seen.insert($0.path).inserted }
+        startIndexing(folders: folders)
+    }
+
+    /// Add a user-picked folder via security-scoped bookmark and re-index.
+    func addFolderInteractive() {
+        guard let folder = SecurityBookmarkStore.pickAndStoreFolder() else { return }
+        if !pinnedFolderURLs.contains(folder) {
+            pinnedFolderURLs.append(folder)
+        }
+        refreshIndex()
+    }
+
+    /// Remove indexed entries by path id and clear selection for them.
+    func removeFiles(matching paths: Set<String>) {
+        guard !paths.isEmpty else { return }
+        files.removeAll { paths.contains($0.id) }
+        selectedIDs.subtract(paths)
+        indexedCount = files.count
+    }
+
+    /// Update a file's URL after rename/move (keeps selection when possible).
+    func updateFileURL(from old: URL, to new: URL) {
+        let oldPath = old.path
+        guard let idx = files.firstIndex(where: { $0.id == oldPath }) else { return }
+        var item = files[idx]
+        item = FileItem(
+            url: new,
+            kind: item.kind,
+            size: item.size,
+            modifiedDate: item.modifiedDate,
+            createdDate: item.createdDate,
+            downloadSource: item.downloadSource,
+            tags: item.tags,
+            isICloudOnly: item.isICloudOnly,
+            ocrText: item.ocrText,
+            width: item.width,
+            height: item.height,
+            duration: item.duration,
+            cameraModel: item.cameraModel
+        )
+        files[idx] = item
+        if selectedIDs.remove(oldPath) != nil {
+            selectedIDs.insert(new.path)
+        }
+    }
+
+    /// Re-insert restored files after Trash undo (paths that exist again).
+    func restoreFiles(_ items: [FileItem]) {
+        for item in items where !files.contains(where: { $0.id == item.id }) {
+            files.append(item)
+        }
+        indexedCount = files.count
     }
 
     func search(_ parsed: ParsedQuery) -> [FileItem] {
         files.filter { item in matches(item, parsed) }.sorted(by: sortComparator)
+    }
+
+    private func enrichInBackground(_ snapshot: [FileItem]) {
+        Task.detached(priority: .utility) {
+            var updates: [(String, String?, [FileTag], Int?, Int?, String?)] = []
+            for file in snapshot where !file.isICloudOnly {
+                var ocr = file.ocrText
+                if ocr == nil {
+                    if file.kind == .image {
+                        ocr = await OCRService.recogniseText(in: file)
+                    } else if file.extensionLowercased == "pdf" {
+                        ocr = await OCRService.recogniseTextInPDF(file, maxPages: 5)
+                    }
+                }
+                var enriched = file
+                enriched.ocrText = ocr
+                let tags = TagService.autoTags(for: enriched)
+                updates.append((file.id, ocr, tags, file.width, file.height, file.cameraModel))
+            }
+            await MainActor.run {
+                for (id, ocr, tags, _, _, _) in updates {
+                    guard let idx = self.files.firstIndex(where: { $0.id == id }) else { continue }
+                    self.files[idx].ocrText = ocr
+                    self.files[idx].tags = tags
+                }
+            }
+        }
     }
 
     private var sortComparator: (FileItem, FileItem) -> Bool {
@@ -114,6 +220,116 @@ final class FileStore: ObservableObject {
     }
 }
 
+/// Security-scoped bookmark store so sandboxed Add Folder grants survive relaunch.
+enum SecurityBookmarkStore {
+    private static let defaultsKey = "com.metaphasicgroup.fileradar.folderBookmarks"
+
+    static func pickAndStoreFolder() -> URL? {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowsMultipleSelection = false
+        panel.prompt = "Add Folder"
+        guard panel.runModal() == .OK, let url = panel.url else { return nil }
+        store(url)
+        _ = url.startAccessingSecurityScopedResource()
+        return url
+    }
+
+    static func store(_ url: URL) {
+        guard let data = try? url.bookmarkData(options: .withSecurityScope,
+                                               includingResourceValuesForKeys: nil,
+                                               relativeTo: nil) else { return }
+        var map = loadMap()
+        map[url.path] = data
+        if let encoded = try? JSONEncoder().encode(map.map { BookmarkRecord(path: $0.key, data: $0.value) }) {
+            UserDefaults.standard.set(encoded, forKey: defaultsKey)
+        }
+    }
+
+    static func resolvedFolders() -> [URL] {
+        var urls: [URL] = []
+        for (_, data) in loadMap() {
+            var isStale = false
+            guard let url = try? URL(resolvingBookmarkData: data,
+                                     options: [.withSecurityScope, .withoutUI],
+                                     relativeTo: nil,
+                                     bookmarkDataIsStale: &isStale) else { continue }
+            _ = url.startAccessingSecurityScopedResource()
+            urls.append(url)
+        }
+        return urls
+    }
+
+    static func startAccessing(_ folders: [URL]) -> [URL] {
+        for url in folders { _ = url.startAccessingSecurityScopedResource() }
+        return folders
+    }
+
+    private struct BookmarkRecord: Codable {
+        var path: String
+        var data: Data
+    }
+
+    private static func loadMap() -> [String: Data] {
+        guard let raw = UserDefaults.standard.data(forKey: defaultsKey),
+              let records = try? JSONDecoder().decode([BookmarkRecord].self, from: raw) else { return [:] }
+        return Dictionary(uniqueKeysWithValues: records.map { ($0.path, $0.data) })
+    }
+}
+
+/// Lightweight FSEvents watcher — coalesces bursts then asks FileStore to refresh.
+final class FolderWatcher {
+    private var stream: FSEventStreamRef?
+    private let folders: [URL]
+    private let onChange: () -> Void
+    private var pending = false
+
+    init(folders: [URL], onChange: @escaping () -> Void) {
+        self.folders = folders
+        self.onChange = onChange
+    }
+
+    func start() {
+        stop()
+        let paths = folders.map(\.path) as CFArray
+        var context = FSEventStreamContext(
+            version: 0, info: Unmanaged.passUnretained(self).toOpaque(),
+            retain: nil, release: nil, copyDescription: nil)
+        let callback: FSEventStreamCallback = { _, info, _, _, _, _ in
+            guard let info else { return }
+            let watcher = Unmanaged<FolderWatcher>.fromOpaque(info).takeUnretainedValue()
+            watcher.scheduleRefresh()
+        }
+        stream = FSEventStreamCreate(nil, callback, &context, paths,
+                                     FSEventStreamEventId(kFSEventStreamEventIdSinceNow),
+                                     1.5,
+                                     FSEventStreamCreateFlags(kFSEventStreamCreateFlagFileEvents))
+        guard let stream else { return }
+        FSEventStreamScheduleWithRunLoop(stream, CFRunLoopGetMain(), CFRunLoopMode.defaultMode.rawValue)
+        FSEventStreamStart(stream)
+    }
+
+    func stop() {
+        guard let stream else { return }
+        FSEventStreamStop(stream)
+        FSEventStreamInvalidate(stream)
+        FSEventStreamRelease(stream)
+        self.stream = nil
+    }
+
+    private func scheduleRefresh() {
+        guard !pending else { return }
+        pending = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            self?.pending = false
+            self?.onChange()
+        }
+    }
+
+    deinit { stop() }
+}
+
 /// Background enumerator. Skips hidden files, package contents it cannot
 /// read, and anything the sandbox has not been granted access to — those
 /// simply do not appear, rather than erroring the whole index.
@@ -131,9 +347,6 @@ struct Indexer {
                     .isDirectoryKey, .fileSizeKey, .contentModificationDateKey, .creationDateKey,
                     .ubiquitousItemDownloadingStatusKey, .isSymbolicLinkKey,
                 ]) else { continue }
-                // Symlinks are never followed into: indexing through one
-                // would pull in files outside the folder the user granted,
-                // and a symlink loop could spin the enumerator forever.
                 if values.isSymbolicLink == true {
                     if values.isDirectory == true { enumerator.skipDescendants() }
                     continue
@@ -141,20 +354,49 @@ struct Indexer {
                 let isDir = values.isDirectory ?? false
                 let status = values.ubiquitousItemDownloadingStatus
                 let isICloudOnly = status == URLUbiquitousItemDownloadingStatus.notDownloaded
-                let item = FileItem(
+                let kind = FileKind.from(url: url, isDirectory: isDir)
+                let meta = ImageMetadata.read(from: url, kind: kind, isICloudOnly: isICloudOnly)
+                var item = FileItem(
                     url: url,
-                    kind: FileKind.from(url: url, isDirectory: isDir),
+                    kind: kind,
                     size: Int64(values.fileSize ?? 0),
                     modifiedDate: values.contentModificationDate ?? .distantPast,
                     createdDate: values.creationDate ?? .distantPast,
                     downloadSource: DownloadSourceDetector.source(for: url),
                     tags: [],
-                    isICloudOnly: isICloudOnly
+                    isICloudOnly: isICloudOnly,
+                    ocrText: nil,
+                    width: meta.width,
+                    height: meta.height,
+                    duration: nil,
+                    cameraModel: meta.cameraModel
                 )
+                item.tags = TagService.autoTags(for: item)
                 results.append(item)
                 if results.count % 500 == 0 { progress(results.count) }
             }
         }
         return results
+    }
+}
+
+/// CGImageSource metadata (width / height / camera) — no full decode.
+enum ImageMetadata {
+    static func read(from url: URL, kind: FileKind, isICloudOnly: Bool) -> (width: Int?, height: Int?, cameraModel: String?) {
+        guard kind == .image, !isICloudOnly else { return (nil, nil, nil) }
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
+              let props = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any] else {
+            return (nil, nil, nil)
+        }
+        let width = props[kCGImagePropertyPixelWidth] as? Int
+        let height = props[kCGImagePropertyPixelHeight] as? Int
+        var camera: String?
+        if let exif = props[kCGImagePropertyExifDictionary] as? [CFString: Any] {
+            camera = exif[kCGImagePropertyExifLensModel] as? String
+        }
+        if camera == nil, let tiff = props[kCGImagePropertyTIFFDictionary] as? [CFString: Any] {
+            camera = tiff[kCGImagePropertyTIFFModel] as? String
+        }
+        return (width, height, camera)
     }
 }

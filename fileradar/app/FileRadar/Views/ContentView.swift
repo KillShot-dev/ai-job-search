@@ -35,6 +35,7 @@ enum Destination: Hashable {
     }
 }
 
+@MainActor
 struct ContentView: View {
     @EnvironmentObject var store: FileStore
     @EnvironmentObject var license: LicenseManager
@@ -73,11 +74,10 @@ struct ContentView: View {
                 showBatchRename: $showBatchRename,
                 selectedFiles: selectedFiles,
                 onPalette: performPalette,
-                onRenameApplied: { renamed in
-                    for file in renamed {
-                        store.files.removeAll { $0.id == file.id }
+                onRenameApplied: { plan in
+                    for (old, newURL) in plan {
+                        store.updateFileURL(from: old.url, to: newURL)
                     }
-                    store.selectedIDs = []
                 }
             ))
             .modifier(ContentNotificationsModifier(
@@ -277,6 +277,10 @@ struct ContentView: View {
                     .help("Quiet preview strip under the file list (Shift-Cmd-P).")
                 }
                 ToolbarItem(placement: .navigation) {
+                    Button("Add Folder…") { store.addFolderInteractive() }
+                        .help("Add a folder with a security-scoped bookmark and index it.")
+                }
+                ToolbarItem(placement: .navigation) {
                     Button("Rename…") { showBatchRename = true }
                         .keyboardShortcut("r", modifiers: [.command, .shift])
                         .disabled(store.selectedIDs.isEmpty)
@@ -305,10 +309,7 @@ struct ContentView: View {
 
     private func bootstrap() {
         if store.files.isEmpty {
-            let home = FileManager.default.homeDirectoryForCurrentUser
-            store.startIndexing(folders: [home.appendingPathComponent("Downloads"),
-                                          home.appendingPathComponent("Documents"),
-                                          home.appendingPathComponent("Desktop")])
+            store.refreshIndex()
         }
         if !museTokenProviderSet {
             museClient.tokenProvider = { [museAuth] in try await museAuth.validAccessToken() }
@@ -351,9 +352,7 @@ struct ContentView: View {
         let items = selectedFiles
         guard !items.isEmpty else { return }
         let moved = trash.trash(items)
-        let movedPaths = Set(moved.map { $0.originalURL.path })
-        store.files.removeAll { file in movedPaths.contains(file.id) }
-        store.selectedIDs = store.selectedIDs.subtracting(movedPaths)
+        store.removeFiles(matching: Set(moved.map { $0.originalURL.path }))
     }
 
     private func selectAllVisible() {
@@ -474,14 +473,14 @@ private struct ContentSheetsModifier: ViewModifier {
     @Binding var showBatchRename: Bool
     var selectedFiles: [FileItem]
     var onPalette: (PaletteAction) -> Void
-    var onRenameApplied: ([FileItem]) -> Void
+    var onRenameApplied: ([(FileItem, URL)]) -> Void
 
     func body(content: Content) -> some View {
         content
             .sheet(isPresented: $showLicense) { LicenseEntryView() }
             .sheet(isPresented: $showPalette) { CommandPaletteView(onSelect: onPalette) }
             .sheet(isPresented: $showBatchRename) {
-                BatchRenameSheet(files: selectedFiles, onApplied: onRenameApplied)
+                BatchRenameSheet(files: selectedFiles) { plan in onRenameApplied(plan) }
             }
     }
 }
@@ -541,8 +540,8 @@ private struct ContentNotificationsModifier: ViewModifier {
             }
             .onReceive(NotificationCenter.default.publisher(for: .moveToTrash)) { note in
                 if let file = note.object as? FileItem {
-                    _ = trash.trash([file])
-                    store.files.removeAll { $0.id == file.id }
+                    let moved = trash.trash([file])
+                    store.removeFiles(matching: Set(moved.map { $0.originalURL.path }))
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: .applySavedSearch)) { note in
@@ -556,6 +555,12 @@ private struct ContentNotificationsModifier: ViewModifier {
             }
             .onReceive(NotificationCenter.default.publisher(for: .trashSelection)) { _ in
                 onTrashSelection()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .fileURLDidChange)) { note in
+                if let old = note.userInfo?["old"] as? URL,
+                   let newURL = note.userInfo?["new"] as? URL {
+                    store.updateFileURL(from: old, to: newURL)
+                }
             }
     }
 }

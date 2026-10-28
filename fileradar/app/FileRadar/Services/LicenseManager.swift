@@ -109,16 +109,36 @@ final class LicenseManager: ObservableObject {
 
     init() { restore() }
 
-    // MARK: - Validation (pure, testable)
+    // MARK: - Validation (pure, testable; mirrors licensing/serials.py)
 
-    static func validate(_ raw: String) -> Bool {
-        let cleaned = raw.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-        let parts = cleaned.split(separator: "-").map(String.init)
-        guard parts.count == 5, parts[0] == "FR" else { return false }
-        let groups = Array(parts.dropFirst())
-        guard groups.count == 4, groups.allSatisfy({ $0.count == 4 }) else { return false }
-        let body = groups.joined()
-        guard body.allSatisfy({ alphabet.contains($0) }) else { return false }
+    /// Normalize user input to the 16-char body, or nil if malformed.
+    /// Accepts optional FR/FR- prefix, hyphens, spaces, lowercase.
+    static func normalize(_ raw: String) -> String? {
+        var s = raw.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        s = s.replacingOccurrences(of: "-", with: "").replacingOccurrences(of: " ", with: "")
+        if s.hasPrefix("FR") { s = String(s.dropFirst(2)) }
+        guard s.count == 16, s.allSatisfy({ alphabet.contains($0) }) else { return nil }
+        return s
+    }
+
+    static func format(_ body16: String) -> String? {
+        guard body16.count == 16 else { return nil }
+        let groups = stride(from: 0, to: 16, by: 4).map {
+            String(body16[body16.index(body16.startIndex, offsetBy: $0)..<body16.index(body16.startIndex, offsetBy: $0 + 4)])
+        }
+        return "FR-" + groups.joined(separator: "-")
+    }
+
+    /// Canonical FR-XXXX-XXXX-XXXX-XXXX form, or nil if invalid.
+    static func canonical(_ raw: String) -> String? {
+        guard let body = normalize(raw), validateBody(body), let formatted = format(body) else { return nil }
+        return formatted
+    }
+
+    static func validate(_ raw: String) -> Bool { canonical(raw) != nil }
+
+    private static func validateBody(_ body: String) -> Bool {
+        guard body.count == 16, body.allSatisfy({ alphabet.contains($0) }) else { return false }
         guard let check = checksumChar(for: String(body.prefix(15))) else { return false }
         return check == body.last!
     }
@@ -153,7 +173,7 @@ final class LicenseManager: ObservableObject {
             statusMessage = "Unlocked via Mac App Store purchase."
             return
         }
-        if let saved = serial, Self.validate(saved) {
+        if let saved = serial, Self.canonical(saved) != nil {
             source = .serial
             isUnlocked = true
             statusMessage = nil
@@ -175,8 +195,7 @@ final class LicenseManager: ObservableObject {
 
     @discardableResult
     func activate(_ raw: String) -> Bool {
-        let cleaned = raw.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-        guard Self.validate(cleaned) else {
+        guard let cleaned = Self.canonical(raw) else {
             statusMessage = "That serial number did not check out."
             return false
         }
@@ -195,9 +214,9 @@ final class LicenseManager: ObservableObject {
     }
 
     /// Async activation that prefers server authority when a base URL is set.
+    /// Sends `machine_hash` (SHA-256 of hardware UUID) via LicenseServerClient.
     func activateOnline(_ raw: String) async -> Bool {
-        let cleaned = raw.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-        guard Self.validate(cleaned) else {
+        guard let cleaned = Self.canonical(raw) else {
             statusMessage = "That serial number did not check out."
             return false
         }
@@ -241,6 +260,18 @@ final class LicenseManager: ObservableObject {
         refreshEntitlements()
     }
 
+    /// Online deactivate that always sends machine_hash when a base URL is set.
+    func deactivateOnline() async {
+        let previous = serial
+        serial = nil
+        KeychainSerialStore.delete()
+        removeLegacyCopies()
+        if let previous, DistributionChannel.licensingBaseURL != nil {
+            _ = await LicenseServerClient.deactivate(previous)
+        }
+        refreshEntitlements()
+    }
+
     private func confirmWithServerIfConfigured(_ serial: String) async {
         guard DistributionChannel.licensingBaseURL != nil else { return }
         let result = await LicenseServerClient.activate(serial)
@@ -259,17 +290,19 @@ final class LicenseManager: ObservableObject {
     }
 
     private func restore() {
-        if let saved = KeychainSerialStore.read(), Self.validate(saved) {
-            serial = saved
+        if let saved = KeychainSerialStore.read(), let canon = Self.canonical(saved) {
+            serial = canon
         } else {
             var legacy: String?
-            if let saved = UserDefaults.standard.string(forKey: legacyDefaultsKey), Self.validate(saved) {
-                legacy = saved
+            if let saved = UserDefaults.standard.string(forKey: legacyDefaultsKey),
+               let canon = Self.canonical(saved) {
+                legacy = canon
             } else if let url = legacyStateFileURL,
                       let data = try? Data(contentsOf: url),
                       let record = try? JSONSerialization.jsonObject(with: data) as? [String: String],
-                      let saved = record["serial"], Self.validate(saved) {
-                legacy = saved
+                      let saved = record["serial"],
+                      let canon = Self.canonical(saved) {
+                legacy = canon
             }
             if let migrated = legacy, KeychainSerialStore.write(migrated) {
                 serial = migrated

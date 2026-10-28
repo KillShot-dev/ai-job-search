@@ -127,8 +127,9 @@ final class MuseClient {
         let response: URLResponse
         do {
             (bytes, response) = try await session.bytes(for: request)
+        } catch is CancellationError {
+            throw CancellationError()
         } catch {
-            if error is CancellationError { throw error }
             throw StreamAttemptError.generic
         }
 
@@ -258,8 +259,9 @@ final class MuseClient {
                     }
                 }
             }
+        } catch is CancellationError {
+            throw CancellationError()
         } catch {
-            if error is CancellationError { throw error }
             throw StreamAttemptError.generic
         }
 

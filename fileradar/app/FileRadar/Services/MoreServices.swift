@@ -6,11 +6,36 @@ import AVFoundation
 /// Automatic clean-up rules. Default state is OFF for every rule — the user
 /// opts in per rule in Settings (principle: automatic rules OFF by default).
 /// Even when on, rules only ever move files to Trash, never delete.
-struct CleanupRule: Identifiable {
-    let id = UUID()
+struct CleanupRule: Identifiable, Codable, Equatable {
+    var id: UUID = UUID()
     var type: CleanupCardType
     var isEnabled = false
     var description: String { type.explanation }
+}
+
+/// Persists automatic clean-up rule toggles in UserDefaults (all default OFF).
+enum CleanupRulesStore {
+    private static let defaultsKey = "com.metaphasicgroup.fileradar.cleanupRules"
+
+    static func load() -> [CleanupRule] {
+        let defaults = CleanupCardType.allCases.map { CleanupRule(type: $0) }
+        guard let data = UserDefaults.standard.data(forKey: defaultsKey),
+              let decoded = try? JSONDecoder().decode([CleanupRule].self, from: data) else {
+            return defaults
+        }
+        return CleanupCardType.allCases.map { type in
+            if let existing = decoded.first(where: { $0.type == type }) {
+                return CleanupRule(id: existing.id, type: type, isEnabled: existing.isEnabled)
+            }
+            return CleanupRule(type: type)
+        }
+    }
+
+    static func save(_ rules: [CleanupRule]) {
+        if let data = try? JSONEncoder().encode(rules) {
+            UserDefaults.standard.set(data, forKey: defaultsKey)
+        }
+    }
 }
 
 enum CleanupEngine {

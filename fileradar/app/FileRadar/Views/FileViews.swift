@@ -118,6 +118,7 @@ extension Notification.Name {
     static let togglePreviewStrip = Notification.Name("FileRadarTogglePreviewStrip")
     static let selectAllVisible = Notification.Name("FileRadarSelectAllVisible")
     static let trashSelection = Notification.Name("FileRadarTrashSelection")
+    static let fileURLDidChange = Notification.Name("FileRadarFileURLDidChange")
 }
 
 struct FileCollectionView: View {

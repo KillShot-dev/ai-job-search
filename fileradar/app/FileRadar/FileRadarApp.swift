@@ -40,6 +40,7 @@ struct FileRadarApp: App {
                     store.manualTagNames = { [manualTags] path in
                         manualTags.tags(for: path).map(\.name)
                     }
+                    QuickSearchPanel.shared.configure(store: store, license: license)
                 }
                 .onChange(of: storeKit.isEntitled) { _, _ in
                     license.refreshEntitlements()

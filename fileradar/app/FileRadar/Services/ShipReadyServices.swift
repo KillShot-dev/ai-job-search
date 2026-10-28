@@ -1,7 +1,9 @@
 import Foundation
+import IOKit
 import AppKit
 import CryptoKit
 import Security
+import QuickLookThumbnailing
 
 // MARK: - Distribution channel (MAS vs direct / website)
 
@@ -61,11 +63,13 @@ enum MachineIdentity {
     }
 
     private static func platformUUID() -> String? {
-        // IOKit is not imported here: use the expert-approved UserDefaults/
-        // sysctl-free path available without extra frameworks — the
-        // hardware UUID via IOKit would need import IOKit. Prefer the
-        // Keychain-backed fallback so sandbox builds stay least-privilege.
-        nil
+        let service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IOPlatformExpertDevice"))
+        guard service != 0 else { return nil }
+        defer { IOObjectRelease(service) }
+        guard let cf = IORegistryEntryCreateCFProperty(service, "IOPlatformUUID" as CFString, kCFAllocatorDefault, 0)?.takeRetainedValue() else {
+            return nil
+        }
+        return cf as? String
     }
 
     private static func fallbackUUID() -> String {
@@ -235,10 +239,13 @@ final class ThumbnailCache: ObservableObject {
         let key = url.path
         guard !isICloudOnly, memory[key] == nil, !inflight.contains(key) else { return }
         inflight.insert(key)
-        Task.detached(priority: .utility) {
-            let image = NSImage(contentsOf: url)
-            await MainActor.run {
-                if let image { self.memory[key] = image }
+        let size = CGSize(width: 256, height: 256)
+        let request = QLThumbnailGenerator.Request(fileAt: url, size: size, scale: 2.0, representationTypes: .thumbnail)
+        QLThumbnailGenerator.shared.generateBestRepresentation(for: request) { rep, _ in
+            Task { @MainActor in
+                if let rep {
+                    self.memory[key] = rep.nsImage
+                }
                 self.inflight.remove(key)
                 self.objectWillChange.send()
             }

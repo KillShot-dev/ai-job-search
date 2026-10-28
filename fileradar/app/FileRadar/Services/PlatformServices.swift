@@ -22,7 +22,8 @@ final class QuickLookHelper: NSObject, QLPreviewPanelDataSource, QLPreviewPanelD
 
     func numberOfPreviewItems(in panel: QLPreviewPanel!) -> Int { items.count }
     func previewPanel(_ panel: QLPreviewPanel!, previewItemAt index: Int) -> QLPreviewItem! {
-        items[index] as QLPreviewItem
+        // NSURL is the documented QLPreviewItem bridge for file URLs.
+        items[index] as NSURL
     }
 }
 
@@ -41,14 +42,14 @@ final class HotkeyService {
     func start() {
         localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             if event.modifierFlags.contains([.command, .shift]) && event.keyCode == 49 { // Space
-                QuickSearchPanel.shared.show()
+                Task { @MainActor in QuickSearchPanel.shared.show() }
                 return nil
             }
             return event
         }
         globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { event in
             if event.modifierFlags.contains([.command, .shift]) && event.keyCode == 49 {
-                QuickSearchPanel.shared.show()
+                Task { @MainActor in QuickSearchPanel.shared.show() }
             }
         }
     }
@@ -61,19 +62,36 @@ final class HotkeyService {
 
 /// The Quick Search floating panel (paid feature). Implemented as an NSPanel
 /// so it can appear above other apps; its content is SwiftUI.
+@MainActor
 final class QuickSearchPanel {
     static let shared = QuickSearchPanel()
     private var panel: NSPanel?
+    private weak var store: FileStore?
+    private weak var license: LicenseManager?
+
+    func configure(store: FileStore, license: LicenseManager) {
+        self.store = store
+        self.license = license
+    }
 
     func show() {
+        guard let license else {
+            NotificationCenter.default.post(name: .showLicenseSheet, object: nil)
+            return
+        }
+        guard license.isAllowed(.quickSearch) else {
+            NotificationCenter.default.post(name: .showLicenseSheet, object: nil)
+            return
+        }
         if panel == nil {
-            let view = QuickSearchPanelView()
+            let view = QuickSearchPanelView(store: store, license: license)
             let hosting = NSHostingController(rootView: view)
             let p = NSPanel(contentViewController: hosting)
             p.styleMask = [.titled, .closable, .fullSizeContentView]
             p.setContentSize(NSSize(width: 560, height: 420))
             p.isFloatingPanel = true
             p.level = .floating
+            p.title = "Quick Search"
             panel = p
         }
         panel?.makeKeyAndOrderFront(nil)
@@ -128,8 +146,18 @@ private extension URL {
 /// the intents exist but never appear in Shortcuts.
 struct FileRadarShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
-        AppShortcut(intent: FindFilesIntent(), phrases: ["Find files in \(.applicationName)"])
-        AppShortcut(intent: GetLatestDownloadIntent(), phrases: ["Get my latest download in \(.applicationName)"])
+        AppShortcut(
+            intent: FindFilesIntent(),
+            phrases: ["Find files in \(.applicationName)"],
+            shortTitle: "Find Files",
+            systemImageName: "magnifyingglass"
+        )
+        AppShortcut(
+            intent: GetLatestDownloadIntent(),
+            phrases: ["Get my latest download in \(.applicationName)"],
+            shortTitle: "Latest Download",
+            systemImageName: "arrow.down.circle"
+        )
     }
 }
 

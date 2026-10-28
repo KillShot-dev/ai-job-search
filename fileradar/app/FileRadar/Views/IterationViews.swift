@@ -443,6 +443,7 @@ struct ArchiveBrowserView: View {
 
 struct SyncCompareView: View {
     @EnvironmentObject var license: LicenseManager
+    @EnvironmentObject var store: FileStore
     @StateObject private var trash = TrashService()
     @State private var leftFolder: URL?
     @State private var rightFolder: URL?
@@ -534,6 +535,7 @@ struct SyncCompareView: View {
         guard let urls = comparison?.onlyLeft else { return }
         let items = urls.compactMap { SyncCompareService.fileItem(for: $0) }
         let moved = trash.trash(items)
+        store.removeFiles(matching: Set(moved.map { $0.originalURL.path }))
         doneMessage = "\(moved.count) file\(moved.count == 1 ? "" : "s") moved to Trash. Restore them from Finder if needed."
         comparison = nil
     }
