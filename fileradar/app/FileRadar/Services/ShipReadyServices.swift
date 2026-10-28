@@ -60,14 +60,31 @@ enum LocalDevBuild {
         #if DEBUG
         return true
         #else
-        return isAppleDevelopmentSigned || isAdHocOrUnsigned
+        // Explicit escape hatch for local QA of Release configs.
+        if ProcessInfo.processInfo.environment["FILERADAR_FORCE_UNLOCK"] == "1" {
+            return true
+        }
+        if UserDefaults.standard.bool(forKey: "fileradar.forceUnlock") {
+            return true
+        }
+        return isAppleDevelopmentSigned || isAdHocOrUnsigned || isLocalWorkspaceBinary
         #endif
     }
 
-    /// Best-effort: Apple Development leaf certificate in the code signature.
+    /// Best-effort: Apple Development / Mac Developer leaf certificate.
     private static var isAppleDevelopmentSigned: Bool {
         guard let summary = leafCertificateSummary else { return false }
-        return summary.hasPrefix("Apple Development:")
+        if summary.hasPrefix("Apple Development:") || summary.hasPrefix("Mac Developer:") {
+            return true
+        }
+        // Catch odd local cert CN variants without treating App Store / Dev ID as local.
+        if summary.contains("Development"),
+           !summary.hasPrefix("Developer ID"),
+           !summary.hasPrefix("Apple Distribution"),
+           !summary.hasPrefix("3rd Party Mac Developer") {
+            return true
+        }
+        return false
     }
 
     /// Ad-hoc or unsigned local builds (common for `CODE_SIGN_IDENTITY=-`).
@@ -75,6 +92,8 @@ enum LocalDevBuild {
         guard let dict = signingInformation else { return true }
         let certs = dict[kSecCodeInfoCertificates as String] as? [SecCertificate] ?? []
         if certs.isEmpty { return true }
+        let team = dict[kSecCodeInfoTeamIdentifier as String] as? String
+        if team == nil || team?.isEmpty == true { return true }
         // Developer ID / Apple Distribution / 3rd Party Mac Developer → not local-dev.
         if let summary = leafCertificateSummary {
             if summary.hasPrefix("Developer ID Application:") { return false }
@@ -82,6 +101,18 @@ enum LocalDevBuild {
             if summary.hasPrefix("3rd Party Mac Developer Application:") { return false }
         }
         return false
+    }
+
+    /// Binaries launched from the Desktop workspace / DerivedData are local QA.
+    private static var isLocalWorkspaceBinary: Bool {
+        let path = Bundle.main.bundlePath
+        let markers = [
+            "/Desktop/FileRadar/",
+            "/DerivedData",
+            "/build/DerivedData",
+            "/dist/FileRadar",
+        ]
+        return markers.contains { path.contains($0) }
     }
 
     private static var leafCertificateSummary: String? {

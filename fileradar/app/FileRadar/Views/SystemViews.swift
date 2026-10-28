@@ -204,6 +204,10 @@ struct LicenseEntryView: View {
                 await storeKit.refresh()
                 await trial.refresh()
                 await license.refreshEntitlementsAsync()
+                // Debug / Apple Development: never leave this sheet as a wall.
+                if LocalDevBuild.isActive, license.isUnlocked {
+                    dismiss()
+                }
             }
         }
     }

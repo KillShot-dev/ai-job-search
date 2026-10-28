@@ -233,9 +233,9 @@ final class LicenseManager: ObservableObject {
             return
         }
         // Empty StoreKit catalog must never leave the user with no path:
-        // auto-start trial when no other entitlement exists.
+        // restart trial so an expired stamp cannot trap behind a blank IAP sheet.
         if storeKit?.product == nil, storeKit?.isEntitled != true {
-            _ = await trial?.startTrial(restartIfExpired: false)
+            _ = await trial?.startTrial(restartIfExpired: true)
             if trial?.isActive == true {
                 source = .trial
                 isUnlocked = true
@@ -243,6 +243,13 @@ final class LicenseManager: ObservableObject {
                 statusMessage = "Trial active — \(days) day\(days == 1 ? "" : "s") left."
                 return
             }
+        }
+        // Last resort: never leave the main UI gated when StoreKit failed to load.
+        if storeKit?.product == nil {
+            source = .trial
+            isUnlocked = true
+            statusMessage = "StoreKit unavailable — continuing with full local access."
+            return
         }
         source = .none
         isUnlocked = false

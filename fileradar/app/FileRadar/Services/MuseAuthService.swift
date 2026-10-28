@@ -261,6 +261,10 @@ final class MuseAuthService: NSObject, ObservableObject {
     override init() {
         super.init()
         // Defer Keychain presence check — SecItem on MainActor freezes launch.
+        // Local Debug / Apple Development: skip entirely so a stale Muse
+        // Keychain ACL cannot surface a SecurityAgent password dialog that
+        // looks like an activation wall.
+        guard !LocalDevBuild.isActive else { return }
         Task { @MainActor in
             isConnected = await MuseTokenStore.connectionPresentAsync()
         }
