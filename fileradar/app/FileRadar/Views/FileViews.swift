@@ -148,6 +148,10 @@ extension Notification.Name {
     static let selectAllVisible = Notification.Name("FileRadarSelectAllVisible")
     static let trashSelection = Notification.Name("FileRadarTrashSelection")
     static let fileURLDidChange = Notification.Name("FileRadarFileURLDidChange")
+    /// Object is optional ChromeView.rawValue String; nil cycles to the next chrome.
+    static let setChromeView = Notification.Name("FileRadarSetChromeView")
+    /// Snapshot helper: object is `[URL]` left/right pane folders.
+    static let pinDemoFoldersForSnapshot = Notification.Name("FileRadarPinDemoFoldersForSnapshot")
 }
 
 struct FileCollectionView: View {
@@ -156,6 +160,10 @@ struct FileCollectionView: View {
     var dropTargetFolder: URL?
     /// When true, drops enqueue a copy instead of a move (dual-pane Option mode).
     var preferCopyOnDrop: Bool = false
+    /// Dual-pane path bars own the chrome; hide the large collection title.
+    var showsHeader: Bool = true
+    /// When set, double-clicking a folder navigates in-pane (ForkLift browse).
+    var onOpenFolder: ((URL) -> Void)? = nil
     @EnvironmentObject var store: FileStore
     @EnvironmentObject var playback: MusicPlaybackService
     @EnvironmentObject var theme: ThemeSettings
@@ -165,20 +173,22 @@ struct FileCollectionView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.compactDensity ? 6 : 10) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(title).font(FileRadarFont.title())
-                Spacer()
-                if dropTargetFolder != nil {
-                    Text(preferCopyOnDrop ? "Drop to copy" : "Drop to move")
-                        .font(FileRadarFont.caption())
-                        .foregroundStyle(dropTargeted ? AnyShapeStyle(theme.look.accent) : AnyShapeStyle(.secondary))
-                        .padding(.horizontal, 8).padding(.vertical, 3)
-                        .background(
-                            Capsule().fill(dropTargeted ? theme.look.accent.opacity(0.14) : Color.clear)
-                        )
+            if showsHeader {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(title).font(FileRadarFont.title())
+                    Spacer()
+                    if dropTargetFolder != nil {
+                        Text(preferCopyOnDrop ? "Drop to copy" : "Drop to move")
+                            .font(FileRadarFont.caption())
+                            .foregroundStyle(dropTargeted ? AnyShapeStyle(theme.look.accent) : AnyShapeStyle(.secondary))
+                            .padding(.horizontal, 8).padding(.vertical, 3)
+                            .background(
+                                Capsule().fill(dropTargeted ? theme.look.accent.opacity(0.14) : Color.clear)
+                            )
+                    }
                 }
+                .padding(.horizontal)
             }
-            .padding(.horizontal)
 
             ZStack {
                 content
@@ -242,7 +252,11 @@ struct FileCollectionView: View {
         } else {
             List(sortedFiles, selection: $store.selectedIDs) { file in
                 HStack(spacing: 10) {
-                    AsyncFileThumbnail(file: file, size: CGSize(width: 28, height: 28))
+                    if file.kind == .image, !file.isICloudOnly {
+                        AsyncFileThumbnail(file: file, size: CGSize(width: 28, height: 28))
+                    } else {
+                        FRKindIcon(kind: file.kind, size: .list)
+                    }
                     Text(file.name)
                     Spacer()
                     if file.kind == .folder {
@@ -260,6 +274,12 @@ struct FileCollectionView: View {
     }
 
     private func handleOpen(_ file: FileItem) {
-        if file.kind == .audio { playback.toggle(file) } else { NSWorkspace.shared.open(file.url) }
+        if file.kind == .folder, let onOpenFolder {
+            onOpenFolder(file.url)
+        } else if file.kind == .audio {
+            playback.toggle(file)
+        } else {
+            NSWorkspace.shared.open(file.url)
+        }
     }
 }

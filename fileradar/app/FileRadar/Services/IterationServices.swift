@@ -264,26 +264,47 @@ final class TabState: ObservableObject {
     private let key = "com.metaphasicgroup.fileradar.tabs.v2"
 
     init() {
-        // v2: empty by default. Ignore v1 payloads that auto-seeded
-        // Downloads + Documents on every install (always-on tab strip).
+        // v3 ForkLift-primary: seed Documents | Downloads for dual-pane launch.
+        // Ignore empty v2 payloads that cleared tabs for Showcase Home.
         if let data = UserDefaults.standard.data(forKey: key),
            let saved = try? JSONDecoder().decode([TabItem].self, from: data),
            !saved.isEmpty {
             tabs = saved
             selectedID = saved.first?.id
         } else {
-            tabs = []
-            selectedID = nil
+            let home = FileManager.default.homeDirectoryForCurrentUser
+            let documents = home.appendingPathComponent("Documents")
+            let downloads = home.appendingPathComponent("Downloads")
+            tabs = [TabItem(folder: documents), TabItem(folder: downloads)]
+            selectedID = tabs.first?.id
             UserDefaults.standard.removeObject(forKey: "com.metaphasicgroup.fileradar.tabs.v1")
         }
     }
 
     var selectedTab: TabItem? { tabs.first { $0.id == selectedID } ?? tabs.first }
 
+    /// Left dual-pane folder (selected / first tab).
+    var firstFolder: URL {
+        selectedTab?.folder
+            ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Documents")
+    }
+
     /// The second pane's folder: the second tab when there is one, else Downloads.
     var secondFolder: URL {
         if tabs.count > 1 { return tabs[1].folder }
         return FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Downloads")
+    }
+
+    /// Pin the dual-pane left side to a chosen folder.
+    func setFirstFolder(_ folder: URL) {
+        if tabs.isEmpty {
+            addTab(folder: folder)
+            return
+        }
+        var next = tabs
+        next[0].folder = folder
+        tabs = next
+        selectedID = next[0].id
     }
 
     /// Pin the dual-pane right side to a chosen folder (creates/selects a tab).
@@ -292,7 +313,11 @@ final class TabState: ObservableObject {
             var next = tabs
             next[1].folder = folder
             tabs = next
+        } else if tabs.count == 1 {
+            addTab(folder: folder)
         } else {
+            let home = FileManager.default.homeDirectoryForCurrentUser
+            addTab(folder: home.appendingPathComponent("Documents"))
             addTab(folder: folder)
         }
     }
@@ -799,7 +824,7 @@ enum PaletteAction: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .goHome: return "Go to Home"
+        case .goHome: return "Go to Browser"
         case .goSearch: return "Go to Search"
         case .goTimeline: return "Go to Timeline"
         case .goDiskMap: return "Go to Disk Map"

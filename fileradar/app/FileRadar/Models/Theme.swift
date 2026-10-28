@@ -78,6 +78,66 @@ enum AppLook: String, CaseIterable, Identifiable {
     }
 }
 
+/// Window chrome layouts (docs/fileradar-chrome-views.md). Same raw IDs on Mac + Windows.
+/// Persisted via `@AppStorage("chromeView")` / UserDefaults key `chromeView`.
+enum ChromeView: String, CaseIterable, Identifiable {
+    case radarGlass
+    case previewTheater
+    case commandRail
+    case workspaceTabs
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .radarGlass: return "Radar Glass"
+        case .previewTheater: return "Preview Theater"
+        case .commandRail: return "Command Rail"
+        case .workspaceTabs: return "Workspace Tabs"
+        }
+    }
+
+    /// Mockup letter A–D for docs / screenshots.
+    var optionLetter: String {
+        switch self {
+        case .radarGlass: return "A"
+        case .previewTheater: return "B"
+        case .commandRail: return "C"
+        case .workspaceTabs: return "D"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .radarGlass: return "circle.dotted"
+        case .previewTheater: return "rectangle.inset.filled.and.person.filled"
+        case .commandRail: return "sidebar.leading"
+        case .workspaceTabs: return "rectangle.topthird.inset.filled"
+        }
+    }
+
+    /// Chrome-specific accent (overrides AppLook accent while this chrome is active).
+    var accent: Color {
+        switch self {
+        case .radarGlass: return FileRadarChrome.accent
+        case .previewTheater: return Color(red: 0.20, green: 0.48, blue: 0.92)
+        case .commandRail: return Color(red: 0.12, green: 0.72, blue: 0.68) // teal
+        case .workspaceTabs: return Color(red: 0.95, green: 0.62, blue: 0.18) // amber
+        }
+    }
+
+    /// Preferred appearance hint for screenshot / first paint (nil = respect user).
+    var preferredAppearance: AppearanceMode? {
+        switch self {
+        case .previewTheater: return .light
+        case .radarGlass, .commandRail, .workspaceTabs: return .dark
+        }
+    }
+
+    static let storageKey = "chromeView"
+    static let `default`: ChromeView = .radarGlass
+}
+
 /// System / Light / Dark — primary appearance chrome (toolbar, Settings,
 /// View / Appearance menus). Looks are secondary.
 enum AppearanceMode: String, CaseIterable, Identifiable {

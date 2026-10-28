@@ -16,8 +16,8 @@ final class FileStore: ObservableObject {
     @Published var isIndexing = false
     @Published var indexedCount = 0
     @Published var cardSize: CGFloat = 140
-    /// Showcase is the default — Home uses the mockup shelves + inspector layout.
-    @Published var viewMode: ViewMode = .showcase
+    /// List is the ForkLift-primary default; Showcase remains for Shelves Home.
+    @Published var viewMode: ViewMode = .list
     @Published var sort: SortOrder = .date
     @Published var selectedIDs = Set<String>()
     @Published var pinnedFolderURLs: [URL] = []

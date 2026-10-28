@@ -18,8 +18,9 @@ struct DropStackView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Label("Drop Stack", systemImage: "tray.and.arrow.down")
+            HStack(spacing: 8) {
+                FRDropStackIcon(size: .sidebar, accent: theme.look.accent)
+                Text("Drop Stack")
                     .font(FileRadarFont.body())
                 Spacer()
                 if !stack.urls.isEmpty {
@@ -34,7 +35,7 @@ struct DropStackView: View {
             } else {
                 ForEach(stack.urls, id: \.self) { url in
                     HStack {
-                        Image(systemName: "doc").font(FileRadarFont.caption())
+                        FRKindIcon(kind: FileKind.from(url: url, isDirectory: url.hasDirectoryPath), size: .micro)
                         Text(url.lastPathComponent).font(FileRadarFont.caption()).lineLimit(1)
                         Spacer()
                         Button(action: { stack.remove(url) }) {
@@ -84,8 +85,9 @@ struct TransferQueueView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Label("Transfers", systemImage: "arrow.left.arrow.right")
+            HStack(spacing: 8) {
+                FRTransferIcon(active: queue.activeCount > 0, size: .sidebar, accent: FileRadarChrome.accent)
+                Text("Transfers")
                     .font(FileRadarFont.body())
                 Spacer()
                 if queue.activeCount > 0 {
@@ -168,9 +170,7 @@ struct TransferHUDView: View {
     var body: some View {
         if queue.activeCount > 0 || queue.items.contains(where: { $0.status == .failed }) {
             HStack(spacing: 12) {
-                Image(systemName: queue.isPaused ? "pause.circle.fill" : "arrow.left.arrow.right.circle.fill")
-                    .foregroundStyle(theme.look.accent)
-                    .imageScale(.large)
+                FRTransferIcon(active: !queue.isPaused && queue.activeCount > 0, size: .list, accent: theme.look.accent)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(headline).font(FileRadarFont.heading()).lineLimit(1)
                     ProgressView(value: aggregateProgress)
@@ -208,6 +208,129 @@ struct TransferHUDView: View {
     }
 }
 
+/// Always-visible Activities strip (ForkLift signature) — idle or working.
+struct ActivitiesStripView: View {
+    @ObservedObject var queue = TransferQueue.shared
+    @EnvironmentObject var theme: ThemeSettings
+    var onShowQueue: () -> Void
+
+    var body: some View {
+        HStack(spacing: 10) {
+            FRTransferIcon(active: queue.activeCount > 0, size: .toolbar, accent: theme.look.accent)
+            if queue.activeCount > 0 {
+                Text(queue.isPaused ? "Activities · Paused" : "Activities · \(queue.activeCount) running")
+                    .font(FileRadarFont.caption())
+                ProgressView(value: aggregateProgress)
+                    .tint(theme.look.accent)
+                    .frame(maxWidth: 160)
+                Button(queue.isPaused ? "Resume" : "Pause") { queue.isPaused.toggle() }
+                    .controlSize(.mini)
+                    .buttonStyle(.bordered)
+                Button("Cancel") { queue.cancelAll() }
+                    .controlSize(.mini)
+                    .buttonStyle(.bordered)
+            } else {
+                Text("Activities · Idle")
+                    .font(FileRadarFont.caption())
+                    .foregroundStyle(.secondary)
+                Spacer(minLength: 0)
+            }
+            Spacer(minLength: 0)
+            Button("Queue") { onShowQueue() }
+                .controlSize(.mini)
+                .buttonStyle(.borderless)
+                .font(FileRadarFont.caption())
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(FileRadarChrome.chromeBarFill)
+        .overlay(alignment: .top) {
+            Rectangle().fill(FileRadarChrome.hairline).frame(height: 1)
+        }
+        .accessibilityLabel("Activities")
+    }
+
+    private var aggregateProgress: Double {
+        let active = queue.items.filter { $0.status == .working || $0.status == .queued }
+        guard !active.isEmpty else { return 0 }
+        return active.map(\.progress).reduce(0, +) / Double(active.count)
+    }
+}
+
+/// Breadcrumb path bar above each dual-pane browser (ForkLift path/status).
+struct PathBarView: View {
+    var folder: URL
+    var isActive: Bool
+    var itemCount: Int
+    var onNavigate: (URL) -> Void
+    var onChooseFolder: () -> Void
+    @EnvironmentObject var theme: ThemeSettings
+
+    private var crumbs: [(String, URL)] {
+        var urls: [URL] = []
+        var current = folder.standardizedFileURL
+        let home = FileManager.default.homeDirectoryForCurrentUser.standardizedFileURL
+        while true {
+            urls.append(current)
+            if current.path == home.path || current.path == "/" { break }
+            let parent = current.deletingLastPathComponent()
+            if parent.path == current.path { break }
+            current = parent
+        }
+        return urls.reversed().map { url in
+            if url.path == home.path { return ("Home", url) }
+            let name = url.lastPathComponent
+            return (name.isEmpty ? url.path : name, url)
+        }
+    }
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Button(action: onChooseFolder) {
+                Image(systemName: "folder")
+                    .font(.system(size: 11, weight: .medium))
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(isActive ? theme.look.accent : .secondary)
+            .help("Choose folder…")
+            .accessibilityLabel("Choose folder")
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 2) {
+                    ForEach(Array(crumbs.enumerated()), id: \.offset) { index, crumb in
+                        if index > 0 {
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 8, weight: .semibold))
+                                .foregroundStyle(.tertiary)
+                        }
+                        Button(crumb.0) { onNavigate(crumb.1) }
+                            .buttonStyle(.plain)
+                            .font(FileRadarFont.caption())
+                            .foregroundStyle(index == crumbs.count - 1
+                                             ? (isActive ? AnyShapeStyle(theme.look.accent) : AnyShapeStyle(.primary))
+                                             : AnyShapeStyle(.secondary))
+                            .lineLimit(1)
+                    }
+                }
+            }
+            Spacer(minLength: 8)
+            Text("\(itemCount)")
+                .font(FileRadarFont.caption())
+                .foregroundStyle(.tertiary)
+                .monospacedDigit()
+                .help("\(itemCount) items")
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(isActive ? FileRadarChrome.activePaneWash(theme.look.accent) : FileRadarChrome.chromeBarFill)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(isActive ? theme.look.accent.opacity(0.35) : FileRadarChrome.hairline)
+                .frame(height: isActive ? 1.5 : 1)
+        }
+    }
+}
+
 // MARK: - Tab strip (restored on relaunch via TabState)
 
 struct TabBarView: View {
@@ -219,9 +342,7 @@ struct TabBarView: View {
         HStack(spacing: 4) {
             ForEach(tabState.tabs) { tab in
                 HStack(spacing: 4) {
-                    Image(systemName: "folder")
-                        .font(.system(size: 9, weight: .medium))
-                        .foregroundStyle(tabState.selectedID == tab.id ? theme.look.accent : .secondary)
+                    FRPlaceIcon(place: FRPlaceKind.from(url: tab.folder), size: .micro)
                     Button(tab.title) {
                         tabState.selectedID = tab.id
                         onSelectFolder(tab.folder)
@@ -273,93 +394,195 @@ struct TabBarView: View {
     }
 }
 
-// MARK: - Dual pane (OPTIONAL, off by default; principle 2: default stays shelves + search)
+// MARK: - Dual pane (ForkLift-primary default)
 //
-// Two file collections side by side. Drag a file from one pane to the
-// other: the drop enqueues a move through the transfer queue (never a
-// silent overwrite — an existing name is skipped and reported). The
-// active pane is the highlighted one; the Jump Panes button (Ctrl-Tab)
-// moves the highlight. Focus here is the active-pane marker, not AppKit
-// first-responder focus — see README UNTESTED.
+// Two folder browsers side by side with path bars. Drag between panes
+// enqueues copy/move via TransferQueue (never silent overwrite). Active
+// pane is highlighted; Jump Panes (Ctrl-Tab) flips focus.
 
 struct DualPaneView: View {
-    var leftTitle: String
+    var leftFolder: URL
     var leftFiles: [FileItem]
     var rightFolder: URL
     var rightFiles: [FileItem]
     @Binding var activeIsRight: Bool
+    var onNavigateLeft: (URL) -> Void
+    var onNavigateRight: (URL) -> Void
+    var onChooseLeftFolder: () -> Void
     var onChooseRightFolder: () -> Void
+    var onSyncCompare: (() -> Void)? = nil
+    /// When set, path bars / chrome toolbar adapt to the active ChromeView.
+    var chromeView: ChromeView = .radarGlass
+    var accent: Color = FileRadarChrome.accent
+    @EnvironmentObject var store: FileStore
     @EnvironmentObject var theme: ThemeSettings
-    @State private var preferCopy = false
+    @State private var preferCopy = true
+
+    private var showsTopChromeBar: Bool {
+        chromeView == .radarGlass || chromeView == .workspaceTabs
+    }
+
+    private var showsSyncPill: Bool {
+        chromeView == .commandRail
+    }
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 10) {
-                Label(activeIsRight ? "Right pane active" : "Left pane active",
-                      systemImage: "rectangle.split.2x1")
-                    .font(FileRadarFont.caption())
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Toggle("Drop copies (Option)", isOn: $preferCopy)
-                    .toggleStyle(.checkbox)
-                    .font(FileRadarFont.caption())
-                    .help("When on, drops onto the right pane copy instead of move. Name clashes are still skipped, never overwritten.")
-                Button("Choose right folder…") { onChooseRightFolder() }
-                    .font(FileRadarFont.caption())
+            if showsTopChromeBar {
+                HStack(spacing: 8) {
+                    Label("Dual pane", systemImage: "rectangle.split.2x1")
+                        .font(FileRadarFont.caption())
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button {
+                        transferSelection(toRight: true, copy: true)
+                    } label: {
+                        Label("Copy →", systemImage: "doc.on.doc")
+                    }
                     .controlSize(.small)
-                Text(rightFolder.path)
-                    .font(FileRadarFont.caption())
-                    .foregroundStyle(.tertiary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                    .frame(maxWidth: 220, alignment: .trailing)
-                    .help(rightFolder.path)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, FileRadarChrome.spaceChromeY)
-            .background(FileRadarChrome.chromeBarFill)
-            .overlay(alignment: .bottom) {
-                Rectangle().fill(FileRadarChrome.hairline).frame(height: 1)
+                    .disabled(store.selectedIDs.isEmpty)
+                    .help("Copy selection to the opposite pane")
+                    Button {
+                        transferSelection(toRight: true, copy: false)
+                    } label: {
+                        Label("Move →", systemImage: "arrow.right")
+                    }
+                    .controlSize(.small)
+                    .disabled(store.selectedIDs.isEmpty)
+                    .help("Move selection to the opposite pane")
+                    Toggle("Drop copies", isOn: $preferCopy)
+                        .toggleStyle(.checkbox)
+                        .font(FileRadarFont.caption())
+                        .help("When on, drops copy instead of move. Name clashes are skipped, never overwritten.")
+                    if let onSyncCompare {
+                        Button {
+                            onSyncCompare()
+                        } label: {
+                            Label("Sync", systemImage: "arrow.left.arrow.right")
+                        }
+                        .controlSize(.small)
+                        .help("Compare / sync the two pane folders")
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, FileRadarChrome.spaceChromeY)
+                .background(FileRadarChrome.chromeBarFill)
+                .overlay(alignment: .bottom) {
+                    Rectangle().fill(FileRadarChrome.hairline).frame(height: 1)
+                }
             }
 
             HStack(alignment: .top, spacing: 0) {
-                pane(title: leftTitle, files: leftFiles, isActive: !activeIsRight,
-                     dropFolder: nil, copyOnDrop: false, onActivate: { activeIsRight = false })
-                Rectangle().fill(FileRadarChrome.hairline).frame(width: 1)
-                pane(title: rightFolder.lastPathComponent, files: rightFiles, isActive: activeIsRight,
-                     dropFolder: rightFolder, copyOnDrop: preferCopy, onActivate: { activeIsRight = true })
+                pane(folder: leftFolder, files: leftFiles, isActive: !activeIsRight, sideLabel: "Left",
+                     onNavigate: onNavigateLeft, onChoose: onChooseLeftFolder,
+                     onActivate: { activeIsRight = false })
+                if showsSyncPill {
+                    PaneSyncPill(
+                        accent: accent,
+                        onCopyRight: { transferSelection(toRight: true, copy: true) },
+                        onCopyLeft: { transferSelection(toRight: false, copy: true) },
+                        onSync: { onSyncCompare?() }
+                    )
+                } else {
+                    Rectangle().fill(FileRadarChrome.hairline).frame(width: 1)
+                }
+                pane(folder: rightFolder, files: rightFiles, isActive: activeIsRight, sideLabel: "Right",
+                     onNavigate: onNavigateRight, onChoose: onChooseRightFolder,
+                     onActivate: { activeIsRight = true })
             }
         }
     }
 
-    private func pane(title: String, files: [FileItem], isActive: Bool,
-                      dropFolder: URL?, copyOnDrop: Bool, onActivate: @escaping () -> Void) -> some View {
-        // Activate on the title chrome only — a full-pane onTapGesture sat
-        // above FileCollectionView and stole clicks from cards/buttons.
+    private func pane(folder: URL, files: [FileItem], isActive: Bool, sideLabel: String,
+                      onNavigate: @escaping (URL) -> Void,
+                      onChoose: @escaping () -> Void,
+                      onActivate: @escaping () -> Void) -> some View {
         VStack(spacing: 0) {
-            HStack {
-                Text(title).font(FileRadarFont.caption()).foregroundStyle(isActive ? theme.look.accent : .secondary)
-                Spacer()
+            ZStack(alignment: .trailing) {
+                Group {
+                    if chromeView == .radarGlass {
+                        PillPathBarView(folder: folder, isActive: isActive, itemCount: files.count,
+                                        onNavigate: { url in onActivate(); onNavigate(url) },
+                                        onChooseFolder: { onActivate(); onChoose() },
+                                        accent: accent)
+                    } else {
+                        PathBarView(folder: folder, isActive: isActive, itemCount: files.count,
+                                    onNavigate: { url in onActivate(); onNavigate(url) },
+                                    onChooseFolder: { onActivate(); onChoose() })
+                    }
+                }
+                Text(sideLabel)
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(accent)
+                    .padding(.trailing, 10)
+                    .allowsHitTesting(false)
             }
-            .padding(.horizontal, 12).padding(.vertical, 4)
             .contentShape(Rectangle())
             .onTapGesture(perform: onActivate)
             .accessibilityAddTraits(isActive ? .isSelected : [])
-            .accessibilityLabel("\(title) pane")
-            .accessibilityHint("Click to make this pane active")
+            .accessibilityLabel("\(folder.lastPathComponent) pane")
 
-            FileCollectionView(title: title, files: files,
-                               dropTargetFolder: dropFolder, preferCopyOnDrop: copyOnDrop)
+            FileCollectionView(title: folder.lastPathComponent, files: files,
+                               dropTargetFolder: folder, preferCopyOnDrop: preferCopy,
+                               showsHeader: false,
+                               onOpenFolder: { url in
+                                   onActivate()
+                                   onNavigate(url)
+                               })
                 .overlay(
                     RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
                         .strokeBorder(
-                            isActive ? FileRadarChrome.activePaneStrokeColor(theme.look.accent) : Color.clear,
+                            isActive ? FileRadarChrome.activePaneStrokeColor(accent) : Color.clear,
                             lineWidth: FileRadarChrome.activePaneStroke
                         )
                         .padding(2)
                         .allowsHitTesting(false)
                 )
-                .background(isActive ? FileRadarChrome.activePaneWash(theme.look.accent) : Color.clear)
+                .background(isActive ? FileRadarChrome.activePaneWash(accent) : Color.clear)
+        }
+    }
+
+    private func transferSelection(toRight: Bool, copy: Bool) {
+        let target = toRight ? rightFolder : leftFolder
+        let sources = store.files.filter { store.selectedIDs.contains($0.id) }.map(\.url)
+        guard !sources.isEmpty else { return }
+        if copy {
+            TransferQueue.shared.enqueueCopy(sources, to: target)
+        } else {
+            TransferQueue.shared.enqueueMove(sources, to: target)
+        }
+    }
+}
+
+/// Immediate children of a folder for dual-pane browsing (index + disk fallback).
+enum FolderBrowser {
+    static func children(of folder: URL, indexed: [FileItem]) -> [FileItem] {
+        let standardized = folder.standardizedFileURL
+        let fromIndex = indexed.filter {
+            $0.url.deletingLastPathComponent().standardizedFileURL.path == standardized.path
+        }
+        if !fromIndex.isEmpty { return fromIndex }
+
+        let fm = FileManager.default
+        guard let urls = try? fm.contentsOfDirectory(
+            at: standardized,
+            includingPropertiesForKeys: [.isDirectoryKey, .fileSizeKey, .contentModificationDateKey, .creationDateKey],
+            options: [.skipsHiddenFiles]
+        ) else { return [] }
+
+        return urls.compactMap { url -> FileItem? in
+            let values = try? url.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey, .contentModificationDateKey, .creationDateKey])
+            let isDir = values?.isDirectory ?? false
+            return FileItem(
+                url: url,
+                kind: FileKind.from(url: url, isDirectory: isDir),
+                size: Int64(values?.fileSize ?? 0),
+                modifiedDate: values?.contentModificationDate ?? Date(),
+                createdDate: values?.creationDate ?? Date(),
+                downloadSource: .unknown,
+                tags: [],
+                isICloudOnly: false
+            )
         }
     }
 }

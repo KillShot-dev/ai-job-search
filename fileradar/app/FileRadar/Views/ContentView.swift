@@ -2,8 +2,9 @@ import SwiftUI
 import AppKit
 
 /// Main window. Principle 2: one job per destination.
+/// Default launch is dual-pane Browser (ForkLift-primary), not Shelves Home.
 enum Destination: Hashable {
-    case home, search, cleanup, duplicates, timeline, diskMap, extras, muse
+    case browser, home, search, cleanup, duplicates, timeline, diskMap, extras, muse
     case kind(FileKind)
     case source(String)
     case smartFolder(String)
@@ -15,7 +16,8 @@ enum Destination: Hashable {
 
     var title: String {
         switch self {
-        case .home: return "Home"
+        case .browser: return "Browser"
+        case .home: return "Shelves"
         case .search: return "Search"
         case .cleanup: return "Clean Up"
         case .duplicates: return "Duplicates"
@@ -52,24 +54,42 @@ struct ContentView: View {
     }
     @State private var museChatViewModel: ChatViewModel?
     @State private var museTokenProviderSet = false
-    @State private var destination: Destination = .home
+    @State private var destination: Destination = .browser
     @State private var searchText = ""
     @State private var showLicense = false
-    /// Inspector open by default — mockup Home is a three-column layout.
-    @State private var showInspector = true
+    /// Inspector optional — dual-pane Browser is the primary composition.
+    @State private var showInspector = false
     @State private var showPalette = false
     @StateObject private var tabState = TabState()
-    @AppStorage("dualPaneEnabled") private var dualPaneEnabled = false
-    @AppStorage("previewStripEnabled") private var previewStripEnabled = true
+    /// New key so Showcase-era `false` defaults do not stick after ForkLift flip.
+    @AppStorage("dualPaneEnabled.v3") private var dualPaneEnabled = true
+    @AppStorage("previewStripEnabled") private var previewStripEnabled = false
+    /// Persisted chrome layout ID (shared with Windows): radarGlass | previewTheater | commandRail | workspaceTabs.
+    @AppStorage(ChromeView.storageKey) private var chromeViewRaw = ChromeView.default.rawValue
     @State private var activeIsRight = false
     @State private var showBatchRename = false
     @State private var showTransfers = false
+    @State private var inspectorMode: InspectorMode = .activities
+    @State private var workspaceChromeTab = "Work"
+    @State private var showQueueDrawer = true
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @StateObject private var trash = TrashService()
     @ObservedObject private var transferQueue = TransferQueue.shared
 
+    private enum InspectorMode: String, CaseIterable {
+        case info = "Info"
+        case activities = "Activities"
+    }
+
+    private var chromeView: ChromeView {
+        ChromeView(rawValue: chromeViewRaw) ?? .radarGlass
+    }
+
+    private var chromeAccent: Color { chromeView.accent }
+
     var body: some View {
         splitChrome
-            .tint(theme.look.accent)
+            .tint(chromeAccent)
             .preferredColorScheme(theme.colorScheme)
             .fileRadarAtmosphere(theme.look)
             .modifier(ContentSheetsModifier(
@@ -92,6 +112,7 @@ struct ContentView: View {
                 showLicense: $showLicense,
                 dualPaneEnabled: $dualPaneEnabled,
                 previewStripEnabled: $previewStripEnabled,
+                chromeViewRaw: $chromeViewRaw,
                 store: store,
                 favorites: favorites,
                 trash: trash,
@@ -100,8 +121,24 @@ struct ContentView: View {
                 onTrashSelection: trashSelected
             ))
             .onAppear(perform: bootstrap)
+            .onChange(of: chromeViewRaw) { _, _ in
+                applyChromeDefaults()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .pinDemoFoldersForSnapshot)) { note in
+                guard let urls = note.object as? [URL], urls.count >= 2 else { return }
+                tabState.tabs = [TabState.TabItem(folder: urls[0]), TabState.TabItem(folder: urls[1])]
+                tabState.selectedID = tabState.tabs.first?.id
+                dualPaneEnabled = true
+                destination = .browser
+                columnVisibility = .all
+            }
             .onChange(of: destination) { _, new in
-                if new == .home { showInspector = true }
+                if new == .home {
+                    showInspector = true
+                    inspectorMode = .info
+                } else if new == .browser {
+                    dualPaneEnabled = true
+                }
                 museChatViewModel?.updateContext(title: new.title,
                                                  fileNames: museContextFileNames(for: new))
                 if case .savedSearch(let id) = new,
@@ -122,81 +159,55 @@ struct ContentView: View {
     /// `NavigationLink(value:)` (swallows clicks with `List(selection:)`)
     /// and tag-selection (also failed to update on this OS) — Buttons fire.
     @ViewBuilder
-    private func sidebarItem(_ title: String, systemImage: String, _ dest: Destination) -> some View {
+    private func sidebarItem(_ title: String, systemImage: String, _ dest: Destination,
+                             nav: FRNavGlyph? = nil, place: FRPlaceKind? = nil, kind: FileKind? = nil) -> some View {
         Button {
             destination = dest
         } label: {
-            Label(title, systemImage: systemImage)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
+            FRSidebarLabel(title: title) {
+                if let kind {
+                    FRKindIcon(kind: kind, size: .sidebar)
+                } else if let place {
+                    FRPlaceIcon(place: place, size: .sidebar)
+                } else if let nav {
+                    FRNavIcon(glyph: nav, size: .sidebar, selected: destination == dest, accent: chromeAccent)
+                } else {
+                    FRNavIcon(glyph: .browser, size: .sidebar, selected: destination == dest, accent: chromeAccent)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .listRowBackground(destination == dest ? FileRadarChrome.sidebarSelectionWash(theme.look.accent) : Color.clear)
+        .listRowBackground(destination == dest ? FileRadarChrome.sidebarSelectionWash(chromeAccent) : Color.clear)
         .accessibilityAddTraits(destination == dest ? .isSelected : [])
         .accessibilityLabel(title)
     }
 
     private var splitChrome: some View {
-        NavigationSplitView {
-            List {
-                // Four sidebar sections — Library, Collections, Tools, Places.
-                Section("Library") {
-                    sidebarItem("Home", systemImage: "house", .home)
-                    sidebarItem("Search", systemImage: "magnifyingglass", .search)
-                    sidebarItem("Timeline", systemImage: "calendar", .timeline)
-                    sidebarItem("Disk Map", systemImage: "square.grid.3x3", .diskMap)
-                    sidebarItem("Muse", systemImage: "sparkles", .muse)
+        Group {
+            switch chromeView {
+            case .commandRail:
+                commandRailChrome
+            default:
+                navigationSplitChrome
+            }
+        }
+    }
+
+    /// Radar Glass / Preview Theater / Workspace Tabs share NavigationSplitView.
+    private var navigationSplitChrome: some View {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
+            ZStack {
+                if chromeView == .radarGlass {
+                    RadarGlassWatermark(accent: chromeAccent)
                 }
-                Section("Collections") {
-                    ForEach([FileKind.image, .video, .audio, .document, .archive, .app], id: \.self) { kind in
-                        sidebarItem(kind.displayName, systemImage: kind.systemImage, .kind(kind))
-                    }
-                    sidebarItem("Large Files", systemImage: "doc.fill", .smartFolder("Large Files"))
-                    sidebarItem("Screenshots", systemImage: "camera", .smartFolder("Screenshots"))
-                    sidebarItem("Receipts & invoices", systemImage: "receipt", .smartFolder("Receipts & invoices"))
-                    sidebarItem("Unfinished drafts", systemImage: "pencil", .smartFolder("Unfinished drafts"))
-                    if !favorites.paths.isEmpty {
-                        ForEach(favorites.paths, id: \.self) { path in
-                            let url = URL(fileURLWithPath: path)
-                            sidebarItem(url.lastPathComponent, systemImage: "star.fill", .favorite(url))
-                        }
-                    }
-                    if license.isAllowed(.savedSearches) {
-                        ForEach(savedSearches.items) { item in
-                            sidebarItem(item.name, systemImage: "bookmark", .savedSearch(item.id))
-                                .contextMenu {
-                                    Button("Delete", role: .destructive) { savedSearches.remove(item.id) }
-                                }
-                        }
-                    }
-                }
-                Section("Tools") {
-                    sidebarItem("Clean Up", systemImage: "trash", .cleanup)
-                    sidebarItem("Duplicates", systemImage: "doc.on.doc", .duplicates)
-                    sidebarItem("Workspaces", systemImage: "square.grid.2x2", .workspaces)
-                    sidebarItem("Compare Folders", systemImage: "arrow.left.arrow.right", .syncCompare)
-                    sidebarItem("Extras", systemImage: "wand.and.stars", .extras)
-                }
-                Section("Places") {
-                    if store.pinnedFolderURLs.isEmpty {
-                        Text("Pin folders from a file’s context menu.")
-                            .font(FileRadarFont.caption())
-                            .foregroundStyle(.secondary)
-                    } else {
-                        ForEach(store.pinnedFolderURLs, id: \.self) { url in
-                            sidebarItem(url.lastPathComponent, systemImage: "pin", .pinned(url))
-                        }
-                    }
-                }
-                // Keep Drop Stack / disk bar inside the list — NOT safeAreaInset.
-                // On this OS, sidebar safeAreaInset was an invisible hit plate over
-                // the outline (rows received AX hits but never activated).
-                Section {
-                    DropStackView()
-                    DiskFreeBar()
-                }
+                sidebarList
             }
             .listStyle(.sidebar)
+            .navigationSplitViewColumnWidth(min: chromeView == .previewTheater ? 72 : 200,
+                                            ideal: chromeView == .previewTheater ? 88 : 220,
+                                            max: chromeView == .previewTheater ? 120 : 280)
             .navigationTitle("FileRadar")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
@@ -211,53 +222,230 @@ struct ContentView: View {
                 }
             }
         } detail: {
-            VStack(spacing: 0) {
-                if let message = license.statusMessage, license.source == .trial {
-                    HStack(spacing: 8) {
-                        Image(systemName: "clock")
-                        Text(message).font(FileRadarFont.caption())
-                        Spacer()
-                        Button("Unlock") { showLicense = true }
-                            .buttonStyle(.borderedProminent)
-                            .controlSize(.small)
-                            .accessibilityLabel("Unlock")
-                    }
-                    .padding(.horizontal, 12).padding(.vertical, 6)
-                    .background(.bar)
-                    .transition(.move(edge: .top).combined(with: .opacity))
+            detailColumn
+        }
+        .navigationSplitViewStyle(.balanced)
+    }
+
+    private var commandRailChrome: some View {
+        HStack(spacing: 0) {
+            CommandRailView(
+                destination: $destination,
+                accent: chromeAccent,
+                onBrowser: {
+                    destination = .browser
+                    dualPaneEnabled = true
+                },
+                onSearch: { destination = .search },
+                onTransfers: { showTransfers = true },
+                onSettings: {
+                    NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
                 }
-                if showTabBar {
-                    TabBarView(tabState: tabState) { folder in
-                        destination = .pinned(folder)
+            )
+            detailColumn
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .background(Color(nsColor: .windowBackgroundColor))
+    }
+
+    @ViewBuilder
+    private var sidebarList: some View {
+        List {
+            if chromeView == .previewTheater {
+                Section {
+                    sidebarItem("Home", systemImage: "house", .browser, nav: .home)
+                    sidebarItem("Downloads", systemImage: "arrow.down.circle", .browser, place: .downloads)
+                    ForEach([FileKind.image, .audio, .video], id: \.self) { kind in
+                        sidebarItem(kind.displayName, systemImage: kind.systemImage, .kind(kind), kind: kind)
                     }
                 }
+            } else {
+                Section("Favorites") {
+                    sidebarItem("Browser", systemImage: "rectangle.split.2x1", .browser, nav: .browser)
+                    sidebarItem("Search", systemImage: "magnifyingglass", .search, nav: .search)
+                    ForEach(standardPlaces, id: \.path) { place in
+                        Button {
+                            tabState.setFirstFolder(place)
+                            destination = .browser
+                            dualPaneEnabled = true
+                        } label: {
+                            FRSidebarLabel(title: place.lastPathComponent) {
+                                FRPlaceIcon(place: FRPlaceKind.from(url: place), size: .sidebar)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .listRowBackground(
+                            (destination == .browser && tabState.firstFolder.path == place.path)
+                            ? FileRadarChrome.sidebarSelectionWash(chromeAccent) : Color.clear
+                        )
+                    }
+                    if !favorites.paths.isEmpty {
+                        ForEach(favorites.paths, id: \.self) { path in
+                            let url = URL(fileURLWithPath: path)
+                            sidebarItem(url.lastPathComponent, systemImage: "star.fill", .favorite(url), place: .favorite)
+                        }
+                    }
+                }
+                if chromeView != .workspaceTabs {
+                    Section("Places") {
+                        if store.pinnedFolderURLs.isEmpty {
+                            Text("Pin folders from a file’s context menu.")
+                                .font(FileRadarFont.caption())
+                                .foregroundStyle(.secondary)
+                        } else {
+                            ForEach(store.pinnedFolderURLs, id: \.self) { url in
+                                sidebarItem(url.lastPathComponent, systemImage: "pin", .pinned(url), place: .pin)
+                            }
+                        }
+                    }
+                    Section("Tools") {
+                        sidebarItem("Clean Up", systemImage: "trash", .cleanup, nav: .cleanup)
+                        sidebarItem("Duplicates", systemImage: "doc.on.doc", .duplicates, nav: .duplicates)
+                        sidebarItem("Compare Folders", systemImage: "arrow.left.arrow.right", .syncCompare, nav: .sync)
+                        sidebarItem("Workspaces", systemImage: "square.grid.2x2", .workspaces, nav: .workspaces)
+                    }
+                    Section("More") {
+                        sidebarItem("Shelves", systemImage: "square.stack", .home, nav: .shelves)
+                        sidebarItem("Timeline", systemImage: "calendar", .timeline, nav: .timeline)
+                        sidebarItem("Disk Map", systemImage: "square.grid.3x3", .diskMap, nav: .diskMap)
+                        sidebarItem("Muse", systemImage: "sparkles", .muse, nav: .muse)
+                        sidebarItem("Extras", systemImage: "wand.and.stars", .extras, nav: .extras)
+                        ForEach([FileKind.image, .video, .audio, .document], id: \.self) { kind in
+                            sidebarItem(kind.displayName, systemImage: kind.systemImage, .kind(kind), kind: kind)
+                        }
+                        if license.isAllowed(.savedSearches) {
+                            ForEach(savedSearches.items) { item in
+                                sidebarItem(item.name, systemImage: "bookmark", .savedSearch(item.id), nav: .bookmark)
+                                    .contextMenu {
+                                        Button("Delete", role: .destructive) { savedSearches.remove(item.id) }
+                                    }
+                            }
+                        }
+                    }
+                } else {
+                    Section("Places") {
+                        ForEach(["Pictures", "Music", "Movies"], id: \.self) { name in
+                            let url = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(name)
+                            Button {
+                                tabState.setFirstFolder(url)
+                                destination = .browser
+                                dualPaneEnabled = true
+                            } label: {
+                                FRSidebarLabel(title: name) {
+                                    FRPlaceIcon(place: FRPlaceKind.from(url: url), size: .sidebar)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    Section("Tools") {
+                        sidebarItem("Shelves", systemImage: "square.stack", .home, nav: .shelves)
+                    }
+                }
+                Section {
+                    DropStackView()
+                    DiskFreeBar()
+                }
+            }
+        }
+    }
+
+    private var detailColumn: some View {
+        VStack(spacing: 0) {
+            if let message = license.statusMessage, license.source == .trial {
+                HStack(spacing: 8) {
+                    Image(systemName: "clock")
+                    Text(message).font(FileRadarFont.caption())
+                    Spacer()
+                    Button("Unlock") { showLicense = true }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.small)
+                        .accessibilityLabel("Unlock")
+                }
+                .padding(.horizontal, 12).padding(.vertical, 6)
+                .background(.bar)
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+            if chromeView == .workspaceTabs {
+                WorkspaceChromeTabBar(selected: $workspaceChromeTab, accent: chromeAccent)
+            }
+            if showTabBar, chromeView != .workspaceTabs {
+                TabBarView(tabState: tabState) { folder in
+                    tabState.setFirstFolder(folder)
+                    destination = .browser
+                    dualPaneEnabled = true
+                }
+            }
+            if chromeView == .previewTheater {
+                TransferTopStrip(accent: chromeAccent) { showTransfers = true }
+            }
+            HStack(spacing: 0) {
                 ZStack(alignment: .bottom) {
                     VStack(spacing: 0) {
-                        if dualPaneEnabled, isFolderDestination {
-                            DualPaneView(leftTitle: destination.title,
-                                         leftFiles: folderFiles(for: destination),
+                        if showsDualPane {
+                            DualPaneView(leftFolder: tabState.firstFolder,
+                                         leftFiles: FolderBrowser.children(of: tabState.firstFolder, indexed: store.files),
                                          rightFolder: tabState.secondFolder,
-                                         rightFiles: store.files.filter { $0.url.path.hasPrefix(tabState.secondFolder.path) },
+                                         rightFiles: FolderBrowser.children(of: tabState.secondFolder, indexed: store.files),
                                          activeIsRight: $activeIsRight,
-                                         onChooseRightFolder: chooseRightPaneFolder)
+                                         onNavigateLeft: { tabState.setFirstFolder($0) },
+                                         onNavigateRight: { tabState.setSecondFolder($0) },
+                                         onChooseLeftFolder: chooseLeftPaneFolder,
+                                         onChooseRightFolder: chooseRightPaneFolder,
+                                         onSyncCompare: { destination = .syncCompare },
+                                         chromeView: chromeView,
+                                         accent: chromeAccent)
                         } else {
                             detailView
                         }
-                        // Preview strip is secondary; Home uses the rich inspector.
-                        if previewStripEnabled, destination != .home {
+                        if previewStripEnabled, destination != .home, !showsDualPane {
                             SelectionPreviewStrip(file: selectedFile)
                         }
+                        if chromeView == .radarGlass {
+                            TransferDockedDrawer(accent: chromeAccent) { showTransfers = true }
+                        } else if chromeView == .commandRail {
+                            CommandKeyboardLegend()
+                        } else if chromeView != .previewTheater, chromeView != .workspaceTabs {
+                            ActivitiesStripView { showTransfers = true }
+                        }
                     }
-                    // HUD is conditional inside; keep the ZStack layer from
-                    // eating clicks when no transfer is active.
-                    TransferHUDView()
-                        .allowsHitTesting(transferQueue.activeCount > 0
-                                          || transferQueue.items.contains { $0.status == .failed })
+                    if chromeView == .commandRail {
+                        TransferFloatingPill(accent: chromeAccent)
+                            .allowsHitTesting(transferQueue.activeCount > 0
+                                              || transferQueue.items.contains { $0.status == .failed })
+                    } else if chromeView != .radarGlass, chromeView != .previewTheater, chromeView != .workspaceTabs {
+                        TransferHUDView()
+                            .allowsHitTesting(transferQueue.activeCount > 0
+                                              || transferQueue.items.contains { $0.status == .failed })
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                if chromeView == .previewTheater {
+                    PreviewTheaterPanel(file: selectedFile, accent: chromeAccent)
+                }
+                if chromeView == .workspaceTabs, showQueueDrawer {
+                    QueueDrawerView(accent: chromeAccent) { showQueueDrawer = false }
                 }
             }
-            .inspector(isPresented: $showInspector) {
-                if let first = store.files.first(where: { store.selectedIDs.contains($0.id) }) {
-                    // Home always uses the mockup-rich inspector.
+        }
+        .inspector(isPresented: $showInspector) {
+            VStack(spacing: 0) {
+                Picker("Inspector", selection: $inspectorMode) {
+                    ForEach(InspectorMode.allCases, id: \.self) { mode in
+                        Text(mode.rawValue).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .padding(10)
+                if inspectorMode == .activities {
+                    TransferQueueView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                } else if let first = store.files.first(where: { store.selectedIDs.contains($0.id) }) {
                     if destination == .home || store.viewMode == .showcase {
                         ShowcaseInspectorView(file: first)
                     } else {
@@ -271,34 +459,50 @@ struct ContentView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
-            .onChange(of: store.viewMode) { _, mode in
-                if mode == .showcase, destination == .home {
-                    showInspector = true
-                }
-            }
-            .onChange(of: store.recents) { _, recents in
-                // Auto-select a recent so the mockup inspector isn't empty on first paint.
-                if store.selectedIDs.isEmpty, let first = recents.first {
-                    store.selectedIDs = [first.id]
-                }
-            }
-            .searchable(text: $searchText, placement: .toolbar, prompt: "Search files…")
-            .onSubmit(of: .search) {
-                if !searchText.isEmpty { destination = .search }
-            }
-            .onChange(of: searchText) { _, new in
-                if !new.isEmpty, destination != .search {
-                    destination = .search
-                }
-            }
-            .toolbar { detailToolbar }
         }
-        .navigationSplitViewStyle(.balanced)
+        .onChange(of: store.viewMode) { _, mode in
+            if mode == .showcase, destination == .home {
+                showInspector = true
+                inspectorMode = .info
+            }
+        }
+        .searchable(text: $searchText, placement: .toolbar, prompt: "Search files…")
+        .onSubmit(of: .search) {
+            if !searchText.isEmpty { destination = .search }
+        }
+        .onChange(of: searchText) { _, new in
+            if !new.isEmpty, destination != .search {
+                destination = .search
+            }
+        }
+        .toolbar { detailToolbar }
+        .popover(isPresented: $showTransfers, arrowEdge: .bottom) {
+            TransferQueueView()
+                .frame(width: 320, height: 280)
+                .padding(8)
+        }
     }
 
-    /// Tab strip only when tabs exist or the current destination is folder-scoped.
+    private var standardPlaces: [URL] {
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        return ["Documents", "Downloads", "Desktop"].map { home.appendingPathComponent($0) }
+    }
+
+    private func placeIcon(_ url: URL) -> String {
+        switch url.lastPathComponent {
+        case "Downloads": return "arrow.down.circle"
+        case "Desktop": return "desktopcomputer"
+        default: return "folder"
+        }
+    }
+
+    private var showsDualPane: Bool {
+        dualPaneEnabled && (destination == .browser || isFolderDestination)
+    }
+
+    /// Tab strip when dual-pane Browser or folder destinations are active.
     private var showTabBar: Bool {
-        !tabState.tabs.isEmpty || isFolderDestination || dualPaneEnabled
+        destination == .browser || isFolderDestination || dualPaneEnabled || !tabState.tabs.isEmpty
     }
 
     @ToolbarContentBuilder
@@ -307,30 +511,47 @@ struct ContentView: View {
             Button {
                 theme.cycleAppearance()
             } label: {
-                Image(systemName: theme.appearance.systemImage)
+                FRToolbarGlyph(kind: .appearance(theme.appearance), accent: chromeAccent)
             }
             .help("Appearance: \(theme.appearance.rawValue). Click to cycle System / Light / Dark.")
             .accessibilityLabel("Appearance \(theme.appearance.rawValue)")
 
-            Button {
-                dualPaneEnabled.toggle()
+            Menu {
+                Picker("Chrome", selection: $chromeViewRaw) {
+                    ForEach(ChromeView.allCases) { chrome in
+                        Text("\(chrome.optionLetter) · \(chrome.displayName)").tag(chrome.rawValue)
+                    }
+                }
             } label: {
-                Image(systemName: dualPaneEnabled ? "rectangle.split.2x1.fill" : "rectangle.split.2x1")
+                FRChromeGlyph(chrome: chromeView, accent: chromeAccent)
             }
-            .help("Dual-pane mode is optional and off by default.")
+            .help("Chrome layout: \(chromeView.displayName)")
+            .accessibilityLabel("Chrome \(chromeView.displayName)")
+
+            Button {
+                if dualPaneEnabled {
+                    dualPaneEnabled = false
+                } else {
+                    dualPaneEnabled = true
+                    destination = .browser
+                }
+            } label: {
+                FRToolbarGlyph(kind: .dualPane(dualPaneEnabled), accent: chromeAccent)
+            }
+            .help("Dual-pane Browser is the default. Toggle for single-pane destinations.")
             .accessibilityLabel(dualPaneEnabled ? "Single pane" : "Dual pane")
 
             Menu {
                 Picker("View", selection: $store.viewMode) {
-                    Label("Grid", systemImage: "square.grid.2x2").tag(FileStore.ViewMode.grid)
                     Label("List", systemImage: "list.bullet").tag(FileStore.ViewMode.list)
                     Label("Columns", systemImage: "rectangle.split.3x1").tag(FileStore.ViewMode.columns)
+                    Label("Grid", systemImage: "square.grid.2x2").tag(FileStore.ViewMode.grid)
                     Label("Showcase", systemImage: "rectangle.portrait.on.rectangle.portrait").tag(FileStore.ViewMode.showcase)
                 }
             } label: {
-                Image(systemName: "square.grid.2x2")
+                FRToolbarGlyph(kind: .viewMode(store.viewMode), accent: chromeAccent)
             }
-            .help("View mode")
+            .help("View mode — list and columns are first-class")
             .accessibilityLabel("View mode")
 
             Menu {
@@ -340,33 +561,31 @@ struct ContentView: View {
                     }
                 }
             } label: {
-                Image(systemName: "arrow.up.arrow.down")
+                FRToolbarGlyph(kind: .sort, accent: chromeAccent)
             }
             .help("Sort files")
             .accessibilityLabel("Sort files")
 
             Button {
-                showInspector.toggle()
+                if chromeView == .workspaceTabs {
+                    showQueueDrawer.toggle()
+                } else {
+                    showInspector.toggle()
+                    if showInspector { inspectorMode = .activities }
+                }
             } label: {
-                Image(systemName: showInspector ? "sidebar.trailing" : "sidebar.right")
+                FRToolbarGlyph(kind: .inspector(showInspector || showQueueDrawer), accent: chromeAccent)
             }
             .keyboardShortcut("i", modifiers: [.command, .option])
-            .help("Toggle inspector")
-            .accessibilityLabel("Inspector")
+            .help(chromeView == .workspaceTabs ? "Toggle Queue drawer" : "Toggle inspector / Activities")
+            .accessibilityLabel(chromeView == .workspaceTabs ? "Queue" : "Inspector")
 
             Button {
                 showTransfers.toggle()
             } label: {
-                Image(systemName: transferQueue.activeCount > 0
-                      ? "arrow.left.arrow.right.circle.fill"
-                      : "arrow.left.arrow.right.circle")
+                FRTransferIcon(active: transferQueue.activeCount > 0, accent: chromeAccent)
             }
-            .help("Transfer queue")
-            .popover(isPresented: $showTransfers, arrowEdge: .bottom) {
-                TransferQueueView()
-                    .frame(width: 320, height: 280)
-                    .padding(8)
-            }
+            .help("Activities / transfer queue")
 
             Menu {
                 Button("Command Palette…") { showPalette = true }
@@ -374,6 +593,7 @@ struct ContentView: View {
                 Button("Jump Panes") { activeIsRight.toggle() }
                     .keyboardShortcut(.tab, modifiers: .control)
                     .disabled(!dualPaneEnabled)
+                Button("Go to Shelves") { destination = .home }
                 Button(previewStripEnabled ? "Hide Preview Strip" : "Show Preview Strip") {
                     previewStripEnabled.toggle()
                 }
@@ -383,13 +603,28 @@ struct ContentView: View {
                     .keyboardShortcut("r", modifiers: [.command, .shift])
                     .disabled(store.selectedIDs.isEmpty)
             } label: {
-                Image(systemName: "ellipsis.circle")
+                FRToolbarGlyph(kind: .more, accent: chromeAccent)
             }
             .help("More actions")
         }
     }
 
+    private func applyChromeDefaults() {
+        dualPaneEnabled = true
+        destination = .browser
+        showInspector = false
+        showQueueDrawer = chromeView == .workspaceTabs
+        if chromeView == .previewTheater {
+            // Keep user appearance; theater is light-capable but not forced.
+        }
+    }
+
     private func bootstrap() {
+        applyChromeDefaults()
+        // ForkLift-primary: list density for dual-pane (Showcase stays on Shelves).
+        if store.viewMode == .showcase {
+            store.viewMode = .list
+        }
         // Defer heavy work so the first frame paints and clicks respond.
         if store.files.isEmpty {
             Task { @MainActor in
@@ -434,6 +669,17 @@ struct ContentView: View {
 
     private var selectedFile: FileItem? { selectedFiles.first }
 
+    private func chooseLeftPaneFolder() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.prompt = "Use as left pane"
+        guard panel.runModal() == .OK, let folder = panel.url else { return }
+        tabState.setFirstFolder(folder)
+        activeIsRight = false
+        destination = .browser
+    }
+
     private func chooseRightPaneFolder() {
         let panel = NSOpenPanel()
         panel.canChooseDirectories = true
@@ -442,6 +688,7 @@ struct ContentView: View {
         guard panel.runModal() == .OK, let folder = panel.url else { return }
         tabState.setSecondFolder(folder)
         activeIsRight = true
+        destination = .browser
     }
 
     private func trashSelected() {
@@ -460,6 +707,12 @@ struct ContentView: View {
     @ViewBuilder
     private var detailView: some View {
         switch destination {
+        case .browser:
+            // Dual-pane owns Browser; fallback if dual-pane was toggled off.
+            FileCollectionView(title: tabState.firstFolder.lastPathComponent,
+                               files: FolderBrowser.children(of: tabState.firstFolder, indexed: store.files),
+                               dropTargetFolder: tabState.firstFolder,
+                               onOpenFolder: { tabState.setFirstFolder($0) })
         case .home: HomeView(destination: $destination)
         case .search, .savedSearch: SearchView(searchText: $searchText)
         case .cleanup: CleanupView(trash: trash)
@@ -473,8 +726,9 @@ struct ContentView: View {
             FileCollectionView(title: name, files: smartFolderFiles(named: name))
         case .pinned(let url), .favorite(let url):
             FileCollectionView(title: url.lastPathComponent,
-                               files: store.files.filter { $0.url.path.hasPrefix(url.path) || $0.url.path == url.path },
-                               dropTargetFolder: url.hasDirectoryPath ? url : url.deletingLastPathComponent())
+                               files: FolderBrowser.children(of: url, indexed: store.files),
+                               dropTargetFolder: url.hasDirectoryPath ? url : url.deletingLastPathComponent(),
+                               onOpenFolder: { tabState.setFirstFolder($0); destination = .browser; dualPaneEnabled = true })
         case .workspaces: WorkspacesView(tabState: tabState, dualPaneEnabled: $dualPaneEnabled)
         case .syncCompare: SyncCompareView()
         case .archive(let url): ArchiveBrowserView(archive: url)
@@ -489,29 +743,35 @@ struct ContentView: View {
 
     private var isFolderDestination: Bool {
         switch destination {
-        case .kind, .pinned, .favorite: return true
+        case .browser, .pinned, .favorite: return true
         default: return false
         }
     }
 
     private func folderFiles(for dest: Destination) -> [FileItem] {
         switch dest {
+        case .browser:
+            return FolderBrowser.children(of: tabState.firstFolder, indexed: store.files)
         case .kind(let kind): return store.files.filter { $0.kind == kind }
         case .pinned(let url), .favorite(let url):
-            return store.files.filter { $0.url.path.hasPrefix(url.path) || $0.url.path == url.path }
+            return FolderBrowser.children(of: url, indexed: store.files)
         default: return []
         }
     }
 
     private func performPalette(_ action: PaletteAction) {
         switch action {
-        case .goHome: destination = .home
+        case .goHome:
+            destination = .browser
+            dualPaneEnabled = true
         case .goSearch: destination = .search
         case .goTimeline: destination = .timeline
         case .goDiskMap: destination = .diskMap
         case .goWorkspaces: destination = .workspaces
         case .goSyncCompare: destination = .syncCompare
-        case .toggleDualPane: dualPaneEnabled.toggle()
+        case .toggleDualPane:
+            dualPaneEnabled.toggle()
+            if dualPaneEnabled { destination = .browser }
         case .toggleInspector: showInspector.toggle()
         case .newTab:
             if case .pinned(let url) = destination {
@@ -521,10 +781,10 @@ struct ContentView: View {
             }
         case .toggleViewMode:
             switch store.viewMode {
-            case .grid: store.viewMode = .list
             case .list: store.viewMode = .columns
-            case .columns: store.viewMode = .showcase
-            case .showcase: store.viewMode = .grid
+            case .columns: store.viewMode = .grid
+            case .grid: store.viewMode = .showcase
+            case .showcase: store.viewMode = .list
             }
         case .batchRename:
             showBatchRename = true
@@ -589,6 +849,7 @@ private struct ContentNotificationsModifier: ViewModifier {
     @Binding var showLicense: Bool
     @Binding var dualPaneEnabled: Bool
     @Binding var previewStripEnabled: Bool
+    @Binding var chromeViewRaw: String
     var store: FileStore
     var favorites: FavoritesStore
     var trash: TrashService
@@ -610,8 +871,19 @@ private struct ContentNotificationsModifier: ViewModifier {
             .onReceive(NotificationCenter.default.publisher(for: .showCommandPalette)) { _ in
                 showPalette = true
             }
+            .onReceive(NotificationCenter.default.publisher(for: .setChromeView)) { note in
+                if let raw = note.object as? String, ChromeView(rawValue: raw) != nil {
+                    chromeViewRaw = raw
+                } else {
+                    let all = ChromeView.allCases
+                    let current = ChromeView(rawValue: chromeViewRaw) ?? .radarGlass
+                    let idx = all.firstIndex(of: current) ?? 0
+                    chromeViewRaw = all[(idx + 1) % all.count].rawValue
+                }
+            }
             .onReceive(NotificationCenter.default.publisher(for: .toggleDualPane)) { _ in
                 dualPaneEnabled.toggle()
+                if dualPaneEnabled { destination = .browser }
             }
             .onReceive(NotificationCenter.default.publisher(for: .showLicenseSheet)) { _ in
                 showLicense = true

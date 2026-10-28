@@ -106,9 +106,7 @@ struct AsyncFileThumbnail: View {
                 Image(nsImage: image).resizable().scaledToFill()
                     .transition(.opacity)
             } else {
-                Image(systemName: file.kind.systemImage)
-                    .font(.system(size: min(size.width, size.height) * 0.28, weight: .medium))
-                    .foregroundStyle(.secondary)
+                FRKindIcon(kind: file.kind, size: size.width >= 48 ? .hero : .list)
             }
         }
         .frame(width: size.width, height: size.height)

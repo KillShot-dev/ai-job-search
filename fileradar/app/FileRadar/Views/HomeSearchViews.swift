@@ -507,9 +507,16 @@ struct DiskFreeBar: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Image(systemName: "internaldrive")
-                    .foregroundStyle(.secondary)
+            HStack(spacing: 8) {
+                ZStack {
+                    FRIconTile(size: 22,
+                               top: Color(red: 0.55, green: 0.72, blue: 0.95),
+                               bottom: Color(red: 0.22, green: 0.35, blue: 0.62),
+                               corner: 6)
+                    Image(systemName: "internaldrive.fill")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.white)
+                }
                 Text(volumeName).font(FileRadarFont.caption())
                 Spacer()
             }
@@ -622,8 +629,21 @@ struct EmptyStateView: View {
     var message: String
 
     var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "tray").font(.largeTitle).foregroundStyle(.secondary)
+        VStack(spacing: 14) {
+            ZStack {
+                FRIconTile(size: 64,
+                           top: Color(red: 0.55, green: 0.78, blue: 1.0),
+                           bottom: Color(red: 0.18, green: 0.42, blue: 0.88),
+                           corner: 18)
+                Image(systemName: "tray.full.fill")
+                    .font(.system(size: 28, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.2), radius: 2, y: 1)
+                Image(systemName: "sparkle")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(Color.yellow)
+                    .offset(x: 18, y: -18)
+            }
             Text(title).font(FileRadarFont.heading())
             Text(message).font(FileRadarFont.body()).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center).frame(maxWidth: 420)

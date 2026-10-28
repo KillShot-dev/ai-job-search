@@ -45,25 +45,69 @@ struct FileRadarApp: App {
                     Task { await license.refreshEntitlementsAsync() }
                     // Dev-only: optional self-snapshot of the key window (no
                     // Screen Recording TCC). Set FILERADAR_SNAPSHOT_PATH.
-                    if LocalDevBuild.isActive,
-                       let path = ProcessInfo.processInfo.environment["FILERADAR_SNAPSHOT_PATH"],
-                       !path.isEmpty {
-                        // Prefer calm Modern + Dark for mockup-matching evidence shots.
+                    let snapPath = ProcessInfo.processInfo.environment["FILERADAR_SNAPSHOT_PATH"] ?? ""
+                    if !snapPath.isEmpty, LocalDevBuild.isActive || ProcessInfo.processInfo.environment["FILERADAR_FORCE_UNLOCK"] == "1" {
+                        // ForkLift-primary evidence: dual-pane list Browser, not Shelves Home.
                         theme.look = .modern
-                        theme.appearance = .dark
-                        store.viewMode = .showcase
+                        store.viewMode = .list
+                        let chromeRaw = ProcessInfo.processInfo.environment["FILERADAR_CHROME_VIEW"]
+                            ?? ChromeView.default.rawValue
+                        if let chrome = ChromeView(rawValue: chromeRaw) {
+                            UserDefaults.standard.set(chrome.rawValue, forKey: ChromeView.storageKey)
+                            if let preferred = chrome.preferredAppearance {
+                                theme.appearance = preferred
+                            } else {
+                                theme.appearance = .dark
+                            }
+                            NotificationCenter.default.post(name: .setChromeView, object: chrome.rawValue)
+                        } else {
+                            theme.appearance = .dark
+                        }
                         Task { @MainActor in
-                            // Wait for demo index + first selection so shelves/inspector fill.
+                            NSApp.activate(ignoringOtherApps: true)
+                            // Sandboxed Debug can read Downloads; pin demo folders there for shots.
+                            let demo = FileManager.default.homeDirectoryForCurrentUser
+                                .appendingPathComponent("Downloads/FileRadarDemo")
+                            let demoInbox = demo.appendingPathComponent("Inbox")
+                            let hasDemo = FileManager.default.fileExists(atPath: demo.path)
+                            if hasDemo {
+                                if let data = try? JSONEncoder().encode([
+                                    TabState.TabItem(folder: demo),
+                                    TabState.TabItem(folder: demoInbox)
+                                ]) {
+                                    UserDefaults.standard.set(data, forKey: "com.metaphasicgroup.fileradar.tabs.v2")
+                                }
+                                store.pinnedFolderURLs = [demo, demoInbox]
+                                store.refreshIndex()
+                            }
+                            try? await Task.sleep(nanoseconds: 600_000_000)
+                            if hasDemo {
+                                NotificationCenter.default.post(name: .pinDemoFoldersForSnapshot,
+                                                                object: [demo, demoInbox])
+                            }
                             for _ in 0..<80 {
                                 if !store.files.isEmpty, !store.isIndexing { break }
                                 try? await Task.sleep(nanoseconds: 250_000_000)
                             }
                             if store.selectedIDs.isEmpty,
-                               let first = store.recents.first ?? store.files.first {
+                               let first = store.files.first {
                                 store.selectedIDs = [first.id]
                             }
-                            try? await Task.sleep(nanoseconds: 1_200_000_000)
-                            Self.writeWindowSnapshot(to: path)
+                            // Seed a demo transfer so docked / strip / pill chrome is visible.
+                            if ProcessInfo.processInfo.environment["FILERADAR_SNAPSHOT_TRANSFER"] == "1" {
+                                let dest = FileManager.default.temporaryDirectory
+                                TransferQueue.shared.enqueueCopy(
+                                    [URL(fileURLWithPath: "/System/Library/CoreServices/SystemVersion.plist")],
+                                    to: dest
+                                )
+                            }
+                            try? await Task.sleep(nanoseconds: 1_800_000_000)
+                            for _ in 0..<20 {
+                                if Self.writeWindowSnapshot(to: snapPath) { break }
+                                try? await Task.sleep(nanoseconds: 300_000_000)
+                            }
+                            try? await Task.sleep(nanoseconds: 300_000_000)
+                            NSApp.terminate(nil)
                         }
                     }
                 }
@@ -83,6 +127,20 @@ struct FileRadarApp: App {
                 Button("List View") { store.viewMode = .list }.keyboardShortcut("2", modifiers: .command)
                 Button("Column View") { store.viewMode = .columns }.keyboardShortcut("3", modifiers: .command)
                 Button("Showcase View") { store.viewMode = .showcase }.keyboardShortcut("4", modifiers: .command)
+                Divider()
+                Menu("Chrome") {
+                    ForEach(ChromeView.allCases) { chrome in
+                        Button("\(chrome.optionLetter) · \(chrome.displayName)") {
+                            UserDefaults.standard.set(chrome.rawValue, forKey: ChromeView.storageKey)
+                            NotificationCenter.default.post(name: .setChromeView, object: chrome.rawValue)
+                        }
+                    }
+                    Divider()
+                    Button("Cycle Chrome") {
+                        NotificationCenter.default.post(name: .setChromeView, object: nil)
+                    }
+                    .keyboardShortcut("c", modifiers: [.command, .option])
+                }
                 Divider()
                 ForEach(AppearanceMode.allCases) { mode in
                     Button(mode.rawValue) { theme.appearance = mode }
@@ -164,19 +222,42 @@ struct FileRadarApp: App {
 
     /// Captures the key window via AppKit view cache (works without Screen Recording).
     @MainActor
-    private static func writeWindowSnapshot(to path: String) {
-        guard let window = NSApp.windows.first(where: { $0.isVisible && $0.frame.width > 400 }),
-              let view = window.contentView else { return }
+    @discardableResult
+    private static func writeWindowSnapshot(to path: String) -> Bool {
+        let window = NSApp.keyWindow
+            ?? NSApp.mainWindow
+            ?? NSApp.windows.first(where: { $0.isVisible && $0.frame.width > 400 })
+        guard let window,
+              let view = window.contentView ?? window.contentViewController?.view else {
+            fputs("FileRadar snapshot: no window yet\n", stderr)
+            return false
+        }
+        window.makeKeyAndOrderFront(nil)
+        view.layoutSubtreeIfNeeded()
         let bounds = view.bounds
-        guard let rep = view.bitmapImageRepForCachingDisplay(in: bounds) else { return }
+        guard bounds.width > 10, bounds.height > 10,
+              let rep = view.bitmapImageRepForCachingDisplay(in: bounds) else {
+            fputs("FileRadar snapshot: bad bounds\n", stderr)
+            return false
+        }
         view.cacheDisplay(in: bounds, to: rep)
         let image = NSImage(size: bounds.size)
         image.addRepresentation(rep)
         guard let tiff = image.tiffRepresentation,
-              let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) else { return }
+              let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) else {
+            fputs("FileRadar snapshot: encode failed\n", stderr)
+            return false
+        }
         let url = URL(fileURLWithPath: path)
-        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
-                                                 withIntermediateDirectories: true)
-        try? png.write(to: url)
+        do {
+            try FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
+                                                    withIntermediateDirectories: true)
+            try png.write(to: url)
+            fputs("FileRadar snapshot: wrote \(path) (\(png.count) bytes)\n", stderr)
+            return true
+        } catch {
+            fputs("FileRadar snapshot: write error \(error)\n", stderr)
+            return false
+        }
     }
 }
