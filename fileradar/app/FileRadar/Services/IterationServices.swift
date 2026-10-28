@@ -373,32 +373,47 @@ final class WorkspaceStore: ObservableObject {
 // sizes (iCloud-only files contribute their recorded size, but nothing
 // is downloaded to measure them).
 
+/// Folder size cache without a shared ObservableObject — publishing every
+/// completed size previously re-rendered every list row that observed it.
 @MainActor
-final class FolderSizeService: ObservableObject {
+final class FolderSizeService {
     static let shared = FolderSizeService()
-    @Published private(set) var sizes: [String: Int64] = [:]
+    private var sizes: [String: Int64] = [:]
     private var computing = Set<String>()
+    private var waiters: [String: [CheckedContinuation<Int64?, Never>]] = [:]
 
     func size(for folder: URL) -> Int64? { sizes[folder.path] }
 
-    func requestSize(for folder: URL) {
-        guard sizes[folder.path] == nil, !computing.contains(folder.path) else { return }
-        computing.insert(folder.path)
-        Task.detached {
-            var total: Int64 = 0
-            let fm = FileManager.default
-            if let enumerator = fm.enumerator(at: folder, includingPropertiesForKeys: [.fileSizeKey, .isDirectoryKey, .isSymbolicLinkKey], options: [.skipsHiddenFiles]) {
-                for case let url as URL in enumerator {
-                    guard let values = try? url.resourceValues(forKeys: [.fileSizeKey, .isDirectoryKey, .isSymbolicLinkKey]) else { continue }
-                    // Symlinked entries are never followed (see Indexer).
-                    if values.isSymbolicLink == true { enumerator.skipDescendants(); continue }
-                    if values.isDirectory != true { total += Int64(values.fileSize ?? 0) }
-                }
+    func sizeAsync(for folder: URL) async -> Int64? {
+        let key = folder.path
+        if let cached = sizes[key] { return cached }
+        return await withCheckedContinuation { (continuation: CheckedContinuation<Int64?, Never>) in
+            if var existing = waiters[key] {
+                existing.append(continuation)
+                waiters[key] = existing
+                return
             }
-            let sum = total
-            await MainActor.run {
-                self.sizes[folder.path] = sum
-                self.computing.remove(folder.path)
+            waiters[key] = [continuation]
+            guard !computing.contains(key) else { return }
+            computing.insert(key)
+            Task.detached {
+                var total: Int64 = 0
+                let fm = FileManager.default
+                if let enumerator = fm.enumerator(at: folder, includingPropertiesForKeys: [.fileSizeKey, .isDirectoryKey, .isSymbolicLinkKey], options: [.skipsHiddenFiles]) {
+                    for case let url as URL in enumerator {
+                        if Task.isCancelled { break }
+                        guard let values = try? url.resourceValues(forKeys: [.fileSizeKey, .isDirectoryKey, .isSymbolicLinkKey]) else { continue }
+                        if values.isSymbolicLink == true { enumerator.skipDescendants(); continue }
+                        if values.isDirectory != true { total += Int64(values.fileSize ?? 0) }
+                    }
+                }
+                let sum = total
+                await MainActor.run {
+                    self.sizes[key] = sum
+                    self.computing.remove(key)
+                    let pending = self.waiters.removeValue(forKey: key) ?? []
+                    for waiter in pending { waiter.resume(returning: sum) }
+                }
             }
         }
     }
@@ -693,21 +708,37 @@ enum SyncCompareService {
 // not run on a Mac, and git may not be installed on every Mac — a
 // missing git binary simply yields no badge, never an error surface.
 
-@MainActor
 enum GitStatusService {
     /// Cache keyed by repo root path → relative filename → porcelain code.
     private static var cache: [String: [String: String]] = [:]
+    private static let lock = NSLock()
 
-    static func badge(for file: URL) -> String? {
+    /// Async so `git status --porcelain` never blocks MainActor (inspector `.task`).
+    static func badge(for file: URL) async -> String? {
+        await Task.detached(priority: .utility) {
+            syncBadge(for: file)
+        }.value
+    }
+
+    private static func syncBadge(for file: URL) -> String? {
         guard let root = repoRoot(for: file) else { return nil }
-        if cache[root.path] == nil {
-            cache[root.path] = statusMap(forRoot: root)
+        lock.lock()
+        let cached = cache[root.path]
+        lock.unlock()
+        let map: [String: String]
+        if let cached {
+            map = cached
+        } else {
+            map = statusMap(forRoot: root)
+            lock.lock()
+            cache[root.path] = map
+            lock.unlock()
         }
         // Prefer path relative to repo root; fall back to last path component.
         let relative = file.path.hasPrefix(root.path + "/")
             ? String(file.path.dropFirst(root.path.count + 1))
             : file.lastPathComponent
-        return cache[root.path]?[relative] ?? cache[root.path]?[file.lastPathComponent]
+        return map[relative] ?? map[file.lastPathComponent]
     }
 
     private static func repoRoot(for file: URL) -> URL? {

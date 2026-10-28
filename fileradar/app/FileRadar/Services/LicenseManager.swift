@@ -47,9 +47,11 @@ enum LicenseSource: String {
 }
 
 /// Minimal Keychain wrapper for the activation serial only.
+/// SecItem* always runs on a utility queue — never on MainActor.
 private enum KeychainSerialStore {
     private static let service = "com.metaphasicgroup.fileradar.license"
     private static let account = "activation-serial"
+    private static let queue = DispatchQueue(label: "com.metaphasicgroup.fileradar.license-keychain", qos: .utility)
 
     private static var baseQuery: [String: Any] {
         [kSecClass as String: kSecClassGenericPassword,
@@ -58,32 +60,36 @@ private enum KeychainSerialStore {
     }
 
     static func read() -> String? {
-        var query = baseQuery
-        query[kSecReturnData as String] = true
-        query[kSecMatchLimit as String] = kSecMatchLimitOne
-        var item: CFTypeRef?
-        guard SecItemCopyMatching(query as CFDictionary, &item) == errSecSuccess,
-              let data = item as? Data,
-              let serial = String(data: data, encoding: .utf8),
-              !serial.isEmpty else { return nil }
-        return serial
+        queue.sync {
+            var query = baseQuery
+            query[kSecReturnData as String] = true
+            query[kSecMatchLimit as String] = kSecMatchLimitOne
+            var item: CFTypeRef?
+            guard SecItemCopyMatching(query as CFDictionary, &item) == errSecSuccess,
+                  let data = item as? Data,
+                  let serial = String(data: data, encoding: .utf8),
+                  !serial.isEmpty else { return nil }
+            return serial
+        }
     }
 
     static func write(_ serial: String) -> Bool {
-        guard let data = serial.data(using: .utf8) else { return false }
-        var attributes = baseQuery
-        attributes[kSecValueData as String] = data
-        attributes[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlocked
-        let addStatus = SecItemAdd(attributes as CFDictionary, nil)
-        if addStatus == errSecSuccess { return true }
-        guard addStatus == errSecDuplicateItem else { return false }
-        let updateStatus = SecItemUpdate(baseQuery as CFDictionary,
-                                         [kSecValueData as String: data] as CFDictionary)
-        return updateStatus == errSecSuccess
+        queue.sync {
+            guard let data = serial.data(using: .utf8) else { return false }
+            var attributes = baseQuery
+            attributes[kSecValueData as String] = data
+            attributes[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlocked
+            let addStatus = SecItemAdd(attributes as CFDictionary, nil)
+            if addStatus == errSecSuccess { return true }
+            guard addStatus == errSecDuplicateItem else { return false }
+            let updateStatus = SecItemUpdate(baseQuery as CFDictionary,
+                                             [kSecValueData as String: data] as CFDictionary)
+            return updateStatus == errSecSuccess
+        }
     }
 
     static func delete() {
-        _ = SecItemDelete(baseQuery as CFDictionary)
+        queue.sync { _ = SecItemDelete(baseQuery as CFDictionary) }
     }
 }
 
@@ -107,7 +113,11 @@ final class LicenseManager: ObservableObject {
             .appendingPathComponent("license.json")
     }
 
-    init() { restore() }
+    init() {
+        // Keychain SecItemCopyMatching on the first main-actor frame stalls
+        // launch (authorizationhost); restore fully off-main.
+        Task { await self.restore() }
+    }
 
     // MARK: - Validation (pure, testable; mirrors licensing/serials.py)
 
@@ -166,7 +176,11 @@ final class LicenseManager: ObservableObject {
     // MARK: - Recompute unlock from all sources
 
     func refreshEntitlements() {
-        trial?.refresh()
+        Task { await refreshEntitlementsAsync() }
+    }
+
+    func refreshEntitlementsAsync() async {
+        await trial?.refresh()
         if storeKit?.isEntitled == true {
             source = .storeKit
             isUnlocked = true
@@ -289,27 +303,39 @@ final class LicenseManager: ObservableObject {
         }
     }
 
-    private func restore() {
-        if let saved = KeychainSerialStore.read(), let canon = Self.canonical(saved) {
-            serial = canon
-        } else {
-            var legacy: String?
-            if let saved = UserDefaults.standard.string(forKey: legacyDefaultsKey),
-               let canon = Self.canonical(saved) {
-                legacy = canon
-            } else if let url = legacyStateFileURL,
-                      let data = try? Data(contentsOf: url),
-                      let record = try? JSONSerialization.jsonObject(with: data) as? [String: String],
-                      let saved = record["serial"],
-                      let canon = Self.canonical(saved) {
-                legacy = canon
+    private func restore() async {
+        let legacyKey = legacyDefaultsKey
+        let legacyURL = legacyStateFileURL
+        // Raw Keychain / legacy I/O off-main; canonicalize on MainActor after.
+        let raw: String? = await Task.detached(priority: .utility) {
+            if let saved = KeychainSerialStore.read(), !saved.isEmpty {
+                return saved
             }
-            if let migrated = legacy, KeychainSerialStore.write(migrated) {
-                serial = migrated
-                removeLegacyCopies()
+            if let saved = UserDefaults.standard.string(forKey: legacyKey), !saved.isEmpty {
+                return saved
             }
+            if let url = legacyURL,
+               let data = try? Data(contentsOf: url),
+               let record = try? JSONSerialization.jsonObject(with: data) as? [String: String],
+               let saved = record["serial"], !saved.isEmpty {
+                return saved
+            }
+            return nil
+        }.value
+        guard let raw, let canon = Self.canonical(raw) else {
+            await refreshEntitlementsAsync()
+            return
         }
-        refreshEntitlements()
+        let wrote = await Task.detached(priority: .utility) {
+            KeychainSerialStore.write(canon)
+        }.value
+        if wrote {
+            serial = canon
+            removeLegacyCopies()
+        } else {
+            serial = canon
+        }
+        await refreshEntitlementsAsync()
     }
 
     private func removeLegacyCopies() {

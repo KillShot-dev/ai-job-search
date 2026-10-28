@@ -182,9 +182,11 @@ struct LicenseEntryView: View {
         .padding()
         .frame(width: 480)
         .onAppear {
-            Task { await storeKit.refresh() }
-            trial.refresh()
-            license.refreshEntitlements()
+            Task {
+                await storeKit.refresh()
+                await trial.refresh()
+                await license.refreshEntitlementsAsync()
+            }
         }
     }
 

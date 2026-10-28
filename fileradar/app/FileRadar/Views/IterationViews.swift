@@ -177,6 +177,7 @@ struct TransferHUDView: View {
             .padding(.horizontal, 16).padding(.bottom, 14)
             .transition(.move(edge: .bottom).combined(with: .opacity))
             .animation(FileRadarMotion.panel, value: queue.activeCount)
+            // Only the chip itself takes hits — never a full-width invisible layer.
             .accessibilityElement(children: .contain)
             .accessibilityLabel("Transfer progress")
         }
@@ -597,11 +598,11 @@ struct CommandPaletteView: View {
 
 struct FolderSizeText: View {
     var folder: URL
-    @ObservedObject var sizes = FolderSizeService.shared
+    @State private var size: Int64?
 
     var body: some View {
         Group {
-            if let size = sizes.size(for: folder) {
+            if let size {
                 Text(ByteCountFormatter.string(fromByteCount: size, countStyle: .file))
                     .foregroundStyle(.secondary)
             } else {
@@ -609,6 +610,8 @@ struct FolderSizeText: View {
             }
         }
         .font(FileRadarFont.caption())
-        .onAppear { sizes.requestSize(for: folder) }
+        .task(id: folder) {
+            size = await FolderSizeService.shared.sizeAsync(for: folder)
+        }
     }
 }

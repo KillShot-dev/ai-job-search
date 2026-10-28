@@ -86,8 +86,9 @@ struct DiskMapView: View {
                     .padding()
             }
         }
-        .onAppear { rebuild() }
-        .onChange(of: store.files.count) { _, _ in rebuild() }
+        .task(id: store.files.count) {
+            await rebuildAsync()
+        }
     }
 
     private var storageBreakdownBar: some View {
@@ -116,16 +117,20 @@ struct DiskMapView: View {
         )
     }
 
-    private func rebuild() {
-        guard !store.files.isEmpty else {
+    private func rebuildAsync() async {
+        let snapshot = store.files
+        guard !snapshot.isEmpty else {
             root = nil
             return
         }
-        root = buildTree()
+        let tree = await Task.detached(priority: .utility) {
+            Self.buildTree(from: snapshot)
+        }.value
+        root = tree
     }
 
-    private func buildTree() -> DiskNode {
-        let byFolder = Dictionary(grouping: store.files) { $0.url.deletingLastPathComponent().lastPathComponent }
+    private static func buildTree(from files: [FileItem]) -> DiskNode {
+        let byFolder = Dictionary(grouping: files) { $0.url.deletingLastPathComponent().lastPathComponent }
         let children = byFolder.map { name, files in
             DiskNode(name: name, url: files.first?.url.deletingLastPathComponent(),
                      size: files.reduce(0) { $0 + $1.size },

@@ -36,14 +36,17 @@ struct FileRadarApp: App {
                 .onAppear {
                     license.storeKit = storeKit
                     license.trial = trial
-                    license.refreshEntitlements()
                     store.manualTagNames = { [manualTags] path in
                         manualTags.tags(for: path).map(\.name)
                     }
                     QuickSearchPanel.shared.configure(store: store, license: license)
+                    // Never touch Keychain synchronously here — sample showed
+                    // refreshEntitlements → TrialManager.refresh → SecItem
+                    // blocking MainActor for the entire open event.
+                    Task { await license.refreshEntitlementsAsync() }
                 }
                 .onChange(of: storeKit.isEntitled) { _, _ in
-                    license.refreshEntitlements()
+                    Task { await license.refreshEntitlementsAsync() }
                 }
         }
         .commands {

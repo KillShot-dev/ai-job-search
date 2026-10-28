@@ -377,28 +377,42 @@ struct ContentView: View {
     }
 
     private func bootstrap() {
+        // Defer heavy work so the first frame paints and clicks respond.
         if store.files.isEmpty {
-            store.refreshIndex()
+            Task { @MainActor in
+                await Task.yield()
+                store.refreshIndex()
+            }
         }
         if !museTokenProviderSet {
             museClient.tokenProvider = { [museAuth] in try await museAuth.validAccessToken() }
             museTokenProviderSet = true
         }
         if museChatViewModel == nil {
-            museChatViewModel = ChatViewModel(
-                store: store,
-                trash: trash,
-                auth: museAuth,
-                client: museClient,
-                voice: museVoice,
-                isLicensed: { [license] in license.isUnlocked },
-                destination: $destination,
-                contextTitle: destination.title,
-                contextFileNames: museContextFileNames(for: destination))
+            Task { @MainActor in
+                await Task.yield()
+                guard museChatViewModel == nil else { return }
+                museChatViewModel = ChatViewModel(
+                    store: store,
+                    trash: trash,
+                    auth: museAuth,
+                    client: museClient,
+                    voice: museVoice,
+                    isLicensed: { [license] in license.isUnlocked },
+                    destination: $destination,
+                    contextTitle: destination.title,
+                    contextFileNames: museContextFileNames(for: destination))
+                museChatViewModel?.updateContext(title: destination.title,
+                                                 fileNames: museContextFileNames(for: destination))
+            }
+        } else {
+            museChatViewModel?.updateContext(title: destination.title,
+                                             fileNames: museContextFileNames(for: destination))
         }
-        museChatViewModel?.updateContext(title: destination.title,
-                                         fileNames: museContextFileNames(for: destination))
-        license.refreshEntitlements()
+        Task { @MainActor in
+            await Task.yield()
+            license.refreshEntitlements()
+        }
     }
 
     private var selectedFiles: [FileItem] {

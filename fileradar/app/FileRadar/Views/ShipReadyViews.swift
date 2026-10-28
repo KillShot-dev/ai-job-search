@@ -97,12 +97,12 @@ struct ColumnBrowserView: View {
 struct AsyncFileThumbnail: View {
     var file: FileItem
     var size: CGSize
-    @ObservedObject private var cache = ThumbnailCache.shared
+    @State private var image: NSImage?
 
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 10).fill(Color.secondary.opacity(0.10))
-            if file.kind == .image, !file.isICloudOnly, let image = cache.image(for: file.url) {
+            if file.kind == .image, !file.isICloudOnly, let image {
                 Image(nsImage: image).resizable().scaledToFill()
                     .transition(.opacity)
             } else {
@@ -114,10 +114,12 @@ struct AsyncFileThumbnail: View {
         .frame(width: size.width, height: size.height)
         .clipped()
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .onAppear {
-            if file.kind == .image {
-                cache.load(url: file.url, isICloudOnly: file.isICloudOnly)
+        .task(id: file.url) {
+            guard file.kind == .image, !file.isICloudOnly else {
+                image = nil
+                return
             }
+            image = await ThumbnailCache.shared.load(url: file.url, isICloudOnly: file.isICloudOnly)
         }
     }
 }

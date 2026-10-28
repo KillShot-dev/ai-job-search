@@ -121,6 +121,7 @@ private enum MuseTokenStore {
     private static let accessAccount = "muse-access-token"
     private static let refreshAccount = "muse-refresh-token"
     private static let apiKeyAccount = "muse-api-key"
+    private static let queue = DispatchQueue(label: "com.metaphasicgroup.fileradar.muse-keychain", qos: .utility)
 
     private static func baseQuery(account: String) -> [String: Any] {
         [kSecClass as String: kSecClassGenericPassword,
@@ -130,40 +131,63 @@ private enum MuseTokenStore {
 
     /// Presence check WITHOUT loading the secret into memory.
     private static func exists(account: String) -> Bool {
-        var query = baseQuery(account: account)
-        query[kSecMatchLimit as String] = kSecMatchLimitOne
-        return SecItemCopyMatching(query as CFDictionary, nil) == errSecSuccess
+        queue.sync {
+            var query = baseQuery(account: account)
+            query[kSecMatchLimit as String] = kSecMatchLimitOne
+            return SecItemCopyMatching(query as CFDictionary, nil) == errSecSuccess
+        }
     }
 
     static func accessTokenExists() -> Bool { exists(account: accessAccount) }
     static func refreshTokenExists() -> Bool { exists(account: refreshAccount) }
     static func apiKeyExists() -> Bool { exists(account: apiKeyAccount) }
 
-    private static func readData(account: String) -> Data? {
+    /// Off-main presence check for launch — never call sync SecItem from MainActor.
+    static func connectionPresentAsync() async -> Bool {
+        await withCheckedContinuation { continuation in
+            queue.async {
+                // Use unlocked helpers only — never `exists` (queue.sync) here.
+                let present = existsUnlocked(account: refreshAccount) || existsUnlocked(account: apiKeyAccount)
+                continuation.resume(returning: present)
+            }
+        }
+    }
+
+    private static func existsUnlocked(account: String) -> Bool {
         var query = baseQuery(account: account)
-        query[kSecReturnData as String] = true
         query[kSecMatchLimit as String] = kSecMatchLimitOne
-        var item: CFTypeRef?
-        guard SecItemCopyMatching(query as CFDictionary, &item) == errSecSuccess,
-              let data = item as? Data, !data.isEmpty else { return nil }
-        return data
+        return SecItemCopyMatching(query as CFDictionary, nil) == errSecSuccess
+    }
+
+    private static func readData(account: String) -> Data? {
+        queue.sync {
+            var query = baseQuery(account: account)
+            query[kSecReturnData as String] = true
+            query[kSecMatchLimit as String] = kSecMatchLimitOne
+            var item: CFTypeRef?
+            guard SecItemCopyMatching(query as CFDictionary, &item) == errSecSuccess,
+                  let data = item as? Data, !data.isEmpty else { return nil }
+            return data
+        }
     }
 
     private static func writeData(_ data: Data, account: String) -> Bool {
-        var attributes = baseQuery(account: account)
-        attributes[kSecValueData as String] = data
-        attributes[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
-        let addStatus = SecItemAdd(attributes as CFDictionary, nil)
-        if addStatus == errSecSuccess { return true }
-        guard addStatus == errSecDuplicateItem else { return false }
-        let updateStatus = SecItemUpdate(baseQuery(account: account) as CFDictionary,
-                                         [kSecValueData as String: data,
-                                          kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly] as CFDictionary)
-        return updateStatus == errSecSuccess
+        queue.sync {
+            var attributes = baseQuery(account: account)
+            attributes[kSecValueData as String] = data
+            attributes[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+            let addStatus = SecItemAdd(attributes as CFDictionary, nil)
+            if addStatus == errSecSuccess { return true }
+            guard addStatus == errSecDuplicateItem else { return false }
+            let updateStatus = SecItemUpdate(baseQuery(account: account) as CFDictionary,
+                                             [kSecValueData as String: data,
+                                              kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly] as CFDictionary)
+            return updateStatus == errSecSuccess
+        }
     }
 
     private static func delete(account: String) {
-        _ = SecItemDelete(baseQuery(account: account) as CFDictionary)
+        queue.sync { _ = SecItemDelete(baseQuery(account: account) as CFDictionary) }
     }
 
     static func readAccessToken() -> StoredAccessToken? {
@@ -236,8 +260,10 @@ final class MuseAuthService: NSObject, ObservableObject {
 
     override init() {
         super.init()
-        // Presence only — no secret is loaded into memory at launch.
-        isConnected = MuseTokenStore.refreshTokenExists() || MuseTokenStore.apiKeyExists()
+        // Defer Keychain presence check — SecItem on MainActor freezes launch.
+        Task { @MainActor in
+            isConnected = await MuseTokenStore.connectionPresentAsync()
+        }
     }
 
     // MARK: - Sign-in

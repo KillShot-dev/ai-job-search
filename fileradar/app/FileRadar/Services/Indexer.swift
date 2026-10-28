@@ -21,6 +21,8 @@ final class FileStore: ObservableObject {
     @Published var selectedIDs = Set<String>()
     @Published var pinnedFolderURLs: [URL] = []
     @Published var recentURLs: [URL] = []
+    /// Cached recents — sorting the full index on every SwiftUI body eval freezes Home.
+    @Published private(set) var recents: [FileItem] = []
     /// Optional lookup for manual tags (set by FileRadarApp). Paths → tag names.
     /// Kept as a closure so FileStore does not hard-depend on ManualTagStore.
     var manualTagNames: ((String) -> [String])?
@@ -30,21 +32,19 @@ final class FileStore: ObservableObject {
 
     private let indexer = Indexer()
     private var folderWatcher: FolderWatcher?
+    private var indexingTask: Task<Void, Never>?
+    private var enrichmentTask: Task<Void, Never>?
+    private var refreshQueued = false
 
-    /// Sort a list with the current sort order (iteration 1: shared by
-    /// search results and by every file collection, so sort keys behave
-    /// the same everywhere: name, date modified, size, kind, date added).
-    func sorted(_ files: [FileItem]) -> [FileItem] {
-        files.sorted(by: sortComparator)
-    }
-
-    var recents: [FileItem] {
-        files.sorted { $0.modifiedDate > $1.modifiedDate }.prefix(50).map { $0 }
-    }
+    /// Soft caps so a first launch against huge Desktop/Documents trees cannot
+    /// pin the main actor with hundreds of thousands of rows + OCR + thumbs.
+    static let maxIndexedFiles = 25_000
+    static let maxOCREnrichments = 120
+    static let maxOCRBytes: Int64 = 8_000_000
 
     var shelves: [(FileKind, [FileItem])] {
         [.image, .video, .audio, .document, .archive, .app].map { kind in
-            (kind, files.filter { $0.kind == kind })
+            (kind, Array(files.filter { $0.kind == kind }.prefix(40)))
         }
     }
 
@@ -54,24 +54,44 @@ final class FileStore: ObservableObject {
             .sorted { $0.createdDate > $1.createdDate }
     }
 
+    /// Sort a list with the current sort order (iteration 1: shared by
+    /// search results and by every file collection, so sort keys behave
+    /// the same everywhere: name, date modified, size, kind, date added).
+    func sorted(_ files: [FileItem]) -> [FileItem] {
+        files.sorted(by: sortComparator)
+    }
+
     func startIndexing(folders: [URL]) {
-        guard !isIndexing else { return }
+        indexingTask?.cancel()
+        enrichmentTask?.cancel()
         isIndexing = true
         let scoped = SecurityBookmarkStore.startAccessing(folders)
         folderWatcher?.stop()
         folderWatcher = FolderWatcher(folders: scoped) { [weak self] in
-            Task { @MainActor in self?.refreshIndex() }
+            Task { @MainActor in self?.requestRefresh() }
         }
         folderWatcher?.start()
-        Task.detached { [indexer] in
-            let found = await indexer.index(folders: scoped) { _ in }
+
+        let maxFiles = Self.maxIndexedFiles
+        indexingTask = Task.detached(priority: .utility) { [indexer] in
+            let found = await indexer.index(folders: scoped, maxFiles: maxFiles) { _ in }
+            guard !Task.isCancelled else { return }
             await MainActor.run {
-                self.files = found
-                self.indexedCount = found.count
-                self.isIndexing = false
+                self.applyIndex(found)
             }
-            await MainActor.run { self.enrichInBackground(found) }
+            await MainActor.run {
+                self.enrichInBackground(found)
+            }
         }
+    }
+
+    /// Coalesce FSEvents: never start a second walk while one is running.
+    func requestRefresh() {
+        if isIndexing {
+            refreshQueued = true
+            return
+        }
+        refreshIndex()
     }
 
     /// Re-index currently pinned + bookmarked folders (FSEvents / Add Folder).
@@ -79,10 +99,12 @@ final class FileStore: ObservableObject {
         var folders = SecurityBookmarkStore.resolvedFolders()
         folders.append(contentsOf: pinnedFolderURLs)
         if folders.isEmpty {
+            // Default to Downloads only. Indexing Desktop + Documents on a
+            // developer Mac (tens of GB, node_modules, etc.) freezes the UI
+            // for minutes even when the walk is off-main — the publish of a
+            // huge @Published array + thumbnail storm is what kills clicks.
             let home = FileManager.default.homeDirectoryForCurrentUser
-            folders = [home.appendingPathComponent("Downloads"),
-                       home.appendingPathComponent("Documents"),
-                       home.appendingPathComponent("Desktop")]
+            folders = [home.appendingPathComponent("Downloads")]
         }
         // Deduplicate by path
         var seen = Set<String>()
@@ -105,6 +127,7 @@ final class FileStore: ObservableObject {
         files.removeAll { paths.contains($0.id) }
         selectedIDs.subtract(paths)
         indexedCount = files.count
+        rebuildRecents()
     }
 
     /// Update a file's URL after rename/move (keeps selection when possible).
@@ -131,6 +154,7 @@ final class FileStore: ObservableObject {
         if selectedIDs.remove(oldPath) != nil {
             selectedIDs.insert(new.path)
         }
+        rebuildRecents()
     }
 
     /// Re-insert restored files after Trash undo (paths that exist again).
@@ -139,37 +163,102 @@ final class FileStore: ObservableObject {
             files.append(item)
         }
         indexedCount = files.count
+        rebuildRecents()
     }
 
     func search(_ parsed: ParsedQuery) -> [FileItem] {
         files.filter { item in matches(item, parsed) }.sorted(by: sortComparator)
     }
 
+    private func applyIndex(_ found: [FileItem]) {
+        files = found
+        indexedCount = found.count
+        isIndexing = false
+        rebuildRecents()
+        if refreshQueued {
+            refreshQueued = false
+            // Defer so the current main-actor turn finishes first.
+            Task { @MainActor in self.refreshIndex() }
+        }
+    }
+
+    private func rebuildRecents() {
+        recents = Array(files.sorted { $0.modifiedDate > $1.modifiedDate }.prefix(50))
+    }
+
+    private struct EnrichmentPatch {
+        var id: String
+        var ocr: String?
+        var tags: [FileTag]
+        var downloadSource: DownloadSource
+        var width: Int?
+        var height: Int?
+        var cameraModel: String?
+    }
+
     private func enrichInBackground(_ snapshot: [FileItem]) {
-        Task.detached(priority: .utility) {
-            var updates: [(String, String?, [FileTag], Int?, Int?, String?)] = []
-            for file in snapshot where !file.isICloudOnly {
+        enrichmentTask?.cancel()
+        let maxOCR = Self.maxOCREnrichments
+        let maxBytes = Self.maxOCRBytes
+        // Metadata (xattr + CGImageSource) for the newest slice only.
+        let metaBudget = min(snapshot.count, 2_000)
+        let newest = snapshot.sorted { $0.modifiedDate > $1.modifiedDate }.prefix(metaBudget)
+        enrichmentTask = Task.detached(priority: .utility) {
+            var updates: [EnrichmentPatch] = []
+            var ocrBudget = maxOCR
+            for file in newest where !file.isICloudOnly {
+                if Task.isCancelled { return }
+                let source = DownloadSourceDetector.source(for: file.url)
+                let meta = ImageMetadata.read(from: file.url, kind: file.kind, isICloudOnly: file.isICloudOnly)
                 var ocr = file.ocrText
-                if ocr == nil {
+                let wantsOCR = ocr == nil
+                    && ocrBudget > 0
+                    && file.size <= maxBytes
+                    && (file.kind == .image || file.extensionLowercased == "pdf")
+                if wantsOCR {
                     if file.kind == .image {
                         ocr = await OCRService.recogniseText(in: file)
                     } else if file.extensionLowercased == "pdf" {
                         ocr = await OCRService.recogniseTextInPDF(file, maxPages: 5)
                     }
+                    ocrBudget -= 1
                 }
                 var enriched = file
                 enriched.ocrText = ocr
+                enriched.downloadSource = source
+                enriched.width = meta.width
+                enriched.height = meta.height
+                enriched.cameraModel = meta.cameraModel
                 let tags = TagService.autoTags(for: enriched)
-                updates.append((file.id, ocr, tags, file.width, file.height, file.cameraModel))
-            }
-            await MainActor.run {
-                for (id, ocr, tags, _, _, _) in updates {
-                    guard let idx = self.files.firstIndex(where: { $0.id == id }) else { continue }
-                    self.files[idx].ocrText = ocr
-                    self.files[idx].tags = tags
+                updates.append(EnrichmentPatch(
+                    id: file.id, ocr: ocr, tags: tags, downloadSource: source,
+                    width: meta.width, height: meta.height, cameraModel: meta.cameraModel
+                ))
+                if updates.count >= 25 {
+                    let batch = updates
+                    updates.removeAll(keepingCapacity: true)
+                    await MainActor.run { self.applyEnrichmentBatch(batch) }
                 }
             }
+            if !updates.isEmpty {
+                let batch = updates
+                await MainActor.run { self.applyEnrichmentBatch(batch) }
+            }
         }
+    }
+
+    private func applyEnrichmentBatch(_ batch: [EnrichmentPatch]) {
+        guard !batch.isEmpty else { return }
+        for patch in batch {
+            guard let idx = files.firstIndex(where: { $0.id == patch.id }) else { continue }
+            if let ocr = patch.ocr { files[idx].ocrText = ocr }
+            files[idx].tags = patch.tags
+            files[idx].downloadSource = patch.downloadSource
+            files[idx].width = patch.width
+            files[idx].height = patch.height
+            files[idx].cameraModel = patch.cameraModel
+        }
+        rebuildRecents()
     }
 
     private var sortComparator: (FileItem, FileItem) -> Bool {
@@ -301,12 +390,14 @@ final class FolderWatcher {
             let watcher = Unmanaged<FolderWatcher>.fromOpaque(info).takeUnretainedValue()
             watcher.scheduleRefresh()
         }
+        // Directory-level events only (not every file write) + longer latency.
         stream = FSEventStreamCreate(nil, callback, &context, paths,
                                      FSEventStreamEventId(kFSEventStreamEventIdSinceNow),
-                                     1.5,
-                                     FSEventStreamCreateFlags(kFSEventStreamCreateFlagFileEvents))
+                                     3.0,
+                                     FSEventStreamCreateFlags(kFSEventStreamCreateFlagNoDefer))
         guard let stream else { return }
-        FSEventStreamScheduleWithRunLoop(stream, CFRunLoopGetMain(), CFRunLoopMode.defaultMode.rawValue)
+        // Background runloop — keep FSEvents off the main thread.
+        FSEventStreamSetDispatchQueue(stream, DispatchQueue.global(qos: .utility))
         FSEventStreamStart(stream)
     }
 
@@ -321,7 +412,7 @@ final class FolderWatcher {
     private func scheduleRefresh() {
         guard !pending else { return }
         pending = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
             self?.pending = false
             self?.onChange()
         }
@@ -334,15 +425,26 @@ final class FolderWatcher {
 /// read, and anything the sandbox has not been granted access to — those
 /// simply do not appear, rather than erroring the whole index.
 struct Indexer {
-    func index(folders: [URL], progress: @escaping (Int) -> Void) async -> [FileItem] {
+    /// Directory names that explode walk time on developer machines.
+    private static let skipDirectoryNames: Set<String> = [
+        "node_modules", ".git", ".svn", ".hg", "DerivedData", "Pods",
+        ".build", ".swiftpm", "Carthage", "vendor", ".venv", "venv",
+        "__pycache__", ".tox", ".cache", "Library", ".Trash", "Caches"
+    ]
+
+    func index(folders: [URL], maxFiles: Int = FileStore.maxIndexedFiles, progress: @escaping (Int) -> Void) async -> [FileItem] {
         var results: [FileItem] = []
+        results.reserveCapacity(min(maxFiles, 4096))
         let fm = FileManager.default
         for folder in folders {
+            if Task.isCancelled { break }
             guard let enumerator = fm.enumerator(at: folder, includingPropertiesForKeys: [
                 .isDirectoryKey, .fileSizeKey, .contentModificationDateKey, .creationDateKey,
                 .ubiquitousItemDownloadingStatusKey,
-            ], options: [.skipsHiddenFiles]) else { continue }
+            ], options: [.skipsHiddenFiles, .skipsPackageDescendants]) else { continue }
             for case let url as URL in enumerator {
+                if Task.isCancelled { break }
+                if results.count >= maxFiles { break }
                 guard let values = try? url.resourceValues(forKeys: [
                     .isDirectoryKey, .fileSizeKey, .contentModificationDateKey, .creationDateKey,
                     .ubiquitousItemDownloadingStatusKey, .isSymbolicLinkKey,
@@ -352,29 +454,39 @@ struct Indexer {
                     continue
                 }
                 let isDir = values.isDirectory ?? false
+                if isDir, Self.skipDirectoryNames.contains(url.lastPathComponent) {
+                    enumerator.skipDescendants()
+                    continue
+                }
                 let status = values.ubiquitousItemDownloadingStatus
                 let isICloudOnly = status == URLUbiquitousItemDownloadingStatus.notDownloaded
                 let kind = FileKind.from(url: url, isDirectory: isDir)
-                let meta = ImageMetadata.read(from: url, kind: kind, isICloudOnly: isICloudOnly)
+                // Defer image metadata to enrichment — CGImageSource on every
+                // file during the walk was a major launch stall on large trees.
                 var item = FileItem(
                     url: url,
                     kind: kind,
                     size: Int64(values.fileSize ?? 0),
                     modifiedDate: values.contentModificationDate ?? .distantPast,
                     createdDate: values.creationDate ?? .distantPast,
-                    downloadSource: DownloadSourceDetector.source(for: url),
+                    downloadSource: .unknown,
                     tags: [],
                     isICloudOnly: isICloudOnly,
                     ocrText: nil,
-                    width: meta.width,
-                    height: meta.height,
+                    width: nil,
+                    height: nil,
                     duration: nil,
-                    cameraModel: meta.cameraModel
+                    cameraModel: nil
                 )
+                // Cheap tags from name/extension only during the walk.
                 item.tags = TagService.autoTags(for: item)
                 results.append(item)
-                if results.count % 500 == 0 { progress(results.count) }
+                if results.count % 500 == 0 {
+                    progress(results.count)
+                    await Task.yield()
+                }
             }
+            if results.count >= maxFiles { break }
         }
         return results
     }

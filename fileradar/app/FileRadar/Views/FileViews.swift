@@ -75,6 +75,7 @@ struct FileCardView: View {
             RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
                 .fill(selected ? theme.look.accent.opacity(0.08) : Color.clear)
         )
+        .contentShape(Rectangle())
         .animation(FileRadarMotion.selection, value: hovering)
         .animation(FileRadarMotion.selection, value: selected)
         .onHover { hovering = $0 }

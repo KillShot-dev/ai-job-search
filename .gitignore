@@ -35,6 +35,8 @@ linkedin_Profile.pdf
 !metaphasic-website/public/**/*.jpg
 !metaphasic-website/public/**/*.jpeg
 !metaphasic-website/public/**/*.svg
+# FileRadar macOS AppIcon asset catalog
+!fileradar/app/FileRadar/Assets.xcassets/AppIcon.appiconset/*.png
 
 # OS files
 .DS_Store

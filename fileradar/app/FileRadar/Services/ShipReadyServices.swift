@@ -56,10 +56,15 @@ enum MachineIdentity {
     /// Stable, non-reversible machine token for activation. SHA-256 of the
     /// IOPlatformUUID (or a random Keychain-backed fallback). The server
     /// stores only this hash — see licensing/store.py.
+    /// Prefer calling from a background context — Keychain fallback uses SecItem.
     static func hashedIdentifier() -> String {
         let raw = platformUUID() ?? fallbackUUID()
         let digest = SHA256.hash(data: Data(raw.utf8))
         return digest.map { String(format: "%02x", $0) }.joined()
+    }
+
+    static func hashedIdentifierAsync() async -> String {
+        await Task.detached(priority: .utility) { hashedIdentifier() }.value
     }
 
     private static func platformUUID() -> String? {
@@ -87,8 +92,42 @@ enum MachineIdentity {
 
 /// Tiny Keychain blob helper shared by license serial, trial stamp, and
 /// machine UUID. Never logs contents.
+///
+/// All SecItem* calls run off the main thread. Keychain decrypt can block
+/// for seconds (or wait on authorizationhost); doing that on MainActor
+/// freezes every button in the app.
 enum KeychainBlob {
+    private static let queue = DispatchQueue(label: "com.metaphasicgroup.fileradar.keychain", qos: .utility)
+
     static func read(service: String, account: String) -> Data? {
+        queue.sync { readSync(service: service, account: account) }
+    }
+
+    static func write(_ data: Data, service: String, account: String) -> Bool {
+        queue.sync { writeSync(data, service: service, account: account) }
+    }
+
+    static func delete(service: String, account: String) {
+        queue.sync { deleteSync(service: service, account: account) }
+    }
+
+    static func readAsync(service: String, account: String) async -> Data? {
+        await withCheckedContinuation { continuation in
+            queue.async {
+                continuation.resume(returning: readSync(service: service, account: account))
+            }
+        }
+    }
+
+    static func writeAsync(_ data: Data, service: String, account: String) async -> Bool {
+        await withCheckedContinuation { continuation in
+            queue.async {
+                continuation.resume(returning: writeSync(data, service: service, account: account))
+            }
+        }
+    }
+
+    private static func readSync(service: String, account: String) -> Data? {
         var query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -102,7 +141,7 @@ enum KeychainBlob {
         return data
     }
 
-    static func write(_ data: Data, service: String, account: String) -> Bool {
+    private static func writeSync(_ data: Data, service: String, account: String) -> Bool {
         let base: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -118,7 +157,7 @@ enum KeychainBlob {
                              [kSecValueData as String: data] as CFDictionary) == errSecSuccess
     }
 
-    static func delete(service: String, account: String) {
+    private static func deleteSync(service: String, account: String) {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -144,27 +183,28 @@ final class TrialManager: ObservableObject {
     @Published private(set) var isActive = false
     @Published private(set) var daysRemaining = 0
 
-    init() { refresh() }
+    init() {
+        Task { await self.refresh() }
+    }
 
-    func refresh() {
-        if startedAt == nil {
-            if let data = KeychainBlob.read(service: service, account: account),
+    func refresh() async {
+        let svc = service
+        let acct = account
+        let existingStart = startedAt
+        let resolved: Date = await Task.detached(priority: .utility) {
+            if let existingStart { return existingStart }
+            if let data = KeychainBlob.read(service: svc, account: acct),
                let raw = String(data: data, encoding: .utf8),
                let interval = TimeInterval(raw) {
-                startedAt = Date(timeIntervalSince1970: interval)
-            } else {
-                let now = Date()
-                startedAt = now
-                _ = KeychainBlob.write(Data(String(now.timeIntervalSince1970).utf8),
-                                       service: service, account: account)
+                return Date(timeIntervalSince1970: interval)
             }
-        }
-        guard let start = startedAt else {
-            isActive = false
-            daysRemaining = 0
-            return
-        }
-        let end = start.addingTimeInterval(TimeInterval(Self.durationDays) * 86_400)
+            let now = Date()
+            _ = KeychainBlob.write(Data(String(now.timeIntervalSince1970).utf8),
+                                   service: svc, account: acct)
+            return now
+        }.value
+        startedAt = resolved
+        let end = resolved.addingTimeInterval(TimeInterval(Self.durationDays) * 86_400)
         let remaining = max(0, Calendar.current.dateComponents([.day], from: Date(), to: end).day ?? 0)
         daysRemaining = remaining
         isActive = Date() < end
@@ -192,16 +232,16 @@ enum LicenseServerClient {
 
     static func activate(_ serial: String) async -> Result {
         guard let base = DistributionChannel.licensingBaseURL else { return .unavailable }
+        let hash = await MachineIdentity.hashedIdentifierAsync()
         return await post(base.appendingPathComponent("activate"),
-                          body: ["serial": serial,
-                                 "machine_hash": MachineIdentity.hashedIdentifier()])
+                          body: ["serial": serial, "machine_hash": hash])
     }
 
     static func deactivate(_ serial: String) async -> Result {
         guard let base = DistributionChannel.licensingBaseURL else { return .unavailable }
+        let hash = await MachineIdentity.hashedIdentifierAsync()
         return await post(base.appendingPathComponent("deactivate"),
-                          body: ["serial": serial,
-                                 "machine_hash": MachineIdentity.hashedIdentifier()])
+                          body: ["serial": serial, "machine_hash": hash])
     }
 
     private static func post(_ url: URL, body: [String: String]) async -> Result {
@@ -225,34 +265,51 @@ enum LicenseServerClient {
     }
 }
 
-// MARK: - Async thumbnail cache (fixes sync NSImage stutter)
+// MARK: - Async thumbnail cache (no global ObservableObject fan-out)
 
+/// In-memory QLThumbnail cache. Intentionally NOT an ObservableObject —
+/// broadcasting `objectWillChange` from a shared cache re-rendered every
+/// visible `AsyncFileThumbnail` on every completion and froze the UI.
 @MainActor
-final class ThumbnailCache: ObservableObject {
+final class ThumbnailCache {
     static let shared = ThumbnailCache()
     private var memory: [String: NSImage] = [:]
-    private var inflight: Set<String> = []
+    private var inflight: [String: [CheckedContinuation<NSImage?, Never>]] = [:]
 
     func image(for url: URL) -> NSImage? { memory[url.path] }
 
-    func load(url: URL, isICloudOnly: Bool) {
+    func load(url: URL, isICloudOnly: Bool) async -> NSImage? {
         let key = url.path
-        guard !isICloudOnly, memory[key] == nil, !inflight.contains(key) else { return }
-        inflight.insert(key)
-        let size = CGSize(width: 256, height: 256)
-        let request = QLThumbnailGenerator.Request(fileAt: url, size: size, scale: 2.0, representationTypes: .thumbnail)
-        QLThumbnailGenerator.shared.generateBestRepresentation(for: request) { rep, _ in
-            Task { @MainActor in
-                if let rep {
-                    self.memory[key] = rep.nsImage
+        if isICloudOnly { return nil }
+        if let cached = memory[key] { return cached }
+        return await withCheckedContinuation { (continuation: CheckedContinuation<NSImage?, Never>) in
+            if var waiters = inflight[key] {
+                waiters.append(continuation)
+                inflight[key] = waiters
+                return
+            }
+            inflight[key] = [continuation]
+            let size = CGSize(width: 256, height: 256)
+            let request = QLThumbnailGenerator.Request(fileAt: url, size: size, scale: 2.0, representationTypes: .thumbnail)
+            QLThumbnailGenerator.shared.generateBestRepresentation(for: request) { rep, _ in
+                Task { @MainActor in
+                    let image = rep?.nsImage
+                    if let image { self.memory[key] = image }
+                    let waiters = self.inflight.removeValue(forKey: key) ?? []
+                    for waiter in waiters { waiter.resume(returning: image) }
                 }
-                self.inflight.remove(key)
-                self.objectWillChange.send()
             }
         }
     }
 
-    func clear() { memory.removeAll() }
+    func clear() {
+        memory.removeAll()
+        let waiters = inflight
+        inflight.removeAll()
+        for (_, list) in waiters {
+            for waiter in list { waiter.resume(returning: nil) }
+        }
+    }
 }
 
 // MARK: - Saved searches (paid)
