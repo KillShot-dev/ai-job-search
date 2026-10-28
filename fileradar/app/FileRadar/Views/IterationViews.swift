@@ -13,6 +13,7 @@ import UniformTypeIdentifiers
 struct DropStackView: View {
     @ObservedObject var stack = DropStack.shared
     @ObservedObject var queue = TransferQueue.shared
+    @EnvironmentObject var theme: ThemeSettings
     @State private var isTargeted = false
 
     var body: some View {
@@ -49,8 +50,15 @@ struct DropStackView: View {
                     .accessibilityHint("Choose a folder; the stacked files are moved there through the transfer queue.")
             }
         }
-        .padding(8)
-        .background(RoundedRectangle(cornerRadius: 8).fill(isTargeted ? Color.accentColor.opacity(0.15) : Color.secondary.opacity(0.08)))
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: FileRadarChrome.radiusControl, style: .continuous)
+                .fill(isTargeted ? FileRadarChrome.dropTargetWash(theme.look.accent) : FileRadarChrome.cardFill)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: FileRadarChrome.radiusControl, style: .continuous)
+                .strokeBorder(isTargeted ? theme.look.accent.opacity(0.35) : FileRadarChrome.hairline.opacity(0.5), lineWidth: 1)
+        )
         .onDrop(of: [.fileURL], isTargeted: $isTargeted) { providers in
             DropUtilities.loadURLs(from: providers) { stack.add($0) }
             return true
@@ -118,8 +126,11 @@ struct TransferQueueView: View {
                 }
             }
         }
-        .padding(8)
-        .background(RoundedRectangle(cornerRadius: 8).fill(Color.secondary.opacity(0.08)))
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: FileRadarChrome.radiusControl, style: .continuous)
+                .fill(FileRadarChrome.cardFill)
+        )
         .accessibilityLabel("Transfer queue.")
     }
 
@@ -157,7 +168,7 @@ struct TransferHUDView: View {
     var body: some View {
         if queue.activeCount > 0 || queue.items.contains(where: { $0.status == .failed }) {
             HStack(spacing: 12) {
-                Image(systemName: queue.isPaused ? "pause.circle.fill" : "doc.on.doc.fill")
+                Image(systemName: queue.isPaused ? "pause.circle.fill" : "arrow.left.arrow.right.circle.fill")
                     .foregroundStyle(theme.look.accent)
                     .imageScale(.large)
                 VStack(alignment: .leading, spacing: 4) {
@@ -172,19 +183,23 @@ struct TransferHUDView: View {
                     .frame(minWidth: 36, alignment: .trailing)
                 Button(queue.isPaused ? "Resume" : "Pause") { queue.isPaused.toggle() }
                     .controlSize(.small)
+                    .buttonStyle(.bordered)
                 Button("Cancel") { queue.cancelAll() }
                     .controlSize(.small)
+                    .buttonStyle(.bordered)
                 if queue.activeCount == 0 {
                     Button("Dismiss") { queue.clearFinished() }
                         .controlSize(.small)
                 }
             }
-            .padding(.horizontal, 18).padding(.vertical, 12)
-            .frame(maxWidth: 440)
-            .background(.ultraThinMaterial, in: Capsule())
-            .overlay(Capsule().strokeBorder(Color.primary.opacity(0.08), lineWidth: 1))
-            .shadow(color: .black.opacity(0.18), radius: 16, y: 6)
-            .padding(.horizontal, 16).padding(.bottom, 14)
+            .padding(.horizontal, FileRadarChrome.spaceHUDPadX)
+            .padding(.vertical, FileRadarChrome.spaceHUDPadY)
+            .frame(maxWidth: FileRadarChrome.hudMaxWidth)
+            .background(theme.look.chromeMaterial, in: Capsule())
+            .overlay(Capsule().strokeBorder(FileRadarChrome.hairline, lineWidth: 1))
+            .shadow(color: FileRadarChrome.hudShadow, radius: 16, y: 6)
+            .padding(.horizontal, FileRadarChrome.spaceCardGap)
+            .padding(.bottom, 14)
             .transition(.move(edge: .bottom).combined(with: .opacity))
             .animation(FileRadarMotion.panel, value: queue.activeCount)
             .accessibilityElement(children: .contain)
@@ -300,13 +315,17 @@ struct DualPaneView: View {
                     .frame(maxWidth: 220, alignment: .trailing)
                     .help(rightFolder.path)
             }
-            .padding(.horizontal, 12).padding(.vertical, 6)
-            .background(Color.primary.opacity(0.03))
+            .padding(.horizontal, 12)
+            .padding(.vertical, FileRadarChrome.spaceChromeY)
+            .background(FileRadarChrome.chromeBarFill)
+            .overlay(alignment: .bottom) {
+                Rectangle().fill(FileRadarChrome.hairline).frame(height: 1)
+            }
 
             HStack(alignment: .top, spacing: 0) {
                 pane(title: leftTitle, files: leftFiles, isActive: !activeIsRight,
                      dropFolder: nil, copyOnDrop: false, onActivate: { activeIsRight = false })
-                Divider()
+                Rectangle().fill(FileRadarChrome.hairline).frame(width: 1)
                 pane(title: rightFolder.lastPathComponent, files: rightFiles, isActive: activeIsRight,
                      dropFolder: rightFolder, copyOnDrop: preferCopy, onActivate: { activeIsRight = true })
             }
@@ -333,11 +352,14 @@ struct DualPaneView: View {
                                dropTargetFolder: dropFolder, preferCopyOnDrop: copyOnDrop)
                 .overlay(
                     RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
-                        .strokeBorder(isActive ? theme.look.accent.opacity(0.55) : Color.clear, lineWidth: 1.5)
+                        .strokeBorder(
+                            isActive ? FileRadarChrome.activePaneStrokeColor(theme.look.accent) : Color.clear,
+                            lineWidth: FileRadarChrome.activePaneStroke
+                        )
                         .padding(2)
                         .allowsHitTesting(false)
                 )
-                .background(isActive ? theme.look.accent.opacity(0.03) : Color.clear)
+                .background(isActive ? FileRadarChrome.activePaneWash(theme.look.accent) : Color.clear)
         }
     }
 }

@@ -30,7 +30,7 @@ struct ShowcaseHomeView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 28) {
+            VStack(alignment: .leading, spacing: FileRadarChrome.spaceSection) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("> Home")
                         .font(FileRadarFont.caption())
@@ -54,7 +54,7 @@ struct ShowcaseHomeView: View {
                         .buttonStyle(.bordered)
                 }
             }
-            .padding(20)
+            .padding(FileRadarChrome.spacePage)
         }
         .sheet(isPresented: $showLicense) { LicenseEntryView() }
     }
@@ -83,7 +83,7 @@ struct ShowcaseHomeView: View {
                                message: "Once FileRadar indexes your folders, kind shelves and smart collections appear here as album cards.")
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 16) {
+                    HStack(spacing: FileRadarChrome.spaceCardGap) {
                         ForEach(albumShelves) { album in
                             ShelfAlbumCard(album: album)
                                 .onTapGesture {
@@ -131,7 +131,10 @@ struct ShowcaseHomeView: View {
                 EmptyStateView(title: "No recent files yet",
                                message: "Once FileRadar finishes its first background index, your newest files will live here.")
             } else if recentsLayout == .grid {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 168), spacing: 16)], spacing: 16) {
+                LazyVGrid(
+                    columns: [GridItem(.adaptive(minimum: 168), spacing: FileRadarChrome.spaceCardGap)],
+                    spacing: FileRadarChrome.spaceCardGap
+                ) {
                     ForEach(recentFiles) { file in
                         ShowcaseRecentCard(file: file)
                             .onTapGesture {
@@ -158,7 +161,7 @@ struct ShowcaseHomeView: View {
                 }
                 .background(
                     RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
-                        .fill(Color.primary.opacity(0.03))
+                        .fill(FileRadarChrome.chromeBarFill)
                 )
             }
         }
@@ -241,15 +244,15 @@ struct ShelfAlbumCard: View {
             .clipShape(RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
-                    .strokeBorder(Color.primary.opacity(hovering ? 0.18 : 0.06), lineWidth: 1)
+                    .strokeBorder(FileRadarChrome.hairline.opacity(hovering ? 1.6 : 0.6), lineWidth: 1)
             )
-            .shadow(color: .black.opacity(hovering ? 0.18 : 0.08), radius: hovering ? 10 : 4, y: 3)
+            .shadow(color: FileRadarChrome.hudShadow.opacity(hovering ? 0.7 : 0.35), radius: hovering ? 8 : 4, y: 3)
 
             Text(album.title).font(FileRadarFont.body()).lineLimit(1)
             Text(album.subtitle).font(FileRadarFont.caption()).foregroundStyle(.secondary)
         }
         .frame(width: 200, alignment: .leading)
-        .scaleEffect(hovering ? 1.02 : 1)
+        .scaleEffect(hovering ? 1.015 : 1)
         .animation(FileRadarMotion.selection, value: hovering)
         .onHover { hovering = $0 }
         .accessibilityElement(children: .combine)
@@ -280,11 +283,16 @@ struct ShowcaseRecentCard: View {
         .padding(8)
         .background(
             RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
-                .fill(selected || hovering ? Color.accentColor.opacity(0.08) : Color.primary.opacity(0.03))
+                .fill(selected || hovering
+                      ? FileRadarChrome.selectionWash(theme.look.accent)
+                      : FileRadarChrome.chromeBarFill)
         )
         .overlay(
             RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
-                .strokeBorder(selected ? Color.accentColor.opacity(0.45) : Color.clear, lineWidth: 1.5)
+                .strokeBorder(
+                    selected ? theme.look.accent : Color.clear,
+                    lineWidth: FileRadarChrome.selectionStroke
+                )
         )
         .animation(FileRadarMotion.selection, value: hovering)
         .animation(FileRadarMotion.selection, value: selected)
@@ -299,6 +307,7 @@ struct ShowcaseRecentCard: View {
 struct ShowcaseRecentRow: View {
     var file: FileItem
     @EnvironmentObject var store: FileStore
+    @EnvironmentObject var theme: ThemeSettings
 
     private var selected: Bool { store.selectedIDs.contains(file.id) }
 
@@ -315,22 +324,29 @@ struct ShowcaseRecentRow: View {
                 .font(FileRadarFont.caption()).foregroundStyle(.secondary)
         }
         .padding(.horizontal, 10).padding(.vertical, 8)
-        .background(selected ? Color.accentColor.opacity(0.08) : Color.clear)
+        .background(selected ? FileRadarChrome.selectionWash(theme.look.accent) : Color.clear)
         .contextMenu { fileContextMenu(for: file) }
     }
 }
 
 /// Rich inspector used in Showcase mode — preview-first, calm EXIF/tags, Finder.
+/// Secondary depth uses Path Finder–style disclosure modules so the first
+/// screenful stays mockup-calm (unified look §2.7).
 struct ShowcaseInspectorView: View {
     var file: FileItem
     @EnvironmentObject var license: LicenseManager
     @EnvironmentObject var theme: ThemeSettings
     @EnvironmentObject var tags: ManualTagStore
+    @AppStorage("gitBadgesEnabled") private var gitBadgesEnabled = false
     @State private var showLicense = false
+    @State private var detailsExpanded = true
+    @State private var tagsExpanded = true
+    @State private var moreExpanded = false
+    @State private var gitBadge: String?
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: FileRadarChrome.spaceCardGap) {
                 HStack {
                     Spacer()
                     ShareLink(item: file.url) {
@@ -360,7 +376,7 @@ struct ShowcaseInspectorView: View {
                     .frame(maxWidth: .infinity)
                     .frame(height: 220)
                     .clipShape(RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous))
-                    .background(.ultraThinMaterial,
+                    .background(theme.look.chromeMaterial,
                                 in: RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous))
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -370,23 +386,56 @@ struct ShowcaseInspectorView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                VStack(spacing: 8) {
-                    showcaseRow("Dimensions", dimensionsText)
-                    showcaseRow("File Size", ByteCountFormatter.string(fromByteCount: file.size, countStyle: .file))
-                    if let cam = file.cameraModel { showcaseRow("Camera", cam) }
-                    showcaseRow("Kind", file.kind.displayName)
-                    showcaseRow("Downloaded from", file.downloadSource.displayName)
-                }
-
-                let allTags = file.tags.map(\.name) + tags.tags(for: file.url.path).map(\.name)
-                if !allTags.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Tags").font(FileRadarFont.caption()).foregroundStyle(.secondary)
-                        FlowTagRow(names: allTags)
+                DisclosureGroup("Info", isExpanded: $detailsExpanded) {
+                    VStack(spacing: 8) {
+                        showcaseRow("Dimensions", dimensionsText)
+                        showcaseRow("File Size", ByteCountFormatter.string(fromByteCount: file.size, countStyle: .file))
+                        if let cam = file.cameraModel { showcaseRow("Camera", cam) }
+                        showcaseRow("Kind", file.kind.displayName)
+                        showcaseRow("Downloaded from", file.downloadSource.displayName)
                     }
+                    .padding(.top, 6)
                 }
+                .font(FileRadarFont.heading())
 
-                ManualTagEditor(file: file)
+                DisclosureGroup("Tags", isExpanded: $tagsExpanded) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        let allTags = file.tags.map(\.name) + tags.tags(for: file.url.path).map(\.name)
+                        if allTags.isEmpty {
+                            Text("No tags yet.")
+                                .font(FileRadarFont.caption())
+                                .foregroundStyle(.secondary)
+                        } else {
+                            FlowTagRow(names: allTags)
+                        }
+                        ManualTagEditor(file: file)
+                    }
+                    .padding(.top, 6)
+                }
+                .font(FileRadarFont.heading())
+
+                DisclosureGroup("More", isExpanded: $moreExpanded) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        if let permissions = permissionText {
+                            Text(permissions).font(FileRadarFont.caption()).foregroundStyle(.secondary)
+                        }
+                        if let ocr = file.ocrText, !ocr.isEmpty {
+                            Text(ocr).font(FileRadarFont.caption()).lineLimit(6)
+                        }
+                        if gitBadgesEnabled {
+                            Text(gitBadge.map { "Git: \($0) (read-only)" } ?? "No Git status for this file.")
+                                .font(FileRadarFont.caption())
+                                .foregroundStyle(.secondary)
+                        }
+                        if file.isICloudOnly {
+                            Label("iCloud only — FileRadar will not download this file.", systemImage: "icloud")
+                                .font(FileRadarFont.caption())
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.top, 6)
+                }
+                .font(FileRadarFont.heading())
 
                 Button {
                     NSWorkspace.shared.activateFileViewerSelecting([file.url])
@@ -397,17 +446,27 @@ struct ShowcaseInspectorView: View {
                 .buttonStyle(.borderedProminent)
                 .tint(theme.look.accent)
                 .controlSize(.large)
-
-                if file.isICloudOnly {
-                    Label("iCloud only — FileRadar will not download this file.", systemImage: "icloud")
-                        .font(FileRadarFont.caption())
-                        .foregroundStyle(.secondary)
-                }
             }
-            .padding(16)
+            .padding(FileRadarChrome.spaceCardGap)
         }
-        .background(.ultraThinMaterial)
+        .background(theme.look.chromeMaterial)
         .sheet(isPresented: $showLicense) { LicenseEntryView() }
+        .task(id: file.url) {
+            guard gitBadgesEnabled else { gitBadge = nil; return }
+            gitBadge = await GitStatusService.badge(for: file.url)
+        }
+    }
+
+    private var permissionText: String? {
+        guard let attributes = try? FileManager.default.attributesOfItem(atPath: file.url.path) else { return nil }
+        var parts: [String] = []
+        if let perms = attributes[.posixPermissions] as? NSNumber {
+            parts.append("Permissions: \(String(perms.intValue, radix: 8))")
+        }
+        if let owner = attributes[.ownerAccountName] as? String {
+            parts.append("Owner: \(owner)")
+        }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 
     private var dimensionsText: String {
@@ -465,7 +524,7 @@ struct DiskFreeBar: View {
         .padding(10)
         .background(
             RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
-                .fill(Color.primary.opacity(0.04))
+                .fill(FileRadarChrome.cardFill)
         )
         .onAppear(perform: refresh)
     }

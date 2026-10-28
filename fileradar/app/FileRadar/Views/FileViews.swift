@@ -60,9 +60,8 @@ struct FileCardView: View {
             .clipShape(RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
-                    .strokeBorder(selected ? theme.look.accent : Color.clear, lineWidth: 2.5)
+                    .strokeBorder(selected ? theme.look.accent : Color.clear, lineWidth: FileRadarChrome.selectionStroke)
             )
-            .shadow(color: selected ? theme.look.accent.opacity(0.35) : .clear, radius: 4, y: 0)
 
             Text(file.name).font(FileRadarFont.body()).lineLimit(2)
                 .accessibilityLabel(file.name)
@@ -73,7 +72,7 @@ struct FileCardView: View {
         .padding(6)
         .background(
             RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
-                .fill(selected ? theme.look.accent.opacity(0.08) : Color.clear)
+                .fill(selected ? FileRadarChrome.selectionWash(theme.look.accent) : Color.clear)
         )
         .contentShape(Rectangle())
         .animation(FileRadarMotion.selection, value: hovering)

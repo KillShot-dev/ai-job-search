@@ -131,7 +131,7 @@ struct ContentView: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .listRowBackground(destination == dest ? theme.look.accent.opacity(0.14) : Color.clear)
+        .listRowBackground(destination == dest ? FileRadarChrome.sidebarSelectionWash(theme.look.accent) : Color.clear)
         .accessibilityAddTraits(destination == dest ? .isSelected : [])
         .accessibilityLabel(title)
     }

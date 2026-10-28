@@ -25,7 +25,7 @@ enum AppLook: String, CaseIterable, Identifiable {
     var accent: Color {
         switch self {
         // Electric blue — close to macOS system accent, not purple.
-        case .modern: return Color(red: 0.0, green: 0.478, blue: 1.0)
+        case .modern: return FileRadarChrome.accent
         case .elegant: return Color(red: 0.12, green: 0.45, blue: 0.42) // deep teal
         case .colourful: return Color(red: 0.91, green: 0.42, blue: 0.24) // copper
         case .minimal: return .primary
@@ -34,10 +34,10 @@ enum AppLook: String, CaseIterable, Identifiable {
 
     var cardCorner: CGFloat {
         switch self {
-        case .modern: return 12
+        case .modern: return FileRadarChrome.radiusCard
         case .elegant: return 16
-        case .colourful: return 12
-        case .minimal: return 6
+        case .colourful: return FileRadarChrome.radiusCard
+        case .minimal: return FileRadarChrome.radiusHairline
         }
     }
 
@@ -188,6 +188,51 @@ enum FileRadarMotion {
     static let chip = Animation.easeOut(duration: 0.22)
     static let selection = Animation.easeInOut(duration: 0.16)
     static let panel = Animation.spring(response: 0.32, dampingFraction: 0.86)
+}
+
+// MARK: - Unified look tokens (docs/fileradar-unified-look.md)
+//
+// Cross-platform contract: Windows matches these names + values.
+// Layout never forks per optional AppLook — only accent/material/title design.
+
+enum FileRadarChrome {
+    /// Electric system blue — mockup + Bloom/ForkLift restraint (not purple).
+    static let accent = Color(red: 0.0, green: 0.478, blue: 1.0)
+
+    static let radiusCard: CGFloat = 12
+    static let radiusControl: CGFloat = 8
+    static let radiusHairline: CGFloat = 6
+
+    static let spacePage: CGFloat = 20
+    static let spaceSection: CGFloat = 28
+    static let spaceCardGap: CGFloat = 16
+    static let spaceChromeY: CGFloat = 8
+    static let spaceHUDPadX: CGFloat = 18
+    static let spaceHUDPadY: CGFloat = 12
+
+    static let hudMaxWidth: CGFloat = 440
+    static let selectionStroke: CGFloat = 2
+    static let activePaneStroke: CGFloat = 1.5
+
+    static func selectionWash(_ accent: Color = FileRadarChrome.accent) -> Color {
+        accent.opacity(0.08)
+    }
+    static func sidebarSelectionWash(_ accent: Color = FileRadarChrome.accent) -> Color {
+        accent.opacity(0.14)
+    }
+    static func dropTargetWash(_ accent: Color = FileRadarChrome.accent) -> Color {
+        accent.opacity(0.15)
+    }
+    static func activePaneWash(_ accent: Color = FileRadarChrome.accent) -> Color {
+        accent.opacity(0.03)
+    }
+    static func activePaneStrokeColor(_ accent: Color = FileRadarChrome.accent) -> Color {
+        accent.opacity(0.55)
+    }
+    static let cardFill = Color.primary.opacity(0.04)
+    static let chromeBarFill = Color.primary.opacity(0.03)
+    static let hairline = Color.primary.opacity(0.10)
+    static let hudShadow = Color.black.opacity(0.18)
 }
 
 /// Quiet atmosphere for detail chrome — soft vertical wash, not flat fill
