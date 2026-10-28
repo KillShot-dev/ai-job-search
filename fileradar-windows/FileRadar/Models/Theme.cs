@@ -1,6 +1,10 @@
 namespace FileRadar.Models;
 
-/// <summary>Four looks from one layout — palette/radius/type only.</summary>
+/// <summary>
+/// Looks from one layout. Primary chrome is Apple-like Modern (slate + blue).
+/// Elegant remains a calm alternate. Colourful/Minimal stay in the catalog
+/// but are not cycled from the toolbar.
+/// </summary>
 public enum AppLook
 {
     Modern,
@@ -38,32 +42,37 @@ public sealed class ThemePalette
 
 public static class ThemeCatalog
 {
+    /// <summary>Primary looks shown in calm chrome (Modern ↔ Elegant).</summary>
+    public static readonly AppLook[] PrimaryLooks = [AppLook.Modern, AppLook.Elegant];
+
     public static ThemePalette Resolve(AppLook look, bool dark) => (look, dark) switch
     {
+        // Apple-like Modern: neutral slate, system-blue accent, soft frosted panels
         (AppLook.Modern, false) => new ThemePalette
         {
-            Accent = "#0A6CFF", Accent2 = "#0D9488", Bg = "#F2F5FA", Panel = "#FFFFFF",
-            Panel2 = "#E8EEF7", Text = "#0F172A", Muted = "#5B6B7C", Border = "#D5DEE9",
-            Chip = "#E3EFFF", Radius = 10
+            Accent = "#0A6BFF", Accent2 = "#5B6B7C", Bg = "#F5F5F7", Panel = "#FBFBFC",
+            Panel2 = "#EEF0F3", Text = "#1D1D1F", Muted = "#6E6E73", Border = "#D2D2D7",
+            Chip = "#E8F0FF", Radius = 10
         },
         (AppLook.Modern, true) => new ThemePalette
         {
-            Accent = "#5EA0FF", Accent2 = "#2DD4BF", Bg = "#0B1220", Panel = "#141C2B",
-            Panel2 = "#1C2638", Text = "#E8EEF7", Muted = "#94A3B8", Border = "#2A364A",
-            Chip = "#1E3A5F", Radius = 10
+            Accent = "#0A84FF", Accent2 = "#8E8E93", Bg = "#1C1C1E", Panel = "#2C2C2E",
+            Panel2 = "#3A3A3C", Text = "#F5F5F7", Muted = "#98989D", Border = "#48484A",
+            Chip = "#1C3A5F", Radius = 10
         },
         (AppLook.Elegant, false) => new ThemePalette
         {
-            Accent = "#1F736B", Accent2 = "#8B6914", Bg = "#F4F7F6", Panel = "#FFFFFF",
+            Accent = "#1F736B", Accent2 = "#8B6914", Bg = "#F4F7F6", Panel = "#FBFBFC",
             Panel2 = "#E7EFED", Text = "#14201E", Muted = "#5A6B68", Border = "#D2DDD9",
-            Chip = "#DFF3EF", Radius = 16
+            Chip = "#DFF3EF", Radius = 14
         },
         (AppLook.Elegant, true) => new ThemePalette
         {
             Accent = "#3DB8AB", Accent2 = "#D4A84B", Bg = "#101816", Panel = "#1A2421",
             Panel2 = "#24302C", Text = "#E8F2EF", Muted = "#9BB0AA", Border = "#2F3F3A",
-            Chip = "#1F3A35", Radius = 16
+            Chip = "#1F3A35", Radius = 14
         },
+        // Retained for catalog parity; not offered in primary chrome
         (AppLook.Colourful, false) => new ThemePalette
         {
             Accent = "#E86A3C", Accent2 = "#2F7D6B", Bg = "#F3EEE6", Panel = "#FFFCF7",
@@ -106,9 +115,10 @@ public sealed class ThemeSettings
         _ => systemDark
     };
 
+    /// <summary>Cycle only calm primary looks (Modern ↔ Elegant).</summary>
     public void CycleLook()
     {
-        var all = Enum.GetValues<AppLook>();
+        var all = ThemeCatalog.PrimaryLooks;
         var i = Array.IndexOf(all, Look);
         Look = all[(i + 1) % all.Length];
     }

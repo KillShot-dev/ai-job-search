@@ -3,7 +3,6 @@ using FileRadar.Models;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Media;
 using Windows.System;
-using Windows.UI;
 using Color = Windows.UI.Color;
 
 namespace FileRadar.Views;
@@ -14,6 +13,8 @@ public sealed partial class MainPage : Page
     private FileItem? _selected;
     private readonly List<FileItem> _selection = [];
     private bool _systemDark;
+    private bool _suppressNavSelection;
+    private readonly List<NavigationViewItem> _placeItems = [];
 
     public MainPage()
     {
@@ -32,38 +33,48 @@ public sealed partial class MainPage : Page
 
     private void BuildPlaces()
     {
-        PlacesList.Items.Clear();
+        foreach (var old in _placeItems)
+            NavView.MenuItems.Remove(old);
+        _placeItems.Clear();
+
         foreach (var place in App.Library.QuickPlaces.Where(Directory.Exists))
         {
             var name = Path.GetFileName(place.TrimEnd('\\', '/'));
             if (string.IsNullOrEmpty(name)) name = place;
-            var btn = new Button
+            var item = new NavigationViewItem
             {
                 Content = name,
-                Tag = place,
-                Style = (Style)Application.Current.Resources["FrNavButton"],
-                Foreground = (Brush)Application.Current.Resources["FrTextBrush"],
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                HorizontalContentAlignment = HorizontalAlignment.Left
+                Tag = "Place:" + place,
+                Icon = new FontIcon { Glyph = "\uE8B7" }
             };
-            btn.Click += Place_Click;
-            PlacesList.Items.Add(btn);
+            NavView.MenuItems.Add(item);
+            _placeItems.Add(item);
         }
     }
 
-    private void Place_Click(object sender, RoutedEventArgs e)
+    private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
-        if (sender is Button { Tag: string path })
+        if (_suppressNavSelection) return;
+        if (args.SelectedItem is not NavigationViewItem { Tag: string tag }) return;
+
+        if (tag == "CycleLook")
         {
+            App.Theme.CycleLook();
+            // Keep previous destination selected in the nav
+            SelectNavForDestination(_destination);
+            Refresh();
+            return;
+        }
+
+        if (tag.StartsWith("Place:", StringComparison.Ordinal))
+        {
+            var path = tag["Place:".Length..];
             App.Library.Navigate(path);
             _destination = Destination.Browse;
             Refresh();
+            return;
         }
-    }
 
-    private void Nav_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is not Button { Tag: string tag }) return;
         _destination = tag switch
         {
             "Search" => Destination.Search,
@@ -76,9 +87,47 @@ public sealed partial class MainPage : Page
         Refresh();
     }
 
+    private void SelectNavForDestination(Destination dest)
+    {
+        _suppressNavSelection = true;
+        try
+        {
+            string? tag = dest switch
+            {
+                Destination.Search => "Search",
+                Destination.Cleanup => "Cleanup",
+                Destination.Duplicates => "Duplicates",
+                Destination.Timeline => "Timeline",
+                Destination.RecycleBin => "RecycleBin",
+                Destination.Browse => null,
+                _ => "Home"
+            };
+
+            if (tag is null)
+            {
+                NavView.SelectedItem = null;
+                return;
+            }
+
+            foreach (var obj in NavView.MenuItems)
+            {
+                if (obj is NavigationViewItem nvi && nvi.Tag as string == tag)
+                {
+                    NavView.SelectedItem = nvi;
+                    return;
+                }
+            }
+        }
+        finally
+        {
+            _suppressNavSelection = false;
+        }
+    }
+
     private void NavigateTo(Destination dest)
     {
         _destination = dest;
+        SelectNavForDestination(dest);
         Refresh();
     }
 
@@ -88,11 +137,12 @@ public sealed partial class MainPage : Page
         var palette = ThemeCatalog.Resolve(App.Theme.Look, dark);
         App.ApplyThemeResources(Application.Current.Resources, palette);
         RootGrid.Background = BrushFrom(palette.Bg);
-        LookBtn.Content = $"Look: {App.Theme.Look}";
+        TopBar.Background = BrushFrom(palette.Panel);
         AppearanceBtn.Content = App.Theme.Appearance.ToString();
         ViewModeBtn.Content = App.Theme.ViewMode.ToString();
         DualPaneBtn.Content = App.Theme.DualPane ? "Dual pane · On" : "Dual pane";
         InspectorBtn.Content = App.Theme.InspectorOpen ? "Inspector · On" : "Inspector";
+        LookItem.Content = $"Look: {App.Theme.Look}";
 
         InspectorColumn.Width = App.Theme.InspectorOpen ? new GridLength(300) : new GridLength(0);
         InspectorBorder.Visibility = App.Theme.InspectorOpen ? Visibility.Visible : Visibility.Collapsed;
@@ -168,7 +218,7 @@ public sealed partial class MainPage : Page
         if (App.Theme.DualPane)
             RenderSecondary();
 
-        StatusText.Text = $"{_destination} · Look {App.Theme.Look} · {App.Theme.ViewMode}";
+        StatusText.Text = $"{_destination} · {App.Theme.Look} · {App.Theme.Appearance} · {App.Theme.ViewMode}";
     }
 
     private void RenderHome()
@@ -178,7 +228,7 @@ public sealed partial class MainPage : Page
             MainContent.Children.Add(new TextBlock
             {
                 Text = shelf.Title,
-                FontSize = 16,
+                FontSize = 15,
                 FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
                 Foreground = (Brush)Application.Current.Resources["FrTextBrush"],
                 Margin = new Thickness(4, 8, 0, 4)
@@ -223,7 +273,7 @@ public sealed partial class MainPage : Page
             MainContent.Children.Add(new TextBlock
             {
                 Text = day,
-                FontSize = 16,
+                FontSize = 15,
                 FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
                 Foreground = (Brush)Application.Current.Resources["FrTextBrush"],
                 Margin = new Thickness(4, 8, 0, 4)
@@ -443,6 +493,7 @@ public sealed partial class MainPage : Page
             {
                 App.Library.Navigate(item.Path);
                 _destination = Destination.Browse;
+                SelectNavForDestination(Destination.Browse);
             }
             Refresh();
             return;
@@ -457,12 +508,6 @@ public sealed partial class MainPage : Page
             try { Process.Start(new ProcessStartInfo(item.Path) { UseShellExecute = true }); }
             catch { StatusText.Text = "Could not open file."; }
         }
-    }
-
-    private void LookBtn_Click(object sender, RoutedEventArgs e)
-    {
-        App.Theme.CycleLook();
-        Refresh();
     }
 
     private void AppearanceBtn_Click(object sender, RoutedEventArgs e)
@@ -492,6 +537,7 @@ public sealed partial class MainPage : Page
     private void SearchBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
         _destination = Destination.Search;
+        SelectNavForDestination(Destination.Search);
         Refresh();
     }
 
@@ -507,6 +553,7 @@ public sealed partial class MainPage : Page
         if (parent is null) return;
         App.Library.Navigate(parent);
         _destination = Destination.Browse;
+        SelectNavForDestination(Destination.Browse);
         Refresh();
     }
 

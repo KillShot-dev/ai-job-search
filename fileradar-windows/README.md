@@ -4,8 +4,10 @@ WinUI 3 / .NET 8 Explorer replacement matching the Mac FileRadar look system.
 
 ## Features (v1)
 
-- Four looks: Modern, Elegant, Colourful, Minimal × Light / Dark / System
-- Sidebar: Home, Search, Cleanup, Duplicates, Timeline, Recycle Bin + Places
+- Apple-like **Modern** default (neutral slate + blue accent, Mica frosted chrome)
+- Appearance: System / Light / Dark in primary toolbar
+- Calm Look cycle (Modern ↔ Elegant) in nav footer — Colourful/Minimal de-emphasized
+- NavigationView sidebar: Library + Places
 - Home shelves, grid/list, inspector, dual-pane, staging trash, search
 
 ## Run (portable exe)

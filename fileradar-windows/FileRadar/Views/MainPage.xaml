@@ -6,17 +6,18 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Background="{StaticResource FrBgBrush}">
+    Background="Transparent">
 
-    <Grid x:Name="RootGrid" Background="{StaticResource FrBgBrush}">
+    <Grid x:Name="RootGrid" Background="Transparent">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Top bar -->
-        <Border Grid.Row="0" Background="{StaticResource FrPanelBrush}"
+        <!-- Quiet top chrome -->
+        <Border Grid.Row="0" x:Name="TopBar"
+                Background="{StaticResource FrPanelBrush}"
                 BorderBrush="{StaticResource FrBorderBrush}" BorderThickness="0,0,0,1"
                 Padding="16,10">
             <Grid ColumnSpacing="12">
@@ -26,23 +27,23 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
-                    <FontIcon Glyph="&#xE71B;" FontSize="20" Foreground="{StaticResource FrAccentBrush}" />
-                    <TextBlock Text="File" FontSize="20" FontWeight="Bold" Foreground="{StaticResource FrTextBrush}" />
-                    <TextBlock Text="Radar" FontSize="20" FontWeight="Bold" Foreground="{StaticResource FrAccentBrush}" Margin="-6,0,0,0" />
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="6">
+                    <FontIcon Glyph="&#xE71B;" FontSize="18" Foreground="{StaticResource FrAccentBrush}" />
+                    <TextBlock Text="FileRadar" FontSize="17" FontWeight="SemiBold"
+                               Foreground="{StaticResource FrTextBrush}" />
                 </StackPanel>
 
                 <AutoSuggestBox x:Name="SearchBox" Grid.Column="1"
-                                PlaceholderText="Search files… try images, invoices, screenshots"
+                                PlaceholderText="Search files…"
                                 QueryIcon="Find"
                                 QuerySubmitted="SearchBox_QuerySubmitted"
                                 TextChanged="SearchBox_TextChanged" />
 
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                    <Button x:Name="LookBtn" Content="Look: Modern" Click="LookBtn_Click" Style="{StaticResource FrPill}"
-                            Background="{StaticResource FrPanel2Brush}" BorderBrush="{StaticResource FrBorderBrush}" Foreground="{StaticResource FrTextBrush}" />
-                    <Button x:Name="AppearanceBtn" Content="Light" Click="AppearanceBtn_Click" Style="{StaticResource FrPill}"
-                            Background="{StaticResource FrPanel2Brush}" BorderBrush="{StaticResource FrBorderBrush}" Foreground="{StaticResource FrTextBrush}" />
+                <!-- Primary chrome: Appearance + view controls only (no Colourful/Minimal) -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <Button x:Name="AppearanceBtn" Content="System" Click="AppearanceBtn_Click" Style="{StaticResource FrPill}"
+                            Background="{StaticResource FrPanel2Brush}" BorderBrush="{StaticResource FrBorderBrush}" Foreground="{StaticResource FrTextBrush}"
+                            ToolTipService.ToolTip="Cycle System / Light / Dark" />
                     <Button x:Name="ViewModeBtn" Content="Grid" Click="ViewModeBtn_Click" Style="{StaticResource FrPill}"
                             Background="{StaticResource FrPanel2Brush}" BorderBrush="{StaticResource FrBorderBrush}" Foreground="{StaticResource FrTextBrush}" />
                     <Button x:Name="DualPaneBtn" Content="Dual pane" Click="DualPaneBtn_Click" Style="{StaticResource FrPill}"
@@ -53,114 +54,145 @@
             </Grid>
         </Border>
 
-        <!-- Body -->
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="230" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition x:Name="InspectorColumn" Width="300" />
-            </Grid.ColumnDefinitions>
+        <!-- Body: NavigationView sidebar + shelves + inspector -->
+        <NavigationView x:Name="NavView" Grid.Row="1"
+                        PaneDisplayMode="Left"
+                        IsBackButtonVisible="Collapsed"
+                        IsSettingsVisible="False"
+                        OpenPaneLength="228"
+                        CompactPaneLength="48"
+                        IsPaneToggleButtonVisible="False"
+                        AlwaysShowHeader="False"
+                        SelectionChanged="NavView_SelectionChanged"
+                        Background="Transparent">
+            <NavigationView.MenuItems>
+                <NavigationViewItemHeader Content="LIBRARY" />
+                <NavigationViewItem Content="Home" Tag="Home" IsSelected="True">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE80F;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Search" Tag="Search">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE721;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Cleanup" Tag="Cleanup">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE74D;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Duplicates" Tag="Duplicates">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE8C8;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Timeline" Tag="Timeline">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE787;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Recycle Bin" Tag="RecycleBin">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE74D;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItemHeader Content="PLACES" />
+            </NavigationView.MenuItems>
+            <NavigationView.FooterMenuItems>
+                <!-- Quiet secondary: Modern ↔ Elegant only -->
+                <NavigationViewItem x:Name="LookItem" Content="Look: Modern" Tag="CycleLook">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE790;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.FooterMenuItems>
 
-            <!-- Sidebar -->
-            <Border Grid.Column="0" Background="{StaticResource FrPanelBrush}"
-                    BorderBrush="{StaticResource FrBorderBrush}" BorderThickness="0,0,1,0" Padding="10,14">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel x:Name="SidebarPanel" Spacing="2">
-                        <TextBlock Text="LIBRARY" FontSize="11" CharacterSpacing="80"
-                                   Foreground="{StaticResource FrMutedBrush}" Margin="8,0,8,6" />
-                        <Button Tag="Home" Content="Home" Click="Nav_Click" Style="{StaticResource FrNavButton}" Foreground="{StaticResource FrTextBrush}" />
-                        <Button Tag="Search" Content="Search" Click="Nav_Click" Style="{StaticResource FrNavButton}" Foreground="{StaticResource FrTextBrush}" />
-                        <Button Tag="Cleanup" Content="Cleanup" Click="Nav_Click" Style="{StaticResource FrNavButton}" Foreground="{StaticResource FrTextBrush}" />
-                        <Button Tag="Duplicates" Content="Duplicates" Click="Nav_Click" Style="{StaticResource FrNavButton}" Foreground="{StaticResource FrTextBrush}" />
-                        <Button Tag="Timeline" Content="Timeline" Click="Nav_Click" Style="{StaticResource FrNavButton}" Foreground="{StaticResource FrTextBrush}" />
-                        <Button Tag="RecycleBin" Content="Recycle Bin" Click="Nav_Click" Style="{StaticResource FrNavButton}" Foreground="{StaticResource FrTextBrush}" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition x:Name="InspectorColumn" Width="300" />
+                </Grid.ColumnDefinitions>
 
-                        <TextBlock Text="PLACES" FontSize="11" CharacterSpacing="80"
-                                   Foreground="{StaticResource FrMutedBrush}" Margin="8,16,8,6" />
-                        <ItemsControl x:Name="PlacesList" />
-                    </StackPanel>
-                </ScrollViewer>
-            </Border>
+                <!-- Main shelves -->
+                <Grid Grid.Column="0" Padding="20,16,14,12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
 
-            <!-- Main content + optional dual pane -->
-            <Grid Grid.Column="1" Padding="18,14,12,12">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-
-                <StackPanel Grid.Row="0" Margin="0,0,0,12" Spacing="4">
-                    <TextBlock x:Name="TitleText" Text="Home" FontSize="24" FontWeight="SemiBold"
-                               Foreground="{StaticResource FrTextBrush}" />
-                    <TextBlock x:Name="SubtitleText" Text="Shelves from your libraries"
-                               Foreground="{StaticResource FrMutedBrush}" />
-                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
-                        <Button Content="Up" Click="UpBtn_Click" Style="{StaticResource FrPill}"
-                                Background="{StaticResource FrPanelBrush}" BorderBrush="{StaticResource FrBorderBrush}" Foreground="{StaticResource FrTextBrush}" />
-                        <Button Content="Trash selected" Click="TrashBtn_Click" Style="{StaticResource FrPill}"
-                                Background="{StaticResource FrPanelBrush}" BorderBrush="{StaticResource FrBorderBrush}" Foreground="{StaticResource FrTextBrush}" />
-                        <Button Content="Open" Click="OpenBtn_Click" Style="{StaticResource FrPill}"
-                                Background="{StaticResource FrAccentBrush}" BorderThickness="0" Foreground="White" />
-                        <TextBlock x:Name="PathText" VerticalAlignment="Center"
-                                   Foreground="{StaticResource FrMutedBrush}" TextWrapping="NoWrap" />
-                    </StackPanel>
-                </StackPanel>
-
-                <Grid Grid.Row="1" ColumnSpacing="10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition x:Name="DualColumn" Width="0" />
-                    </Grid.ColumnDefinitions>
-
-                    <Border Background="{StaticResource FrPanelBrush}" BorderBrush="{StaticResource FrBorderBrush}"
-                            BorderThickness="1" CornerRadius="12" Padding="8">
-                        <ScrollViewer x:Name="MainScroll" VerticalScrollBarVisibility="Auto">
-                            <StackPanel x:Name="MainContent" Spacing="16" />
-                        </ScrollViewer>
-                    </Border>
-
-                    <Border x:Name="DualPaneBorder" Grid.Column="1" Visibility="Collapsed"
-                            Background="{StaticResource FrPanelBrush}" BorderBrush="{StaticResource FrBorderBrush}"
-                            BorderThickness="1" CornerRadius="12" Padding="8">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <StackPanel x:Name="SecondaryContent" Spacing="8" />
-                        </ScrollViewer>
-                    </Border>
-                </Grid>
-            </Grid>
-
-            <!-- Inspector -->
-            <Border x:Name="InspectorBorder" Grid.Column="2"
-                    Background="{StaticResource FrPanelBrush}"
-                    BorderBrush="{StaticResource FrBorderBrush}" BorderThickness="1,0,0,0"
-                    Padding="16">
-                <ScrollViewer>
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="Inspector" FontSize="16" FontWeight="SemiBold"
+                    <StackPanel Grid.Row="0" Margin="0,0,0,14" Spacing="4">
+                        <TextBlock x:Name="TitleText" Text="Home" FontSize="26" FontWeight="SemiBold"
                                    Foreground="{StaticResource FrTextBrush}" />
-                        <Border x:Name="InspectorThumb" Height="160" CornerRadius="12"
-                                Background="{StaticResource FrPanel2Brush}"
-                                BorderBrush="{StaticResource FrBorderBrush}" BorderThickness="1">
-                            <FontIcon x:Name="InspectorGlyph" Glyph="&#xE8A5;" FontSize="48"
-                                      HorizontalAlignment="Center" VerticalAlignment="Center"
-                                      Foreground="{StaticResource FrAccentBrush}" />
+                        <TextBlock x:Name="SubtitleText" Text="Shelves from your libraries" FontSize="13"
+                                   Foreground="{StaticResource FrMutedBrush}" />
+                        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,10,0,0">
+                            <Button Content="Up" Click="UpBtn_Click" Style="{StaticResource FrPill}"
+                                    Background="{StaticResource FrPanelBrush}" BorderBrush="{StaticResource FrBorderBrush}" Foreground="{StaticResource FrTextBrush}" />
+                            <Button Content="Trash selected" Click="TrashBtn_Click" Style="{StaticResource FrPill}"
+                                    Background="{StaticResource FrPanelBrush}" BorderBrush="{StaticResource FrBorderBrush}" Foreground="{StaticResource FrTextBrush}" />
+                            <Button Content="Open" Click="OpenBtn_Click" Style="{StaticResource FrPrimaryButton}" />
+                            <TextBlock x:Name="PathText" VerticalAlignment="Center" FontSize="12"
+                                       Foreground="{StaticResource FrMutedBrush}" TextWrapping="NoWrap" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <Grid Grid.Row="1" ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition x:Name="DualColumn" Width="0" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border Background="{StaticResource FrPanelBrush}" BorderBrush="{StaticResource FrBorderBrush}"
+                                BorderThickness="1" CornerRadius="12" Padding="10">
+                            <ScrollViewer x:Name="MainScroll" VerticalScrollBarVisibility="Auto">
+                                <StackPanel x:Name="MainContent" Spacing="18" />
+                            </ScrollViewer>
                         </Border>
-                        <TextBlock x:Name="InspectorName" Text="Select a file"
-                                   FontSize="18" FontWeight="SemiBold" TextWrapping="WrapWholeWords"
-                                   Foreground="{StaticResource FrTextBrush}" />
-                        <TextBlock x:Name="InspectorKind" Text="" Foreground="{StaticResource FrMutedBrush}" />
-                        <TextBlock x:Name="InspectorSize" Text="" Foreground="{StaticResource FrMutedBrush}" />
-                        <TextBlock x:Name="InspectorModified" Text="" Foreground="{StaticResource FrMutedBrush}" />
-                        <TextBlock x:Name="InspectorPath" Text="" TextWrapping="WrapWholeWords"
-                                   FontSize="12" Foreground="{StaticResource FrMutedBrush}" />
-                    </StackPanel>
-                </ScrollViewer>
-            </Border>
-        </Grid>
+
+                        <Border x:Name="DualPaneBorder" Grid.Column="1" Visibility="Collapsed"
+                                Background="{StaticResource FrPanelBrush}" BorderBrush="{StaticResource FrBorderBrush}"
+                                BorderThickness="1" CornerRadius="12" Padding="10">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel x:Name="SecondaryContent" Spacing="8" />
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+                </Grid>
+
+                <!-- Inspector -->
+                <Border x:Name="InspectorBorder" Grid.Column="1"
+                        Background="{StaticResource FrPanelBrush}"
+                        BorderBrush="{StaticResource FrBorderBrush}" BorderThickness="1,0,0,0"
+                        Padding="18,16">
+                    <ScrollViewer>
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Inspector" FontSize="15" FontWeight="SemiBold"
+                                       Foreground="{StaticResource FrTextBrush}" />
+                            <Border x:Name="InspectorThumb" Height="160" CornerRadius="12"
+                                    Background="{StaticResource FrPanel2Brush}"
+                                    BorderBrush="{StaticResource FrBorderBrush}" BorderThickness="1">
+                                <FontIcon x:Name="InspectorGlyph" Glyph="&#xE8A5;" FontSize="44"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Foreground="{StaticResource FrAccentBrush}" />
+                            </Border>
+                            <TextBlock x:Name="InspectorName" Text="Select a file"
+                                       FontSize="17" FontWeight="SemiBold" TextWrapping="WrapWholeWords"
+                                       Foreground="{StaticResource FrTextBrush}" />
+                            <TextBlock x:Name="InspectorKind" Text="" FontSize="13" Foreground="{StaticResource FrMutedBrush}" />
+                            <TextBlock x:Name="InspectorSize" Text="" FontSize="13" Foreground="{StaticResource FrMutedBrush}" />
+                            <TextBlock x:Name="InspectorModified" Text="" FontSize="13" Foreground="{StaticResource FrMutedBrush}" />
+                            <TextBlock x:Name="InspectorPath" Text="" TextWrapping="WrapWholeWords"
+                                       FontSize="12" Foreground="{StaticResource FrMutedBrush}" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+        </NavigationView>
 
         <!-- Status -->
         <Border Grid.Row="2" Background="{StaticResource FrPanel2Brush}"
-                BorderBrush="{StaticResource FrBorderBrush}" BorderThickness="0,1,0,0" Padding="14,8">
+                BorderBrush="{StaticResource FrBorderBrush}" BorderThickness="0,1,0,0" Padding="14,7">
             <TextBlock x:Name="StatusText" Text="Ready" Foreground="{StaticResource FrMutedBrush}" FontSize="12" />
         </Border>
     </Grid>
