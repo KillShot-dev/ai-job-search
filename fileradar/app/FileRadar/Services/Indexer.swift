@@ -16,7 +16,8 @@ final class FileStore: ObservableObject {
     @Published var isIndexing = false
     @Published var indexedCount = 0
     @Published var cardSize: CGFloat = 140
-    @Published var viewMode: ViewMode = .grid
+    /// Showcase is the default — Home uses the mockup shelves + inspector layout.
+    @Published var viewMode: ViewMode = .showcase
     @Published var sort: SortOrder = .date
     @Published var selectedIDs = Set<String>()
     @Published var pinnedFolderURLs: [URL] = []
@@ -98,6 +99,15 @@ final class FileStore: ObservableObject {
     func refreshIndex() {
         var folders = SecurityBookmarkStore.resolvedFolders()
         folders.append(contentsOf: pinnedFolderURLs)
+        // Snapshot / QA: prefer a small Downloads/FileRadarDemo folder so Home
+        // shelves fill quickly for mockup evidence shots.
+        if ProcessInfo.processInfo.environment["FILERADAR_SNAPSHOT_PATH"] != nil {
+            let demo = FileManager.default.homeDirectoryForCurrentUser
+                .appendingPathComponent("Downloads/FileRadarDemo")
+            if FileManager.default.fileExists(atPath: demo.path) {
+                folders = [demo]
+            }
+        }
         if folders.isEmpty {
             // Default to Downloads only. Indexing Desktop + Documents on a
             // developer Mac (tens of GB, node_modules, etc.) freezes the UI

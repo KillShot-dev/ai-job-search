@@ -3,146 +3,13 @@ import AppKit
 
 // MARK: - Home (principle 2: shelves + recents, one job)
 
+/// Home is always the mockup Showcase layout (shelves album cards + Recents +
+/// inspector elsewhere). Grid / List / Columns still apply to other destinations.
 struct HomeView: View {
     @Binding var destination: Destination
-    @EnvironmentObject var store: FileStore
-    @EnvironmentObject var license: LicenseManager
-    @EnvironmentObject var theme: ThemeSettings
-    @State private var showLicense = false
 
     var body: some View {
-        Group {
-            if store.viewMode == .showcase {
-                ShowcaseHomeView(destination: $destination)
-            } else {
-                classicHome
-            }
-        }
-        .sheet(isPresented: $showLicense) { LicenseEntryView() }
-    }
-
-    /// Calm Home: title → shelves/recents → quiet source + collection rows.
-    /// No look/appearance pills, no bento tiles — chrome lives in toolbar/Settings.
-    private var classicHome: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                Text("Home").font(FileRadarFont.title())
-                if store.isIndexing {
-                    Label("Indexing your files in the background…", systemImage: "arrow.triangle.2.circlepath")
-                        .font(FileRadarFont.caption()).foregroundStyle(.secondary)
-                }
-                VStack(alignment: .leading, spacing: 10) {
-                    shelfHeader("Recent", seeAll: { destination = .search })
-                    if store.recents.isEmpty {
-                        EmptyStateView(title: "No recent files yet",
-                                       message: "Once FileRadar finishes its first background index, your newest files will live here.")
-                    } else {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 16) {
-                                ForEach(store.recents.prefix(20)) { file in
-                                    FileCardView(file: file, size: store.cardSize)
-                                        .onTapGesture {
-                                            withAnimation(FileRadarMotion.selection) {
-                                                store.selectedIDs = [file.id]
-                                            }
-                                        }
-                                        .onTapGesture(count: 2) { NSWorkspace.shared.open(file.url) }
-                                }
-                            }
-                        }
-                    }
-                }
-                ForEach(store.shelves, id: \.0) { kind, files in
-                    if !files.isEmpty {
-                        VStack(alignment: .leading, spacing: 10) {
-                            shelfHeader(kind.displayName, seeAll: { destination = .kind(kind) })
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 16) {
-                                    ForEach(files.prefix(20)) { file in
-                                        FileCardView(file: file, size: store.cardSize)
-                                            .onTapGesture {
-                                                withAnimation(FileRadarMotion.selection) {
-                                                    store.selectedIDs = [file.id]
-                                                }
-                                            }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                // Downloaded From — plain rows (clickable), not capsule pills.
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Downloaded From").font(FileRadarFont.heading())
-                    let groups = Dictionary(grouping: store.files) { $0.downloadSource.displayName }
-                    ForEach(groups.keys.sorted(), id: \.self) { key in
-                        Button {
-                            withAnimation(FileRadarMotion.panel) { destination = .source(key) }
-                        } label: {
-                            HStack {
-                                Text(key).font(FileRadarFont.body())
-                                Spacer()
-                                Text("\(groups[key]?.count ?? 0) files")
-                                    .font(FileRadarFont.body())
-                                    .foregroundStyle(.secondary)
-                                Image(systemName: "chevron.right")
-                                    .font(.caption)
-                                    .foregroundStyle(.tertiary)
-                            }
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("Downloaded from \(key), \(groups[key]?.count ?? 0) files")
-                    }
-                }
-                // Smart Collections — list rows, not bento cards.
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Smart Collections").font(FileRadarFont.heading())
-                    ForEach(TagService.smartCollections(in: store.files), id: \.title) { col in
-                        Button {
-                            withAnimation(FileRadarMotion.panel) {
-                                destination = .smartFolder(col.title)
-                            }
-                        } label: {
-                            HStack(alignment: .firstTextBaseline) {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(col.title).font(FileRadarFont.body())
-                                    Text(col.explanation)
-                                        .font(FileRadarFont.caption())
-                                        .foregroundStyle(.secondary)
-                                        .lineLimit(2)
-                                }
-                                Spacer()
-                                Text("\(col.files.count)")
-                                    .font(FileRadarFont.body())
-                                    .foregroundStyle(.secondary)
-                            }
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("\(col.title), \(col.files.count) files")
-                    }
-                }
-                if !license.isUnlocked {
-                    Button(DistributionChannel.current == .macAppStore
-                           ? "Unlock the full version"
-                           : "Enter serial number to unlock the full version") {
-                        showLicense = true
-                    }
-                }
-            }.padding()
-        }
-    }
-
-    private func shelfHeader(_ title: String, seeAll: @escaping () -> Void) -> some View {
-        HStack {
-            Text(title).font(FileRadarFont.heading())
-            Spacer()
-            Button("See All", action: seeAll)
-                .font(FileRadarFont.caption())
-                .buttonStyle(.borderless)
-                .foregroundStyle(theme.look.accent)
-        }
+        ShowcaseHomeView(destination: $destination)
     }
 }
 
@@ -165,6 +32,9 @@ struct ShowcaseHomeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
                 VStack(alignment: .leading, spacing: 4) {
+                    Text("> Home")
+                        .font(FileRadarFont.caption())
+                        .foregroundStyle(.secondary)
                     Text("Home").font(FileRadarFont.title())
                     if store.isIndexing {
                         Label("Indexing your files in the background…", systemImage: "arrow.triangle.2.circlepath")
@@ -294,14 +164,21 @@ struct ShowcaseHomeView: View {
         }
     }
 
+    /// Kind shelves always appear as album cards (SF Symbol cover when empty)
+    /// so Home matches the mockup structure before indexing finishes. Smart
+    /// collections and favorites join once they have files.
     private var albumShelves: [ShelfAlbum] {
         var albums: [ShelfAlbum] = []
-        for (kind, files) in store.shelves where !files.isEmpty {
+        for (kind, files) in store.shelves {
+            let count = store.files.filter { $0.kind == kind }.count
+            let cover = files.first(where: { $0.kind == .image && !$0.isICloudOnly }) ?? files.first
             albums.append(ShelfAlbum(
                 id: "kind-\(kind.rawValue)",
                 title: kind.displayName,
-                subtitle: "\(files.count) file\(files.count == 1 ? "" : "s")",
-                cover: files.first(where: { $0.kind == .image && !$0.isICloudOnly }) ?? files.first,
+                subtitle: count == 0
+                    ? "Empty shelf"
+                    : "\(count) file\(count == 1 ? "" : "s")",
+                cover: cover,
                 systemImage: kind.systemImage,
                 destination: .kind(kind)
             ))
@@ -454,10 +331,37 @@ struct ShowcaseInspectorView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Spacer()
+                    ShareLink(item: file.url) {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                    .help("Share")
+                    .accessibilityLabel("Share")
+                    Menu {
+                        Button("Copy Path") {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(file.url.path, forType: .string)
+                        }
+                        Button("Quick Look") {
+                            QuickLookHelper.shared.show(files: [file])
+                        }
+                        Button("Show in Finder") {
+                            NSWorkspace.shared.activateFileViewerSelecting([file.url])
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                    .help("More")
+                    .accessibilityLabel("More actions")
+                }
+
                 AsyncFileThumbnail(file: file, size: CGSize(width: 320, height: 220))
                     .frame(maxWidth: .infinity)
                     .frame(height: 220)
                     .clipShape(RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous))
+                    .background(.ultraThinMaterial,
+                                in: RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous))
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(file.name).font(FileRadarFont.heading()).textSelection(.enabled)
@@ -491,6 +395,7 @@ struct ShowcaseInspectorView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
+                .tint(theme.look.accent)
                 .controlSize(.large)
 
                 if file.isICloudOnly {
@@ -501,6 +406,7 @@ struct ShowcaseInspectorView: View {
             }
             .padding(16)
         }
+        .background(.ultraThinMaterial)
         .sheet(isPresented: $showLicense) { LicenseEntryView() }
     }
 

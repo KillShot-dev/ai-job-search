@@ -48,8 +48,21 @@ struct FileRadarApp: App {
                     if LocalDevBuild.isActive,
                        let path = ProcessInfo.processInfo.environment["FILERADAR_SNAPSHOT_PATH"],
                        !path.isEmpty {
+                        // Prefer calm Modern + Dark for mockup-matching evidence shots.
+                        theme.look = .modern
+                        theme.appearance = .dark
+                        store.viewMode = .showcase
                         Task { @MainActor in
-                            try? await Task.sleep(nanoseconds: 900_000_000)
+                            // Wait for demo index + first selection so shelves/inspector fill.
+                            for _ in 0..<80 {
+                                if !store.files.isEmpty, !store.isIndexing { break }
+                                try? await Task.sleep(nanoseconds: 250_000_000)
+                            }
+                            if store.selectedIDs.isEmpty,
+                               let first = store.recents.first ?? store.files.first {
+                                store.selectedIDs = [first.id]
+                            }
+                            try? await Task.sleep(nanoseconds: 1_200_000_000)
                             Self.writeWindowSnapshot(to: path)
                         }
                     }

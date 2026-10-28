@@ -139,24 +139,37 @@ struct TransferHUDView: View {
     @ObservedObject var queue = TransferQueue.shared
     @EnvironmentObject var theme: ThemeSettings
 
+    private var headline: String {
+        let n = max(queue.activeCount, 1)
+        if queue.isPaused { return "Paused · \(n) item\(n == 1 ? "" : "s")" }
+        let verb = queue.items.contains(where: { $0.title.lowercased().contains("copy") }) ? "Copying" : "Moving"
+        return "\(verb) \(n) item\(n == 1 ? "" : "s")"
+    }
+
+    private var aggregateProgress: Double {
+        let active = queue.items.filter { $0.status == .working || $0.status == .queued }
+        guard !active.isEmpty else {
+            return queue.items.first(where: { $0.status == .failed })?.progress ?? 0
+        }
+        return active.map(\.progress).reduce(0, +) / Double(active.count)
+    }
+
     var body: some View {
         if queue.activeCount > 0 || queue.items.contains(where: { $0.status == .failed }) {
             HStack(spacing: 12) {
-                Image(systemName: queue.isPaused ? "pause.circle.fill" : "arrow.left.arrow.right.circle.fill")
+                Image(systemName: queue.isPaused ? "pause.circle.fill" : "doc.on.doc.fill")
                     .foregroundStyle(theme.look.accent)
                     .imageScale(.large)
-                VStack(alignment: .leading, spacing: 2) {
-                    if let current = queue.items.first(where: { $0.status == .working })
-                        ?? queue.items.first(where: { $0.status == .queued })
-                        ?? queue.items.first(where: { $0.status == .failed }) {
-                        Text(current.title).font(FileRadarFont.heading()).lineLimit(1)
-                        ProgressView(value: current.progress)
-                            .tint(theme.look.accent)
-                        Text(queue.isPaused ? "Paused — resume when ready" : "\(queue.activeCount) active · pause between files")
-                            .font(FileRadarFont.caption()).foregroundStyle(.secondary)
-                    }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(headline).font(FileRadarFont.heading()).lineLimit(1)
+                    ProgressView(value: aggregateProgress)
+                        .tint(theme.look.accent)
                 }
-                Spacer(minLength: 8)
+                Text("\(Int((aggregateProgress * 100).rounded()))%")
+                    .font(.system(size: 11, weight: .semibold, design: .default))
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+                    .frame(minWidth: 36, alignment: .trailing)
                 Button(queue.isPaused ? "Resume" : "Pause") { queue.isPaused.toggle() }
                     .controlSize(.small)
                 Button("Cancel") { queue.cancelAll() }
@@ -167,17 +180,13 @@ struct TransferHUDView: View {
                 }
             }
             .padding(.horizontal, 18).padding(.vertical, 12)
-            .frame(maxWidth: 420)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
-            )
-            .shadow(color: .black.opacity(0.16), radius: 14, y: 5)
+            .frame(maxWidth: 440)
+            .background(.ultraThinMaterial, in: Capsule())
+            .overlay(Capsule().strokeBorder(Color.primary.opacity(0.08), lineWidth: 1))
+            .shadow(color: .black.opacity(0.18), radius: 16, y: 6)
             .padding(.horizontal, 16).padding(.bottom, 14)
             .transition(.move(edge: .bottom).combined(with: .opacity))
             .animation(FileRadarMotion.panel, value: queue.activeCount)
-            // Only the chip itself takes hits — never a full-width invisible layer.
             .accessibilityElement(children: .contain)
             .accessibilityLabel("Transfer progress")
         }

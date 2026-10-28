@@ -55,7 +55,8 @@ struct ContentView: View {
     @State private var destination: Destination = .home
     @State private var searchText = ""
     @State private var showLicense = false
-    @State private var showInspector = false
+    /// Inspector open by default — mockup Home is a three-column layout.
+    @State private var showInspector = true
     @State private var showPalette = false
     @StateObject private var tabState = TabState()
     @AppStorage("dualPaneEnabled") private var dualPaneEnabled = false
@@ -100,6 +101,7 @@ struct ContentView: View {
             ))
             .onAppear(perform: bootstrap)
             .onChange(of: destination) { _, new in
+                if new == .home { showInspector = true }
                 museChatViewModel?.updateContext(title: new.title,
                                                  fileNames: museContextFileNames(for: new))
                 if case .savedSearch(let id) = new,
@@ -241,7 +243,8 @@ struct ContentView: View {
                         } else {
                             detailView
                         }
-                        if previewStripEnabled {
+                        // Preview strip is secondary; Home uses the rich inspector.
+                        if previewStripEnabled, destination != .home {
                             SelectionPreviewStrip(file: selectedFile)
                         }
                     }
@@ -254,18 +257,29 @@ struct ContentView: View {
             }
             .inspector(isPresented: $showInspector) {
                 if let first = store.files.first(where: { store.selectedIDs.contains($0.id) }) {
-                    if store.viewMode == .showcase {
+                    // Home always uses the mockup-rich inspector.
+                    if destination == .home || store.viewMode == .showcase {
                         ShowcaseInspectorView(file: first)
                     } else {
                         InspectorView(file: first)
                     }
                 } else {
-                    Text("Select a file to inspect it.").padding()
+                    Text("Select a file to inspect it.")
+                        .font(FileRadarFont.body())
+                        .foregroundStyle(.secondary)
+                        .padding()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
             .onChange(of: store.viewMode) { _, mode in
                 if mode == .showcase, destination == .home {
                     showInspector = true
+                }
+            }
+            .onChange(of: store.recents) { _, recents in
+                // Auto-select a recent so the mockup inspector isn't empty on first paint.
+                if store.selectedIDs.isEmpty, let first = recents.first {
+                    store.selectedIDs = [first.id]
                 }
             }
             .searchable(text: $searchText, placement: .toolbar, prompt: "Search files…")
