@@ -22,28 +22,29 @@ public enum ViewMode
     List
 }
 
-/// <summary>Cross-platform FileRadarChrome tokens — mirror docs/fileradar-unified-look.md.</summary>
+/// <summary>Cross-platform FileRadarChrome tokens — ForkLift-primary dual-pane chrome.</summary>
 public static class FileRadarChrome
 {
     public const string Accent = "#007AFF";
     public const double RadiusCard = 12;
     public const double RadiusControl = 8;
     public const double RadiusHairline = 6;
-    public const double SpacePage = 20;
-    public const double SpaceSection = 28;
-    public const double SpaceCardGap = 16;
-    public const double SpaceChromeY = 8;
+    public const double SpacePage = 12;
+    public const double SpaceSection = 16;
+    public const double SpaceCardGap = 10;
+    public const double SpaceChromeY = 6;
     public const double SpaceHudPadX = 18;
     public const double SpaceHudPadY = 12;
-    public const double TypeTitle = 26;
-    public const double TypeHeading = 15;
-    public const double TypeBody = 13;
+    public const double TypeTitle = 20;
+    public const double TypeHeading = 13;
+    public const double TypeBody = 12;
     public const double TypeCaption = 11;
-    public const double SelectionStroke = 2;
+    public const double SelectionStroke = 1.5;
     public const double SidebarWashOpacity = 0.14;
     public const double AccentFillOpacity = 0.08;
     public const double DropTargetWashOpacity = 0.15;
-    public const double HudMaxWidth = 440;
+    public const double HudMaxWidth = 480;
+    public const double SidebarWidth = 200;
 }
 
 public sealed class ThemePalette
@@ -85,14 +86,17 @@ public static class ThemeCatalog
 
 public sealed class ThemeSettings
 {
-    /// <summary>Locked to Modern for primary chrome — mockup Showcase Home.</summary>
+    /// <summary>Locked to Modern — ForkLift dual-pane power-tool calm.</summary>
     public AppLook Look { get; set; } = AppLook.Modern;
-    /// <summary>Dark by default to match Showcase mockup frosted chrome.</summary>
+    /// <summary>Dark by default (restrained materials).</summary>
     public AppearanceMode Appearance { get; set; } = AppearanceMode.Dark;
-    public ViewMode ViewMode { get; set; } = ViewMode.Grid;
-    public bool DualPane { get; set; }
-    public bool PreferCopyOnDrop { get; set; }
-    public bool InspectorOpen { get; set; } = true;
+    /// <summary>List first-class; grid secondary (orthodox FM density).</summary>
+    public ViewMode ViewMode { get; set; } = ViewMode.List;
+    /// <summary>Dual-pane is the launch default (ForkLift-first).</summary>
+    public bool DualPane { get; set; } = true;
+    public bool PreferCopyOnDrop { get; set; } = true;
+    /// <summary>Inspector optional — off by default, not a Home preview wall.</summary>
+    public bool InspectorOpen { get; set; }
 
     public bool IsDark(bool systemDark) => Appearance switch
     {

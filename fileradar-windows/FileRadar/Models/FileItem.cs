@@ -17,6 +17,7 @@ public enum FileKind
 public enum Destination
 {
     Home,
+    Shelves,
     Search,
     Cleanup,
     Duplicates,

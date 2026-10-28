@@ -40,13 +40,24 @@ public sealed partial class MainPage : Page
         try
         {
             _systemDark = Application.Current.RequestedTheme == ApplicationTheme.Dark;
+            // ForkLift-first defaults
+            App.Theme.DualPane = true;
+            App.Theme.ViewMode = ViewMode.List;
+            App.Theme.InspectorOpen = false;
+            App.Theme.PreferCopyOnDrop = true;
+
+            var desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+            var docs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            if (Directory.Exists(desktop)) App.Library.Navigate(desktop);
+            if (Directory.Exists(docs)) App.Library.NavigateSecondary(docs);
+
             BuildFavorites();
+            BuildPlaces();
             RefreshDiskBar();
             RefreshDropStackUi();
-            App.Theme.InspectorOpen = true;
             ApplyTheme();
-            InspectorColumn.Width = new GridLength(340);
-            InspectorBorder.Visibility = Visibility.Visible;
+            InspectorColumn.Width = new GridLength(0);
+            InspectorBorder.Visibility = Visibility.Collapsed;
             DiskBarBorder.Visibility = Visibility.Visible;
             DiskNameText.Text = "System";
             DiskFreeText.Text = "Measuring free space…";
@@ -59,10 +70,12 @@ public sealed partial class MainPage : Page
             var capture = string.Equals(Environment.GetEnvironmentVariable("FILERADAR_CAPTURE"), "1", StringComparison.Ordinal);
             if (capture)
             {
-                // Match Mac unified-home reference: Showcase Home + selection stroke, no forced HUD
+                // ForkLift dual-pane home + Activities HUD for evidence
                 DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, async () =>
                 {
-                    await Task.Delay(1600);
+                    App.Transfers.EnqueueDemo("Activities preview", 3);
+                    UpdateTransferHud();
+                    await Task.Delay(1800);
                     await CaptureSelfAsync();
                 });
             }
@@ -82,7 +95,7 @@ public sealed partial class MainPage : Page
             var pixels = await rtb.GetPixelsAsync();
             var folder = await StorageFolder.GetFolderFromPathAsync(
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FileRadar"));
-            var file = await folder.CreateFileAsync("unified-home-capture.png", CreationCollisionOption.ReplaceExisting);
+            var file = await folder.CreateFileAsync("forklift-home-capture.png", CreationCollisionOption.ReplaceExisting);
             using var stream = await file.OpenAsync(FileAccessMode.ReadWrite);
             var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, stream);
             encoder.SetPixelData(
@@ -94,7 +107,7 @@ public sealed partial class MainPage : Page
                 pixels.ToArray());
             await encoder.FlushAsync();
 
-            var dest = Path.Combine(AppContext.BaseDirectory, "fileradar-windows-unified-home.png");
+            var dest = Path.Combine(AppContext.BaseDirectory, "fileradar-windows-forklift-home.png");
             File.Copy(file.Path, dest, true);
             File.AppendAllText(
                 Path.Combine(folder.Path, "ui-load.log"),
@@ -116,28 +129,40 @@ public sealed partial class MainPage : Page
     {
         FavoritesPanel.Children.Clear();
         foreach (var place in App.Library.FavoritePlaces.Where(Directory.Exists))
+            FavoritesPanel.Children.Add(MakePlaceButton(place, "\uE735"));
+    }
+
+    private void BuildPlaces()
+    {
+        PlacesPanel.Children.Clear();
+        foreach (var place in App.Library.QuickPlaces.Where(Directory.Exists)
+                     .Where(p => !App.Library.FavoritePlaces.Contains(p, StringComparer.OrdinalIgnoreCase)))
+            PlacesPanel.Children.Add(MakePlaceButton(place, "\uE8B7"));
+    }
+
+    private Button MakePlaceButton(string place, string glyph)
+    {
+        var name = Path.GetFileName(place.TrimEnd('\\', '/'));
+        if (string.IsNullOrEmpty(name)) name = place;
+        var btn = new Button
         {
-            var name = Path.GetFileName(place.TrimEnd('\\', '/'));
-            if (string.IsNullOrEmpty(name)) name = place;
-            var btn = new Button
+            Style = (Style)Application.Current.Resources["FrNavButton"],
+            Tag = place,
+            Foreground = (Brush)Application.Current.Resources["FrTextBrush"],
+            Padding = new Thickness(10, 6, 10, 6)
+        };
+        btn.Content = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = 8,
+            Children =
             {
-                Style = (Style)Application.Current.Resources["FrNavButton"],
-                Tag = place,
-                Foreground = (Brush)Application.Current.Resources["FrTextBrush"]
-            };
-            btn.Content = new StackPanel
-            {
-                Orientation = Orientation.Horizontal,
-                Spacing = 10,
-                Children =
-                {
-                    new FontIcon { Glyph = "\uE8B7", FontSize = 14 },
-                    new TextBlock { Text = name }
-                }
-            };
-            btn.Click += Favorite_Click;
-            FavoritesPanel.Children.Add(btn);
-        }
+                new FontIcon { Glyph = glyph, FontSize = 12 },
+                new TextBlock { Text = name, FontSize = 12 }
+            }
+        };
+        btn.Click += Favorite_Click;
+        return btn;
     }
 
     private void Favorite_Click(object sender, RoutedEventArgs e)
@@ -207,6 +232,7 @@ public sealed partial class MainPage : Page
         HighlightNav(btn);
         _destination = tag switch
         {
+            "Shelves" => Destination.Shelves,
             "Search" => Destination.Search,
             "Cleanup" => Destination.Cleanup,
             "Duplicates" => Destination.Duplicates,
@@ -265,7 +291,7 @@ public sealed partial class MainPage : Page
 
         if (App.Theme.InspectorOpen)
         {
-            InspectorColumn.Width = new GridLength(340);
+            InspectorColumn.Width = new GridLength(300);
             InspectorBorder.Visibility = Visibility.Visible;
         }
         else
@@ -274,6 +300,7 @@ public sealed partial class MainPage : Page
             InspectorBorder.Visibility = Visibility.Collapsed;
         }
 
+        SidebarColumn.Width = new GridLength(FileRadarChrome.SidebarWidth);
         RequestedTheme = dark ? ElementTheme.Dark : ElementTheme.Light;
         App.SyncBackdropTheme(dark);
         if (_activeNav is not null) HighlightNav(_activeNav);
@@ -297,17 +324,28 @@ public sealed partial class MainPage : Page
 
     private void ApplyDualPaneLayout()
     {
-        var on = App.Theme.DualPane && _destination is Destination.Browse or Destination.Home or Destination.Search;
-        // Dual-pane only meaningful when browsing folders; Home stays single composition by default
-        if (_destination == Destination.Home) on = App.Theme.DualPane; // allow preview when toggled
-        DualPaneChrome.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+        var browser = _destination is Destination.Home or Destination.Browse;
+        var on = App.Theme.DualPane && browser;
+        // Ops strip stays collapsed — Copy → / ← Copy live in overflow; path bars carry pane chrome
+        DualPaneChrome.Visibility = Visibility.Collapsed;
         DualDivider.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+        RightPaneShell.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
         RightScroll.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
         DualDividerCol.Width = on ? new GridLength(1) : new GridLength(0);
         RightPaneCol.Width = on ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
         LeftPaneCol.Width = new GridLength(1, GridUnitType.Star);
+        LeftPathBar.Visibility = browser ? Visibility.Visible : Visibility.Collapsed;
+        RightPathBar.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
         DualPaneActiveLabel.Text = _rightPaneActive ? "Right pane active" : "Left pane active";
+        LeftPaneHint.Foreground = _rightPaneActive
+            ? (Brush)Application.Current.Resources["FrMutedBrush"]
+            : (Brush)Application.Current.Resources["FrAccentBrush"];
+        RightPaneHint.Foreground = _rightPaneActive
+            ? (Brush)Application.Current.Resources["FrAccentBrush"]
+            : (Brush)Application.Current.Resources["FrMutedBrush"];
         CopyOnDropCheck.IsChecked = App.Theme.PreferCopyOnDrop;
+        LeftPathBox.Text = App.Library.CurrentPath;
+        RightPathBox.Text = App.Library.SecondaryPath;
         MarkActivePane();
         if (on) RenderRightPane();
     }
@@ -316,8 +354,9 @@ public sealed partial class MainPage : Page
     {
         var accent = (SolidColorBrush)Application.Current.Resources["FrAccentBrush"];
         var wash = new SolidColorBrush(Color.FromArgb(0x08, accent.Color.R, accent.Color.G, accent.Color.B));
-        var stroke = new SolidColorBrush(Color.FromArgb(0x8C, accent.Color.R, accent.Color.G, accent.Color.B)); // ~55%
-        if (!App.Theme.DualPane)
+        var stroke = new SolidColorBrush(Color.FromArgb(0x8C, accent.Color.R, accent.Color.G, accent.Color.B));
+        var browser = _destination is Destination.Home or Destination.Browse;
+        if (!App.Theme.DualPane || !browser)
         {
             LeftPaneFrame.BorderThickness = new Thickness(0);
             RightPaneFrame.BorderThickness = new Thickness(0);
@@ -336,21 +375,12 @@ public sealed partial class MainPage : Page
     private void RenderRightPane()
     {
         RightContent.Children.Clear();
-        RightContent.Children.Add(new TextBlock
-        {
-            Text = Path.GetFileName(App.Library.SecondaryPath.TrimEnd('\\')) is { Length: > 0 } n
-                ? n : App.Library.SecondaryPath,
-            FontSize = FileRadarChrome.TypeHeading,
-            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
-            Foreground = (Brush)Application.Current.Resources["FrTextBrush"],
-            Margin = new Thickness(0, 0, 0, 8)
-        });
         var items = App.Library.ListDirectory(App.Library.SecondaryPath);
         if (items.Count == 0)
-            RightContent.Children.Add(EmptyLabel("Choose a right folder to browse."));
+            RightContent.Children.Add(EmptyLabel("This folder is empty."));
         else
             RightContent.Children.Add(App.Theme.ViewMode == ViewMode.List
-                ? BuildRecentsList(items)
+                ? BuildBrowserList(items, rightPane: true)
                 : BuildRecentsGrid(items));
     }
 
@@ -358,19 +388,23 @@ public sealed partial class MainPage : Page
     {
         ApplyTheme();
         MainContent.Children.Clear();
+        RightContent.Children.Clear();
         _selection.Clear();
         _cardMap.Clear();
         RefreshDiskBar();
         RefreshDropStackUi();
 
-        var isHome = _destination == Destination.Home;
-        BrowseActions.Visibility = isHome || _destination == Destination.Workspaces
-            ? Visibility.Collapsed : Visibility.Visible;
-        SubtitleText.Visibility = isHome ? Visibility.Collapsed : Visibility.Visible;
+        var isBrowser = _destination is Destination.Home or Destination.Browse;
+        var isTool = !isBrowser;
+        ToolHeader.Visibility = isTool ? Visibility.Visible : Visibility.Collapsed;
+        BrowseActions.Visibility = isTool && _destination is not Destination.Shelves and not Destination.Workspaces
+            ? Visibility.Visible : Visibility.Collapsed;
+        SubtitleText.Visibility = isTool ? Visibility.Visible : Visibility.Collapsed;
         BreadcrumbText.Text = _destination switch
         {
-            Destination.Home => "›  Home",
+            Destination.Home => "›  Browser",
             Destination.Browse => $"›  {Path.GetFileName(App.Library.CurrentPath.TrimEnd('\\'))}",
+            Destination.Shelves => "›  Shelves",
             Destination.Workspaces => "›  Workspaces",
             Destination.Search => "›  Search",
             Destination.Cleanup => "›  Cleanup",
@@ -383,7 +417,14 @@ public sealed partial class MainPage : Page
         switch (_destination)
         {
             case Destination.Home:
-                TitleText.Text = "Home";
+            case Destination.Browse:
+                TitleText.Text = "Browser";
+                PathText.Text = App.Library.CurrentPath;
+                RenderBrowserLeft();
+                break;
+            case Destination.Shelves:
+                TitleText.Text = "Shelves";
+                SubtitleText.Text = "Curated album groups — secondary to the dual-pane browser";
                 PathText.Text = "";
                 RenderShowcaseHome();
                 {
@@ -429,16 +470,22 @@ public sealed partial class MainPage : Page
                 PathText.Text = "";
                 RenderWorkspaces();
                 break;
-            default:
-                TitleText.Text = Path.GetFileName(App.Library.CurrentPath.TrimEnd('\\')) is { Length: > 0 } n ? n : App.Library.CurrentPath;
-                SubtitleText.Text = "Browse";
-                PathText.Text = App.Library.CurrentPath;
-                RenderFileCollection(App.Library.ListDirectory(App.Library.CurrentPath), "This folder is empty or inaccessible.");
-                break;
         }
 
         ApplyDualPaneLayout();
         UpdateTransferHud();
+    }
+
+    private void RenderBrowserLeft()
+    {
+        var items = App.Library.ListDirectory(App.Library.CurrentPath);
+        if (items.Count == 0)
+            MainContent.Children.Add(EmptyLabel("This folder is empty or inaccessible."));
+        else
+            MainContent.Children.Add(App.Theme.ViewMode == ViewMode.List
+                ? BuildBrowserList(items, rightPane: false)
+                : BuildRecentsGrid(items));
+        if (items.Count > 0) SelectItem(items[0]);
     }
 
     private void RenderShowcaseHome()
@@ -909,18 +956,92 @@ public sealed partial class MainPage : Page
     }
 
     private Panel BuildRecentsList(IReadOnlyList<FileItem> items)
+        => BuildBrowserList(items, rightPane: false);
+
+    private Panel BuildBrowserList(IReadOnlyList<FileItem> items, bool rightPane)
     {
         var list = new StackPanel { Spacing = 0 };
-        var shell = new Border
-        {
-            Background = (Brush)Application.Current.Resources["FrPanel2Brush"],
-            CornerRadius = new CornerRadius(FileRadarChrome.RadiusCard),
-            Padding = new Thickness(4),
-            Child = list
-        };
         foreach (var item in items)
-            list.Children.Add(BuildRecentRow(item));
-        return new Grid { Children = { shell } };
+            list.Children.Add(BuildBrowserRow(item, rightPane));
+        return list;
+    }
+
+    private FrameworkElement BuildBrowserRow(FileItem item, bool rightPane)
+    {
+        var row = new Border
+        {
+            Padding = new Thickness(8, 5, 8, 5),
+            CornerRadius = new CornerRadius(4),
+            Background = new SolidColorBrush(Colors.Transparent),
+            BorderThickness = new Thickness(0),
+            Tag = item
+        };
+        var g = new Grid { ColumnSpacing = 10 };
+        g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(22) });
+        g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(72) });
+        g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(88) });
+
+        g.Children.Add(new FontIcon
+        {
+            Glyph = item.IsDirectory ? "\uE8B7" : item.KindGlyph,
+            FontSize = 12,
+            VerticalAlignment = VerticalAlignment.Center,
+            Foreground = (Brush)Application.Current.Resources["FrMutedBrush"]
+        });
+        var name = new TextBlock
+        {
+            Text = item.Name,
+            FontSize = FileRadarChrome.TypeBody,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            VerticalAlignment = VerticalAlignment.Center,
+            Foreground = (Brush)Application.Current.Resources["FrTextBrush"]
+        };
+        Grid.SetColumn(name, 1);
+        g.Children.Add(name);
+
+        var size = new TextBlock
+        {
+            Text = item.IsDirectory ? "—" : item.SizeLabel,
+            FontSize = FileRadarChrome.TypeCaption,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Center,
+            Foreground = (Brush)Application.Current.Resources["FrMutedBrush"]
+        };
+        Grid.SetColumn(size, 2);
+        g.Children.Add(size);
+
+        var modified = new TextBlock
+        {
+            Text = item.ModifiedUtc.ToLocalTime().ToString("yyyy-MM-dd"),
+            FontSize = FileRadarChrome.TypeCaption,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Center,
+            Foreground = (Brush)Application.Current.Resources["FrMutedBrush"]
+        };
+        Grid.SetColumn(modified, 3);
+        g.Children.Add(modified);
+        row.Child = g;
+
+        row.PointerPressed += (_, _) =>
+        {
+            _rightPaneActive = rightPane;
+            SelectItem(item);
+            ApplyDualPaneLayout();
+            row.Background = (Brush)Application.Current.Resources["FrSelectionBrush"];
+        };
+        row.DoubleTapped += (_, _) =>
+        {
+            _rightPaneActive = rightPane;
+            OpenItem(item);
+        };
+        row.RightTapped += (_, args) =>
+        {
+            _rightPaneActive = rightPane;
+            SelectItem(item);
+            ShowItemMenu(item, row, args.GetPosition(row));
+        };
+        return row;
     }
 
     private FrameworkElement BuildRecentRow(FileItem item)
@@ -1067,7 +1188,7 @@ public sealed partial class MainPage : Page
             return;
         }
         MainContent.Children.Add(App.Theme.ViewMode == ViewMode.List
-            ? BuildRecentsList(items)
+            ? BuildBrowserList(items, rightPane: false)
             : BuildRecentsGrid(items));
     }
 
@@ -1335,9 +1456,17 @@ public sealed partial class MainPage : Page
             panel.Children.Add(b);
             return b;
         }
+        Item("Copy selection → right pane", CopyLeftToRight_Click);
+        Item("Copy selection ← left pane", CopyRightToLeft_Click);
         Item("Batch rename…          Ctrl+Shift+R", BatchRename_Click);
         Item("Compare / Sync…", CompareSync_Click);
         Item("Save workspace…", SaveWorkspace_Click);
+        Item("Shelves (secondary)…", (_, _) =>
+        {
+            _destination = Destination.Shelves;
+            HighlightNav(null);
+            Refresh();
+        });
         Item("Keyboard shortcuts", ShortcutsHelp_Click);
         return new Flyout { Content = panel, Placement = FlyoutPlacementMode.Bottom };
     }
@@ -1625,5 +1754,100 @@ public sealed partial class MainPage : Page
     {
         if (_selected is null) return;
         OpenItem(_selected);
+    }
+
+    private void LeftPane_Activate(object sender, PointerRoutedEventArgs e)
+    {
+        _rightPaneActive = false;
+        ApplyDualPaneLayout();
+    }
+
+    private void RightPane_Activate(object sender, PointerRoutedEventArgs e)
+    {
+        _rightPaneActive = true;
+        ApplyDualPaneLayout();
+    }
+
+    private void LeftUp_Click(object sender, RoutedEventArgs e)
+    {
+        var parent = Directory.GetParent(App.Library.CurrentPath)?.FullName;
+        if (parent is null) return;
+        _rightPaneActive = false;
+        App.Library.Navigate(parent);
+        _destination = Destination.Browse;
+        Refresh();
+    }
+
+    private void RightUp_Click(object sender, RoutedEventArgs e)
+    {
+        var parent = Directory.GetParent(App.Library.SecondaryPath)?.FullName;
+        if (parent is null) return;
+        _rightPaneActive = true;
+        App.Library.NavigateSecondary(parent);
+        App.Theme.DualPane = true;
+        _destination = Destination.Browse;
+        Refresh();
+    }
+
+    private void LeftHome_Click(object sender, RoutedEventArgs e)
+    {
+        var desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+        if (!Directory.Exists(desktop)) return;
+        _rightPaneActive = false;
+        App.Library.Navigate(desktop);
+        _destination = Destination.Home;
+        HighlightNav(NavHome);
+        Refresh();
+    }
+
+    private void RightHome_Click(object sender, RoutedEventArgs e)
+    {
+        var docs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        if (!Directory.Exists(docs)) return;
+        _rightPaneActive = true;
+        App.Library.NavigateSecondary(docs);
+        App.Theme.DualPane = true;
+        _destination = Destination.Home;
+        HighlightNav(NavHome);
+        Refresh();
+    }
+
+    private void LeftPathBox_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key != VirtualKey.Enter) return;
+        var path = LeftPathBox.Text?.Trim();
+        if (string.IsNullOrEmpty(path) || !Directory.Exists(path)) return;
+        _rightPaneActive = false;
+        App.Library.Navigate(path);
+        _destination = Destination.Browse;
+        Refresh();
+        e.Handled = true;
+    }
+
+    private void RightPathBox_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key != VirtualKey.Enter) return;
+        var path = RightPathBox.Text?.Trim();
+        if (string.IsNullOrEmpty(path) || !Directory.Exists(path)) return;
+        _rightPaneActive = true;
+        App.Library.NavigateSecondary(path);
+        App.Theme.DualPane = true;
+        _destination = Destination.Browse;
+        Refresh();
+        e.Handled = true;
+    }
+
+    private void CopyLeftToRight_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selection.Count == 0) return;
+        App.Transfers.EnqueueCopy(_selection.Select(i => i.Path).ToList(), App.Library.SecondaryPath);
+        UpdateTransferHud();
+    }
+
+    private void CopyRightToLeft_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selection.Count == 0) return;
+        App.Transfers.EnqueueCopy(_selection.Select(i => i.Path).ToList(), App.Library.CurrentPath);
+        UpdateTransferHud();
     }
 }
