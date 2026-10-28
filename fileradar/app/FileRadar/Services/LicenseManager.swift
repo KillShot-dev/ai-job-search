@@ -119,9 +119,24 @@ final class LicenseManager: ObservableObject {
     }
 
     init() {
+        // Debug / Apple Development: never boot into a locked wall while
+        // Keychain / StoreKit catch up. Production MAS / Developer ID still
+        // start locked until restore + trial / serial / StoreKit resolve.
+        if LocalDevBuild.isActive {
+            isUnlocked = true
+            source = .trial
+            statusMessage = "Development build — full features unlocked."
+        }
         // Keychain SecItemCopyMatching on the first main-actor frame stalls
         // launch (authorizationhost); restore fully off-main.
         Task { await self.restore() }
+    }
+
+    /// Wire StoreKit + trial before the first entitlement refresh (avoids a
+    /// race where restore runs with `trial == nil` and clears unlock).
+    func attach(storeKit: StoreKitLicense, trial: TrialManager) {
+        self.storeKit = storeKit
+        self.trial = trial
     }
 
     // MARK: - Validation (pure, testable; mirrors licensing/serials.py)
@@ -185,6 +200,16 @@ final class LicenseManager: ObservableObject {
     }
 
     func refreshEntitlementsAsync() async {
+        // Local Debug / Apple Development: always unlocked. Start/restart
+        // Keychain trial so status copy stays coherent, but never gate UI.
+        if LocalDevBuild.isActive {
+            _ = await trial?.startTrial(restartIfExpired: true)
+            source = .trial
+            isUnlocked = true
+            let days = trial?.daysRemaining ?? TrialManager.durationDays
+            statusMessage = "Development build — full features unlocked (\(days)d trial stamp)."
+            return
+        }
         await trial?.refresh()
         if storeKit?.isEntitled == true {
             source = .storeKit
@@ -206,6 +231,18 @@ final class LicenseManager: ObservableObject {
             let days = trial?.daysRemaining ?? 0
             statusMessage = "Trial active — \(days) day\(days == 1 ? "" : "s") left."
             return
+        }
+        // Empty StoreKit catalog must never leave the user with no path:
+        // auto-start trial when no other entitlement exists.
+        if storeKit?.product == nil, storeKit?.isEntitled != true {
+            _ = await trial?.startTrial(restartIfExpired: false)
+            if trial?.isActive == true {
+                source = .trial
+                isUnlocked = true
+                let days = trial?.daysRemaining ?? 0
+                statusMessage = "Trial active — \(days) day\(days == 1 ? "" : "s") left."
+                return
+            }
         }
         source = .none
         isUnlocked = false
@@ -320,6 +357,13 @@ final class LicenseManager: ObservableObject {
     }
 
     private func restore() async {
+        // Local Debug / Apple Development: never touch Keychain on launch.
+        // Re-signed binaries trigger a SecurityAgent “wants to use your
+        // confidential information” password dialog that blocks the UI.
+        if LocalDevBuild.isActive {
+            await refreshEntitlementsAsync()
+            return
+        }
         let legacyKey = legacyDefaultsKey
         let legacyURL = legacyStateFileURL
         // Raw Keychain / legacy I/O off-main; canonicalize on MainActor after.

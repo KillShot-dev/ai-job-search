@@ -34,8 +34,7 @@ struct FileRadarApp: App {
                 .preferredColorScheme(theme.colorScheme)
                 .frame(minWidth: 960, minHeight: 640)
                 .onAppear {
-                    license.storeKit = storeKit
-                    license.trial = trial
+                    license.attach(storeKit: storeKit, trial: trial)
                     store.manualTagNames = { [manualTags] path in
                         manualTags.tags(for: path).map(\.name)
                     }
@@ -44,6 +43,16 @@ struct FileRadarApp: App {
                     // refreshEntitlements → TrialManager.refresh → SecItem
                     // blocking MainActor for the entire open event.
                     Task { await license.refreshEntitlementsAsync() }
+                    // Dev-only: optional self-snapshot of the key window (no
+                    // Screen Recording TCC). Set FILERADAR_SNAPSHOT_PATH.
+                    if LocalDevBuild.isActive,
+                       let path = ProcessInfo.processInfo.environment["FILERADAR_SNAPSHOT_PATH"],
+                       !path.isEmpty {
+                        Task { @MainActor in
+                            try? await Task.sleep(nanoseconds: 900_000_000)
+                            Self.writeWindowSnapshot(to: path)
+                        }
+                    }
                 }
                 .onChange(of: storeKit.isEntitled) { _, _ in
                     Task { await license.refreshEntitlementsAsync() }
@@ -134,5 +143,23 @@ struct FileRadarApp: App {
 
     init() {
         HotkeyService.shared.start()
+    }
+
+    /// Captures the key window via AppKit view cache (works without Screen Recording).
+    @MainActor
+    private static func writeWindowSnapshot(to path: String) {
+        guard let window = NSApp.windows.first(where: { $0.isVisible && $0.frame.width > 400 }),
+              let view = window.contentView else { return }
+        let bounds = view.bounds
+        guard let rep = view.bitmapImageRepForCachingDisplay(in: bounds) else { return }
+        view.cacheDisplay(in: bounds, to: rep)
+        let image = NSImage(size: bounds.size)
+        image.addRepresentation(rep)
+        guard let tiff = image.tiffRepresentation,
+              let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) else { return }
+        let url = URL(fileURLWithPath: path)
+        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
+                                                 withIntermediateDirectories: true)
+        try? png.write(to: url)
     }
 }

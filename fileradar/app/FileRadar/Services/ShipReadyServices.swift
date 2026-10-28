@@ -50,6 +50,60 @@ private extension String {
     var nilIfEmpty: String? { isEmpty ? nil : self }
 }
 
+// MARK: - Local / Debug unlock helpers
+
+/// True for Debug builds, ad-hoc/`CODE_SIGN_IDENTITY=-` binaries, and locally
+/// signed Apple Development binaries. Keeps the app usable without ASC IAP or
+/// a website serial. Mac App Store / Developer ID production certs stay false.
+enum LocalDevBuild {
+    static var isActive: Bool {
+        #if DEBUG
+        return true
+        #else
+        return isAppleDevelopmentSigned || isAdHocOrUnsigned
+        #endif
+    }
+
+    /// Best-effort: Apple Development leaf certificate in the code signature.
+    private static var isAppleDevelopmentSigned: Bool {
+        guard let summary = leafCertificateSummary else { return false }
+        return summary.hasPrefix("Apple Development:")
+    }
+
+    /// Ad-hoc or unsigned local builds (common for `CODE_SIGN_IDENTITY=-`).
+    private static var isAdHocOrUnsigned: Bool {
+        guard let dict = signingInformation else { return true }
+        let certs = dict[kSecCodeInfoCertificates as String] as? [SecCertificate] ?? []
+        if certs.isEmpty { return true }
+        // Developer ID / Apple Distribution / 3rd Party Mac Developer → not local-dev.
+        if let summary = leafCertificateSummary {
+            if summary.hasPrefix("Developer ID Application:") { return false }
+            if summary.hasPrefix("Apple Distribution:") { return false }
+            if summary.hasPrefix("3rd Party Mac Developer Application:") { return false }
+        }
+        return false
+    }
+
+    private static var leafCertificateSummary: String? {
+        guard let dict = signingInformation,
+              let certs = dict[kSecCodeInfoCertificates as String] as? [SecCertificate],
+              let leaf = certs.first else { return nil }
+        return SecCertificateCopySubjectSummary(leaf) as String?
+    }
+
+    private static var signingInformation: [String: Any]? {
+        var code: SecCode?
+        guard SecCodeCopySelf([], &code) == errSecSuccess, let code else { return nil }
+        var staticCode: SecStaticCode?
+        guard SecCodeCopyStaticCode(code, [], &staticCode) == errSecSuccess,
+              let staticCode else { return nil }
+        var info: CFDictionary?
+        let flags = SecCSFlags(rawValue: kSecCSSigningInformation)
+        guard SecCodeCopySigningInformation(staticCode, flags, &info) == errSecSuccess else { return nil }
+        return info as? [String: Any]
+    }
+}
+
 // MARK: - Machine hash (never send raw hardware ids)
 
 enum MachineIdentity {
@@ -169,15 +223,16 @@ enum KeychainBlob {
 
 // MARK: - Trial (local, Keychain-backed, 14 days)
 
-/// Local trial for direct-sale builds. Starts on first launch; stamp lives
-/// in Keychain only. MAS builds should prefer StoreKit free trial / intro
-/// offers configured in App Store Connect — this path is for website sales.
+/// Local trial stamp. Stored in Application Support (not Keychain): re-signed
+/// Debug / Apple Development builds previously triggered a modal
+/// “wants to use your confidential information… trial” Keychain password
+/// dialog that looked like an activation wall and blocked the whole UI.
+/// Production MAS can still sell via StoreKit; after trial, free browsing
+/// remains available and the unlock sheet stays dismissible.
 @MainActor
 final class TrialManager: ObservableObject {
     static let durationDays = 14
-
-    private let service = "com.metaphasicgroup.fileradar.trial"
-    private let account = "first-launch"
+    private static let defaultsKey = "com.metaphasicgroup.fileradar.trial.startedAt"
 
     @Published private(set) var startedAt: Date?
     @Published private(set) var isActive = false
@@ -188,19 +243,45 @@ final class TrialManager: ObservableObject {
     }
 
     func refresh() async {
-        let svc = service
-        let acct = account
-        let existingStart = startedAt
+        await applyStamp(restart: false)
+    }
+
+    /// Ensures a trial stamp exists. When `restartIfExpired` is true and the
+    /// current window has ended, rewrite for a fresh 14 days (Debug /
+    /// Continue with Trial / empty-StoreKit recovery).
+    @discardableResult
+    func startTrial(restartIfExpired: Bool = false) async -> Bool {
+        await applyStamp(restart: false)
+        if !isActive, restartIfExpired {
+            await applyStamp(restart: true)
+        }
+        return isActive
+    }
+
+    private func applyStamp(restart: Bool) async {
+        let existingStart = restart ? nil : startedAt
+        let defaultsKey = Self.defaultsKey
         let resolved: Date = await Task.detached(priority: .utility) {
             if let existingStart { return existingStart }
-            if let data = KeychainBlob.read(service: svc, account: acct),
-               let raw = String(data: data, encoding: .utf8),
-               let interval = TimeInterval(raw) {
-                return Date(timeIntervalSince1970: interval)
+            if !restart {
+                if let saved = UserDefaults.standard.object(forKey: defaultsKey) as? TimeInterval {
+                    return Date(timeIntervalSince1970: saved)
+                }
+                if let url = Self.stampURL,
+                   let data = try? Data(contentsOf: url),
+                   let raw = String(data: data, encoding: .utf8),
+                   let interval = TimeInterval(raw) {
+                    UserDefaults.standard.set(interval, forKey: defaultsKey)
+                    return Date(timeIntervalSince1970: interval)
+                }
+                // Do NOT read the legacy Keychain trial item here: re-signed
+                // local builds pop a SecurityAgent password dialog that blocks
+                // the entire UI (the former “activation wall”).
             }
             let now = Date()
-            _ = KeychainBlob.write(Data(String(now.timeIntervalSince1970).utf8),
-                                   service: svc, account: acct)
+            let interval = now.timeIntervalSince1970
+            UserDefaults.standard.set(interval, forKey: defaultsKey)
+            Self.writeStampFile(interval)
             return now
         }.value
         startedAt = resolved
@@ -208,6 +289,19 @@ final class TrialManager: ObservableObject {
         let remaining = max(0, Calendar.current.dateComponents([.day], from: Date(), to: end).day ?? 0)
         daysRemaining = remaining
         isActive = Date() < end
+    }
+
+    nonisolated private static var stampURL: URL? {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
+            .appendingPathComponent("FileRadar", isDirectory: true)
+            .appendingPathComponent("trial-started.txt")
+    }
+
+    nonisolated private static func writeStampFile(_ interval: TimeInterval) {
+        guard let url = stampURL else { return }
+        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
+                                                 withIntermediateDirectories: true)
+        try? Data(String(interval).utf8).write(to: url, options: .atomic)
     }
 }
 

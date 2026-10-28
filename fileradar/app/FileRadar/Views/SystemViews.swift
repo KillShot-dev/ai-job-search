@@ -144,18 +144,34 @@ struct LicenseEntryView: View {
     @Environment(\.dismiss) var dismiss
     @State private var serial = ""
     @State private var error: String?
+    @State private var trialBusy = false
 
     private var channel: DistributionChannel { DistributionChannel.current }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Unlock FileRadar").font(FileRadarFont.heading())
+            HStack {
+                Text("Unlock FileRadar").font(FileRadarFont.heading())
+                Spacer()
+                Button {
+                    dismiss()
+                } label: {
+                    Text("Close")
+                }
+                .keyboardShortcut(.cancelAction)
+                .accessibilityLabel("Close")
+                .accessibilityIdentifier("licenseClose")
+            }
             Text(subtitle)
                 .font(FileRadarFont.body()).foregroundStyle(.secondary)
 
             if license.isUnlocked {
                 statusBanner
             }
+
+            // Always-available escape hatches — empty StoreKit / MAS / expired
+            // trial must never trap the user on this sheet.
+            escapeHatches
 
             if channel == .macAppStore || storeKit.product != nil {
                 storeKitSection
@@ -174,8 +190,8 @@ struct LicenseEntryView: View {
                     .font(FileRadarFont.caption()).foregroundStyle(.secondary)
             } else if !license.isUnlocked, !trial.isActive {
                 Text(channel == .macAppStore
-                     ? "The free trial has ended. Buy on the App Store to keep using paid features."
-                     : "The free trial has ended. Enter a serial or buy on the App Store to keep using paid features.")
+                     ? "The free trial has ended. Buy on the App Store to keep using paid features, or continue with free browsing."
+                     : "The free trial has ended. Enter a serial, buy on the App Store, or continue with free browsing.")
                     .font(FileRadarFont.caption()).foregroundStyle(.secondary)
             }
 
@@ -188,6 +204,49 @@ struct LicenseEntryView: View {
                 await storeKit.refresh()
                 await trial.refresh()
                 await license.refreshEntitlementsAsync()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var escapeHatches: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 10) {
+                Button {
+                    Task {
+                        trialBusy = true
+                        defer { trialBusy = false }
+                        _ = await trial.startTrial(restartIfExpired: true)
+                        await license.refreshEntitlementsAsync()
+                        dismiss()
+                    }
+                } label: {
+                    Text(trialBusy ? "Starting…" : "Continue with Trial")
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(trialBusy)
+                .accessibilityLabel("Continue with Trial")
+                .accessibilityIdentifier("continueTrial")
+
+                Button {
+                    dismiss()
+                } label: {
+                    Text("Use Free Features")
+                }
+                .accessibilityLabel("Use Free Features")
+                .accessibilityIdentifier("useFreeFeatures")
+
+                Button {
+                    dismiss()
+                } label: {
+                    Text("Skip for now")
+                }
+                .accessibilityLabel("Skip for now")
+                .accessibilityIdentifier("skipLicense")
+            }
+            if storeKit.product == nil, channel == .macAppStore {
+                Text("App Store products are not loaded in this build. You can still continue with Trial or free features — you are not blocked.")
+                    .font(FileRadarFont.caption()).foregroundStyle(.secondary)
             }
         }
     }
@@ -214,7 +273,13 @@ struct LicenseEntryView: View {
                 }
             }
             Spacer()
-            Button("Done") { dismiss() }
+            Button {
+                dismiss()
+            } label: {
+                Text("Done")
+            }
+            .accessibilityLabel("Done")
+            .accessibilityIdentifier("licenseDone")
         }
         .padding(10)
         .background(RoundedRectangle(cornerRadius: 8).fill(Color.green.opacity(0.12)))
@@ -255,7 +320,7 @@ struct LicenseEntryView: View {
                     .disabled(storeKit.isLoading)
                 }
             } else {
-                Text("App Store products are not available in this build yet. Configure FRStoreKitProductID in Info.plist and the product in App Store Connect.")
+                Text("App Store products are not available in this build yet. Use Continue with Trial or Skip above — do not wait on an empty catalog.")
                     .font(FileRadarFont.caption()).foregroundStyle(.secondary)
                 Button("Refresh Store") {
                     Task { await storeKit.refresh() }
