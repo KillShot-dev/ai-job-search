@@ -22,6 +22,7 @@ public enum Destination
     Duplicates,
     Timeline,
     RecycleBin,
+    Workspaces,
     Browse
 }
 

@@ -3,12 +3,16 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using FileRadar.Models;
 using FileRadar.Services;
 using Microsoft.UI;
+using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
-using Windows.Storage.Streams;
+using Windows.Storage.Pickers;
 using Windows.System;
+using WinRT.Interop;
 using Color = Windows.UI.Color;
 
 namespace FileRadar.Views;
@@ -20,11 +24,15 @@ public sealed partial class MainPage : Page
     private readonly List<FileItem> _selection = [];
     private bool _systemDark;
     private Button? _activeNav;
+    private bool _rightPaneActive;
+    private readonly Dictionary<Border, FileItem> _cardMap = [];
 
     public MainPage()
     {
         InitializeComponent();
         Loaded += OnLoaded;
+        App.Transfers.Changed += (_, _) => DispatcherQueue.TryEnqueue(UpdateTransferHud);
+        App.DropStack.Changed += (_, _) => DispatcherQueue.TryEnqueue(RefreshDropStackUi);
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -34,9 +42,9 @@ public sealed partial class MainPage : Page
             _systemDark = Application.Current.RequestedTheme == ApplicationTheme.Dark;
             BuildFavorites();
             RefreshDiskBar();
+            RefreshDropStackUi();
             App.Theme.InspectorOpen = true;
             ApplyTheme();
-            // Hard-pin Showcase chrome so Home always shows the third pane + disk bar
             InspectorColumn.Width = new GridLength(340);
             InspectorBorder.Visibility = Visibility.Visible;
             DiskBarBorder.Visibility = Visibility.Visible;
@@ -45,16 +53,16 @@ public sealed partial class MainPage : Page
             HighlightNav(NavHome);
             NavigateTo(Destination.Home);
             RefreshDiskBar();
+            UpdateTransferHud();
+            ApplyDualPaneLayout();
 
-            var log = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "FileRadar", "ui-load.log");
-            Directory.CreateDirectory(Path.GetDirectoryName(log)!);
-            if (string.Equals(Environment.GetEnvironmentVariable("FILERADAR_CAPTURE"), "1", StringComparison.Ordinal))
+            var capture = string.Equals(Environment.GetEnvironmentVariable("FILERADAR_CAPTURE"), "1", StringComparison.Ordinal);
+            if (capture)
             {
+                // Match Mac unified-home reference: Showcase Home + selection stroke, no forced HUD
                 DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, async () =>
                 {
-                    await Task.Delay(1200);
+                    await Task.Delay(1600);
                     await CaptureSelfAsync();
                 });
             }
@@ -74,7 +82,7 @@ public sealed partial class MainPage : Page
             var pixels = await rtb.GetPixelsAsync();
             var folder = await StorageFolder.GetFolderFromPathAsync(
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FileRadar"));
-            var file = await folder.CreateFileAsync("apple-home-capture.png", CreationCollisionOption.ReplaceExisting);
+            var file = await folder.CreateFileAsync("unified-home-capture.png", CreationCollisionOption.ReplaceExisting);
             using var stream = await file.OpenAsync(FileAccessMode.ReadWrite);
             var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, stream);
             encoder.SetPixelData(
@@ -86,8 +94,7 @@ public sealed partial class MainPage : Page
                 pixels.ToArray());
             await encoder.FlushAsync();
 
-            // Also copy next to the exe for easy pickup
-            var dest = Path.Combine(AppContext.BaseDirectory, "fileradar-windows-apple-home.png");
+            var dest = Path.Combine(AppContext.BaseDirectory, "fileradar-windows-unified-home.png");
             File.Copy(file.Path, dest, true);
             File.AppendAllText(
                 Path.Combine(folder.Path, "ui-load.log"),
@@ -156,6 +163,44 @@ public sealed partial class MainPage : Page
         DiskFreeBar.Value = Math.Clamp(1.0 - (double)free / total, 0, 1);
     }
 
+    private void RefreshDropStackUi()
+    {
+        DropStackList.Children.Clear();
+        var empty = App.DropStack.Count == 0;
+        DropStackEmpty.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
+        DropStackClearBtn.Visibility = empty ? Visibility.Collapsed : Visibility.Visible;
+        DropStackPlaceBtn.Visibility = empty ? Visibility.Collapsed : Visibility.Visible;
+        foreach (var path in App.DropStack.Paths.Take(6))
+        {
+            var row = new Grid { ColumnSpacing = 6 };
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            var name = new TextBlock
+            {
+                Text = Path.GetFileName(path),
+                FontSize = 11,
+                TextTrimming = TextTrimming.CharacterEllipsis,
+                Foreground = (Brush)Application.Current.Resources["FrTextBrush"]
+            };
+            var rm = new Button
+            {
+                Content = "\uE711",
+                FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                FontSize = 10,
+                Padding = new Thickness(4),
+                Background = new SolidColorBrush(Colors.Transparent),
+                BorderThickness = new Thickness(0),
+                Foreground = (Brush)Application.Current.Resources["FrMutedBrush"],
+                Tag = path
+            };
+            rm.Click += (_, _) => App.DropStack.Remove(path);
+            Grid.SetColumn(rm, 1);
+            row.Children.Add(name);
+            row.Children.Add(rm);
+            DropStackList.Children.Add(row);
+        }
+    }
+
     private void Nav_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not Button { Tag: string tag } btn) return;
@@ -167,6 +212,7 @@ public sealed partial class MainPage : Page
             "Duplicates" => Destination.Duplicates,
             "Timeline" => Destination.Timeline,
             "RecycleBin" => Destination.RecycleBin,
+            "Workspaces" => Destination.Workspaces,
             _ => Destination.Home
         };
         Refresh();
@@ -182,6 +228,7 @@ public sealed partial class MainPage : Page
             {
                 b.Background = b == btn ? sel : new SolidColorBrush(Colors.Transparent);
                 b.Foreground = muted;
+                b.BorderThickness = new Thickness(0);
             }
         }
         _activeNav = btn;
@@ -196,7 +243,6 @@ public sealed partial class MainPage : Page
     private void ApplyTheme()
     {
         var dark = App.Theme.IsDark(_systemDark);
-        // Showcase Home is Modern only — ignore Colourful/Minimal
         var palette = ThemeCatalog.Resolve(AppLook.Modern, dark);
         App.ApplyThemeResources(Application.Current.Resources, palette);
 
@@ -204,6 +250,7 @@ public sealed partial class MainPage : Page
         TopBar.Background = BrushFrom(palette.Panel);
         SidebarBorder.Background = BrushFrom(palette.Panel);
         InspectorBorder.Background = BrushFrom(palette.Panel);
+        TransferHud.Background = BrushFrom(dark ? "#CC2C2C2E" : "#CCF5F5F7");
 
         AppearanceIcon.Glyph = App.Theme.Appearance switch
         {
@@ -211,6 +258,10 @@ public sealed partial class MainPage : Page
             AppearanceMode.Dark => "\uE708",
             _ => "\uE771"
         };
+
+        DualPaneIcon.Foreground = App.Theme.DualPane
+            ? (Brush)Application.Current.Resources["FrAccentBrush"]
+            : (Brush)Application.Current.Resources["FrMutedBrush"];
 
         if (App.Theme.InspectorOpen)
         {
@@ -226,6 +277,7 @@ public sealed partial class MainPage : Page
         RequestedTheme = dark ? ElementTheme.Dark : ElementTheme.Light;
         App.SyncBackdropTheme(dark);
         if (_activeNav is not null) HighlightNav(_activeNav);
+        ApplyDualPaneLayout();
     }
 
     private static SolidColorBrush BrushFrom(string hex)
@@ -243,16 +295,90 @@ public sealed partial class MainPage : Page
         return new SolidColorBrush(Color.FromArgb(a, r, g, b));
     }
 
+    private void ApplyDualPaneLayout()
+    {
+        var on = App.Theme.DualPane && _destination is Destination.Browse or Destination.Home or Destination.Search;
+        // Dual-pane only meaningful when browsing folders; Home stays single composition by default
+        if (_destination == Destination.Home) on = App.Theme.DualPane; // allow preview when toggled
+        DualPaneChrome.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+        DualDivider.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+        RightScroll.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+        DualDividerCol.Width = on ? new GridLength(1) : new GridLength(0);
+        RightPaneCol.Width = on ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
+        LeftPaneCol.Width = new GridLength(1, GridUnitType.Star);
+        DualPaneActiveLabel.Text = _rightPaneActive ? "Right pane active" : "Left pane active";
+        CopyOnDropCheck.IsChecked = App.Theme.PreferCopyOnDrop;
+        MarkActivePane();
+        if (on) RenderRightPane();
+    }
+
+    private void MarkActivePane()
+    {
+        var accent = (SolidColorBrush)Application.Current.Resources["FrAccentBrush"];
+        var wash = new SolidColorBrush(Color.FromArgb(0x08, accent.Color.R, accent.Color.G, accent.Color.B));
+        var stroke = new SolidColorBrush(Color.FromArgb(0x8C, accent.Color.R, accent.Color.G, accent.Color.B)); // ~55%
+        if (!App.Theme.DualPane)
+        {
+            LeftPaneFrame.BorderThickness = new Thickness(0);
+            RightPaneFrame.BorderThickness = new Thickness(0);
+            LeftPaneFrame.Background = new SolidColorBrush(Colors.Transparent);
+            RightPaneFrame.Background = new SolidColorBrush(Colors.Transparent);
+            return;
+        }
+        LeftPaneFrame.BorderBrush = stroke;
+        RightPaneFrame.BorderBrush = stroke;
+        LeftPaneFrame.BorderThickness = _rightPaneActive ? new Thickness(0) : new Thickness(1.5);
+        RightPaneFrame.BorderThickness = _rightPaneActive ? new Thickness(1.5) : new Thickness(0);
+        LeftPaneFrame.Background = _rightPaneActive ? new SolidColorBrush(Colors.Transparent) : wash;
+        RightPaneFrame.Background = _rightPaneActive ? wash : new SolidColorBrush(Colors.Transparent);
+    }
+
+    private void RenderRightPane()
+    {
+        RightContent.Children.Clear();
+        RightContent.Children.Add(new TextBlock
+        {
+            Text = Path.GetFileName(App.Library.SecondaryPath.TrimEnd('\\')) is { Length: > 0 } n
+                ? n : App.Library.SecondaryPath,
+            FontSize = FileRadarChrome.TypeHeading,
+            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+            Foreground = (Brush)Application.Current.Resources["FrTextBrush"],
+            Margin = new Thickness(0, 0, 0, 8)
+        });
+        var items = App.Library.ListDirectory(App.Library.SecondaryPath);
+        if (items.Count == 0)
+            RightContent.Children.Add(EmptyLabel("Choose a right folder to browse."));
+        else
+            RightContent.Children.Add(App.Theme.ViewMode == ViewMode.List
+                ? BuildRecentsList(items)
+                : BuildRecentsGrid(items));
+    }
+
     private void Refresh()
     {
         ApplyTheme();
         MainContent.Children.Clear();
         _selection.Clear();
+        _cardMap.Clear();
         RefreshDiskBar();
+        RefreshDropStackUi();
 
         var isHome = _destination == Destination.Home;
-        BrowseActions.Visibility = isHome ? Visibility.Collapsed : Visibility.Visible;
+        BrowseActions.Visibility = isHome || _destination == Destination.Workspaces
+            ? Visibility.Collapsed : Visibility.Visible;
         SubtitleText.Visibility = isHome ? Visibility.Collapsed : Visibility.Visible;
+        BreadcrumbText.Text = _destination switch
+        {
+            Destination.Home => "›  Home",
+            Destination.Browse => $"›  {Path.GetFileName(App.Library.CurrentPath.TrimEnd('\\'))}",
+            Destination.Workspaces => "›  Workspaces",
+            Destination.Search => "›  Search",
+            Destination.Cleanup => "›  Cleanup",
+            Destination.Duplicates => "›  Duplicates",
+            Destination.Timeline => "›  Timeline",
+            Destination.RecycleBin => "›  Recycle Bin",
+            _ => "›  FileRadar"
+        };
 
         switch (_destination)
         {
@@ -260,8 +386,6 @@ public sealed partial class MainPage : Page
                 TitleText.Text = "Home";
                 PathText.Text = "";
                 RenderShowcaseHome();
-                // Seed inspector with first recent so the third pane looks alive (mockup)
-                if (_selected is null)
                 {
                     var seed = App.Library.BuildRecents(1).FirstOrDefault()
                                ?? App.Library.BuildAlbumShelves().FirstOrDefault()?.Cover;
@@ -298,6 +422,13 @@ public sealed partial class MainPage : Page
                 PathText.Text = App.Library.StagingTrashPath;
                 RenderRecycleBin();
                 break;
+            case Destination.Workspaces:
+                TitleText.Text = "Workspaces";
+                SubtitleText.Text = "Restore tabs, panes, and places — locations only, never moves files.";
+                SubtitleText.Visibility = Visibility.Visible;
+                PathText.Text = "";
+                RenderWorkspaces();
+                break;
             default:
                 TitleText.Text = Path.GetFileName(App.Library.CurrentPath.TrimEnd('\\')) is { Length: > 0 } n ? n : App.Library.CurrentPath;
                 SubtitleText.Text = "Browse";
@@ -305,11 +436,13 @@ public sealed partial class MainPage : Page
                 RenderFileCollection(App.Library.ListDirectory(App.Library.CurrentPath), "This folder is empty or inaccessible.");
                 break;
         }
+
+        ApplyDualPaneLayout();
+        UpdateTransferHud();
     }
 
     private void RenderShowcaseHome()
     {
-        // —— Shelves ——
         var shelvesHeader = new Grid { Margin = new Thickness(0, 0, 0, 4) };
         shelvesHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         shelvesHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -318,7 +451,7 @@ public sealed partial class MainPage : Page
         shelvesTitle.Children.Add(new TextBlock
         {
             Text = "Shelves",
-            FontSize = 15,
+            FontSize = FileRadarChrome.TypeHeading,
             FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
             Foreground = (Brush)Application.Current.Resources["FrTextBrush"]
         });
@@ -331,17 +464,18 @@ public sealed partial class MainPage : Page
         Grid.SetColumn(shelvesTitle, 0);
         shelvesHeader.Children.Add(shelvesTitle);
 
+        // Mac: accent text link, not an outlined utility chip
         var editBtn = new Button
         {
             Content = "Edit Shelves",
-            Style = (Style)Application.Current.Resources["FrGhostButton"],
-            Background = (Brush)Application.Current.Resources["FrPanelBrush"],
-            BorderBrush = (Brush)Application.Current.Resources["FrBorderBrush"],
-            Foreground = (Brush)Application.Current.Resources["FrTextBrush"]
+            Background = new SolidColorBrush(Colors.Transparent),
+            BorderThickness = new Thickness(0),
+            Padding = new Thickness(8, 4, 8, 4),
+            FontSize = 13,
+            Foreground = (Brush)Application.Current.Resources["FrAccentBrush"]
         };
         editBtn.Click += (_, _) =>
         {
-            // Opens Images kind shelf browse as a stand-in for shelf editing
             var pics = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
             if (Directory.Exists(pics))
             {
@@ -369,14 +503,18 @@ public sealed partial class MainPage : Page
                 HorizontalScrollMode = ScrollMode.Enabled,
                 VerticalScrollMode = ScrollMode.Disabled
             };
-            var shelfRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 16, Padding = new Thickness(0, 4, 0, 8) };
+            var shelfRow = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Spacing = FileRadarChrome.SpaceCardGap,
+                Padding = new Thickness(0, 4, 0, 8)
+            };
             foreach (var album in albums)
                 shelfRow.Children.Add(BuildShelfAlbumCard(album));
             shelfScroll.Content = shelfRow;
             MainContent.Children.Add(shelfScroll);
         }
 
-        // —— Recents ——
         var recentsHeader = new Grid { Margin = new Thickness(0, 8, 0, 4) };
         recentsHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         recentsHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -385,7 +523,7 @@ public sealed partial class MainPage : Page
         recentsTitle.Children.Add(new TextBlock
         {
             Text = "Recents",
-            FontSize = 15,
+            FontSize = FileRadarChrome.TypeHeading,
             FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
             Foreground = (Brush)Application.Current.Resources["FrTextBrush"]
         });
@@ -398,16 +536,53 @@ public sealed partial class MainPage : Page
         Grid.SetColumn(recentsTitle, 0);
         recentsHeader.Children.Add(recentsTitle);
 
-        var sortLabel = new TextBlock
+        // Mac Recents chrome: Sort + Grid/List segmented
+        var recentsChrome = new StackPanel
         {
-            Text = App.Theme.ViewMode == ViewMode.Grid ? "Grid" : "List",
+            Orientation = Orientation.Horizontal,
+            Spacing = 8,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        recentsChrome.Children.Add(new TextBlock
+        {
+            Text = "Date",
             FontSize = 12,
             VerticalAlignment = VerticalAlignment.Center,
-            Foreground = (Brush)Application.Current.Resources["FrMutedBrush"],
-            Margin = new Thickness(0, 0, 4, 0)
-        };
-        Grid.SetColumn(sortLabel, 1);
-        recentsHeader.Children.Add(sortLabel);
+            Foreground = (Brush)Application.Current.Resources["FrMutedBrush"]
+        });
+        var viewSeg = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 0 };
+        Button ViewChip(string label, bool on, Action click)
+        {
+            var b = new Button
+            {
+                Content = label,
+                Padding = new Thickness(10, 4, 10, 4),
+                FontSize = 11,
+                CornerRadius = new CornerRadius(6),
+                BorderThickness = new Thickness(0),
+                Background = on
+                    ? (Brush)Application.Current.Resources["FrSelectionBrush"]
+                    : new SolidColorBrush(Colors.Transparent),
+                Foreground = on
+                    ? (Brush)Application.Current.Resources["FrAccentBrush"]
+                    : (Brush)Application.Current.Resources["FrMutedBrush"]
+            };
+            b.Click += (_, _) => click();
+            return b;
+        }
+        viewSeg.Children.Add(ViewChip("Grid", App.Theme.ViewMode == ViewMode.Grid, () =>
+        {
+            App.Theme.ViewMode = ViewMode.Grid;
+            Refresh();
+        }));
+        viewSeg.Children.Add(ViewChip("List", App.Theme.ViewMode == ViewMode.List, () =>
+        {
+            App.Theme.ViewMode = ViewMode.List;
+            Refresh();
+        }));
+        recentsChrome.Children.Add(viewSeg);
+        Grid.SetColumn(recentsChrome, 1);
+        recentsHeader.Children.Add(recentsChrome);
         MainContent.Children.Add(recentsHeader);
 
         var recents = App.Library.BuildRecents();
@@ -416,12 +591,113 @@ public sealed partial class MainPage : Page
         else if (App.Theme.ViewMode == ViewMode.List)
             MainContent.Children.Add(BuildRecentsList(recents));
         else
-            MainContent.Children.Add(BuildRecentsGrid(recents));
+        {
+            var grid = BuildRecentsGrid(recents);
+            MainContent.Children.Add(grid);
+            // Apply Mac-style selection stroke on the first recent after layout
+            if (recents.Count > 0)
+            {
+                var first = recents[0];
+                SelectItem(first);
+                var card = _cardMap.FirstOrDefault(kv => kv.Value.Path == first.Path).Key;
+                if (card is not null) ApplyCardSelection(card);
+            }
+        }
+    }
+
+    private void RenderWorkspaces()
+    {
+        var saveRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 0, 0, 16) };
+        var nameBox = new TextBox
+        {
+            PlaceholderText = "Workspace name — e.g. Photos, Projects",
+            Width = 280,
+            FontSize = 13
+        };
+        var saveBtn = new Button
+        {
+            Content = "Save current layout",
+            Style = (Style)Application.Current.Resources["FrGhostButton"],
+            Background = (Brush)Application.Current.Resources["FrAccentBrush"],
+            Foreground = new SolidColorBrush(Colors.White),
+            BorderThickness = new Thickness(0)
+        };
+        saveBtn.Click += (_, _) =>
+        {
+            App.Workspaces.Save(nameBox.Text ?? "", App.Library.CurrentPath, App.Library.SecondaryPath,
+                App.Theme.DualPane, App.Theme.InspectorOpen);
+            nameBox.Text = "";
+            Refresh();
+        };
+        saveRow.Children.Add(nameBox);
+        saveRow.Children.Add(saveBtn);
+        MainContent.Children.Add(saveRow);
+
+        if (App.Workspaces.Workspaces.Count == 0)
+        {
+            MainContent.Children.Add(EmptyLabel("No workspaces yet. Arrange panes, then save a name like Photos or Projects."));
+            return;
+        }
+
+        foreach (var ws in App.Workspaces.Workspaces)
+        {
+            var row = new Border
+            {
+                Padding = new Thickness(14, 12, 14, 12),
+                Margin = new Thickness(0, 0, 0, 8),
+                CornerRadius = new CornerRadius(FileRadarChrome.RadiusControl),
+                Background = (Brush)Application.Current.Resources["FrPanel2Brush"],
+                BorderBrush = (Brush)Application.Current.Resources["FrBorderBrush"],
+                BorderThickness = new Thickness(1)
+            };
+            var g = new Grid { ColumnSpacing = 12 };
+            g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            g.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            g.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            var info = new StackPanel { Spacing = 2 };
+            info.Children.Add(new TextBlock
+            {
+                Text = ws.Name,
+                FontSize = FileRadarChrome.TypeHeading,
+                FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+                Foreground = (Brush)Application.Current.Resources["FrTextBrush"]
+            });
+            info.Children.Add(new TextBlock
+            {
+                Text = $"{(ws.DualPane ? "dual pane" : "single pane")} · inspector {(ws.InspectorOpen ? "on" : "off")}",
+                FontSize = FileRadarChrome.TypeCaption,
+                Foreground = (Brush)Application.Current.Resources["FrMutedBrush"]
+            });
+            var restore = new Button { Content = "Restore", Tag = ws };
+            restore.Click += (_, _) =>
+            {
+                App.Library.Navigate(ws.CurrentPath);
+                App.Library.NavigateSecondary(ws.SecondaryPath);
+                App.Theme.DualPane = ws.DualPane;
+                App.Theme.InspectorOpen = ws.InspectorOpen;
+                _destination = Destination.Browse;
+                HighlightNav(null);
+                Refresh();
+            };
+            var del = new Button { Content = "Delete", Tag = ws };
+            del.Click += (_, _) =>
+            {
+                App.Workspaces.Delete(ws.Id);
+                Refresh();
+            };
+            Grid.SetColumn(restore, 1);
+            Grid.SetColumn(del, 2);
+            g.Children.Add(info);
+            g.Children.Add(restore);
+            g.Children.Add(del);
+            row.Child = g;
+            MainContent.Children.Add(row);
+        }
     }
 
     private FrameworkElement BuildShelfAlbumCard(ShelfAlbum album)
     {
-        var radius = (double)Application.Current.Resources["FrRadius"];
+        var radius = FileRadarChrome.RadiusCard;
         var card = new StackPanel { Width = 200, Spacing = 8 };
 
         var cover = new Border
@@ -452,7 +728,7 @@ public sealed partial class MainPage : Page
         card.Children.Add(new TextBlock
         {
             Text = album.Title,
-            FontSize = 13,
+            FontSize = FileRadarChrome.TypeBody,
             FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
             Foreground = (Brush)Application.Current.Resources["FrTextBrush"]
         });
@@ -470,7 +746,6 @@ public sealed partial class MainPage : Page
         };
         card.DoubleTapped += (_, _) =>
         {
-            // Browse the cover's parent folder
             var path = album.Cover?.Path;
             if (path is null) return;
             var dir = Path.GetDirectoryName(path);
@@ -516,17 +791,22 @@ public sealed partial class MainPage : Page
 
     private FrameworkElement BuildRecentCard(FileItem item)
     {
-        var radius = (double)Application.Current.Resources["FrRadius"];
+        var radius = FileRadarChrome.RadiusCard;
+        var accent = ((SolidColorBrush)Application.Current.Resources["FrAccentBrush"]).Color;
+        // cardFill ≈ primary @ 4% (unified-look) — soft plate, not flat utility box
+        var cardFill = new SolidColorBrush(Color.FromArgb(0x0A, 0xFF, 0xFF, 0xFF));
         var card = new Border
         {
             Width = 168,
-            Margin = new Thickness(0, 0, 12, 12),
+            Margin = new Thickness(0, 0, FileRadarChrome.SpaceCardGap - 4, 12),
             Padding = new Thickness(8),
             CornerRadius = new CornerRadius(radius),
-            Background = (Brush)Application.Current.Resources["FrPanel2Brush"],
-            BorderThickness = new Thickness(0),
+            Background = cardFill,
+            BorderBrush = new SolidColorBrush(Color.FromArgb(0, accent.R, accent.G, accent.B)),
+            BorderThickness = new Thickness(FileRadarChrome.SelectionStroke),
             Tag = item
         };
+        _cardMap[card] = item;
 
         var stack = new StackPanel { Spacing = 8 };
         var thumb = new Border
@@ -553,7 +833,7 @@ public sealed partial class MainPage : Page
         stack.Children.Add(new TextBlock
         {
             Text = item.Name,
-            FontSize = 13,
+            FontSize = FileRadarChrome.TypeBody,
             MaxLines = 2,
             TextWrapping = TextWrapping.WrapWholeWords,
             TextTrimming = TextTrimming.CharacterEllipsis,
@@ -562,7 +842,7 @@ public sealed partial class MainPage : Page
         stack.Children.Add(new TextBlock
         {
             Text = item.RelativeTimeLabel,
-            FontSize = 11,
+            FontSize = FileRadarChrome.TypeCaption,
             Foreground = (Brush)Application.Current.Resources["FrMutedBrush"]
         });
         card.Child = stack;
@@ -570,13 +850,62 @@ public sealed partial class MainPage : Page
         card.PointerPressed += (_, _) =>
         {
             SelectItem(item);
-            // subtle selection wash
-            card.Background = (Brush)Application.Current.Resources["FrSelectionBrush"];
+            ApplyCardSelection(card);
         };
         card.DoubleTapped += (_, _) => OpenItem(item);
+        card.RightTapped += (_, args) => ShowItemMenu(item, card, args.GetPosition(card));
 
         _ = LoadCoverAsync(item, img, glyph);
         return card;
+    }
+
+    private void ApplyCardSelection(Border selected)
+    {
+        var accent = ((SolidColorBrush)Application.Current.Resources["FrAccentBrush"]).Color;
+        var wash = new SolidColorBrush(Color.FromArgb(
+            (byte)(FileRadarChrome.AccentFillOpacity * 255), accent.R, accent.G, accent.B));
+        var stroke = new SolidColorBrush(accent);
+        var idle = new SolidColorBrush(Color.FromArgb(0x0A, 0xFF, 0xFF, 0xFF));
+
+        foreach (var kv in _cardMap)
+        {
+            if (kv.Key == selected)
+            {
+                kv.Key.Background = wash;
+                kv.Key.BorderBrush = stroke;
+            }
+            else
+            {
+                kv.Key.Background = idle;
+                kv.Key.BorderBrush = new SolidColorBrush(Color.FromArgb(0, accent.R, accent.G, accent.B));
+            }
+        }
+    }
+
+    private void ShowItemMenu(FileItem item, FrameworkElement anchor, Windows.Foundation.Point point)
+    {
+        var flyout = new MenuFlyout();
+        var open = new MenuFlyoutItem { Text = "Open" };
+        open.Click += (_, _) => OpenItem(item);
+        var stack = new MenuFlyoutItem { Text = "Add to Drop Stack" };
+        stack.Click += (_, _) => { App.DropStack.Add(item.Path); };
+        var rename = new MenuFlyoutItem { Text = "Rename…          Ctrl+Shift+R" };
+        rename.Click += (_, _) =>
+        {
+            SelectItem(item);
+            _ = ShowBatchRenameAsync();
+        };
+        var explorer = new MenuFlyoutItem { Text = "Show in Explorer" };
+        explorer.Click += (_, _) =>
+        {
+            SelectItem(item);
+            ShowInExplorer_Click(explorer, new RoutedEventArgs());
+        };
+        flyout.Items.Add(open);
+        flyout.Items.Add(stack);
+        flyout.Items.Add(rename);
+        flyout.Items.Add(explorer);
+        flyout.ShowAt(anchor, point);
     }
 
     private Panel BuildRecentsList(IReadOnlyList<FileItem> items)
@@ -585,7 +914,7 @@ public sealed partial class MainPage : Page
         var shell = new Border
         {
             Background = (Brush)Application.Current.Resources["FrPanel2Brush"],
-            CornerRadius = new CornerRadius((double)Application.Current.Resources["FrRadius"]),
+            CornerRadius = new CornerRadius(FileRadarChrome.RadiusCard),
             Padding = new Thickness(4),
             Child = list
         };
@@ -633,13 +962,13 @@ public sealed partial class MainPage : Page
         info.Children.Add(new TextBlock
         {
             Text = item.Name,
-            FontSize = 13,
+            FontSize = FileRadarChrome.TypeBody,
             Foreground = (Brush)Application.Current.Resources["FrTextBrush"]
         });
         info.Children.Add(new TextBlock
         {
             Text = item.RelativeTimeLabel,
-            FontSize = 11,
+            FontSize = FileRadarChrome.TypeCaption,
             Foreground = (Brush)Application.Current.Resources["FrMutedBrush"]
         });
         Grid.SetColumn(info, 1);
@@ -648,7 +977,7 @@ public sealed partial class MainPage : Page
         var size = new TextBlock
         {
             Text = item.SizeLabel,
-            FontSize = 11,
+            FontSize = FileRadarChrome.TypeCaption,
             VerticalAlignment = VerticalAlignment.Center,
             HorizontalAlignment = HorizontalAlignment.Right,
             Foreground = (Brush)Application.Current.Resources["FrMutedBrush"]
@@ -700,7 +1029,7 @@ public sealed partial class MainPage : Page
             MainContent.Children.Add(new TextBlock
             {
                 Text = day,
-                FontSize = 15,
+                FontSize = FileRadarChrome.TypeHeading,
                 FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
                 Foreground = (Brush)Application.Current.Resources["FrTextBrush"],
                 Margin = new Thickness(0, 8, 0, 4)
@@ -747,12 +1076,11 @@ public sealed partial class MainPage : Page
         Text = text,
         Foreground = (Brush)Application.Current.Resources["FrMutedBrush"],
         Margin = new Thickness(4, 8, 4, 8),
-        FontSize = 13
+        FontSize = FileRadarChrome.TypeBody
     };
 
     private static Brush KindPlateBrush(FileKind kind)
     {
-        // Soft tinted plates (not flat grey utility boxes)
         var hex = kind switch
         {
             FileKind.Images => "#1C3A5F",
@@ -763,7 +1091,6 @@ public sealed partial class MainPage : Page
             FileKind.Apps => "#2C2C3A",
             _ => "#2C2C2E"
         };
-        // Light mode fallthrough — ThemeCatalog already dark by default
         if (Application.Current.RequestedTheme == ApplicationTheme.Light
             || (App.MainWindow?.Content as FrameworkElement)?.ActualTheme == ElementTheme.Light)
         {
@@ -799,14 +1126,16 @@ public sealed partial class MainPage : Page
         ShowInExplorerBtn.IsEnabled = true;
 
         InspectorMetaPanel.Children.Clear();
-        AddMetaRow("Kind", item.KindDisplayName);
-        AddMetaRow("File Size", item.SizeLabel);
+        AddMetaRow(InspectorMetaPanel, "Kind", item.KindDisplayName);
+        AddMetaRow(InspectorMetaPanel, "File Size", item.SizeLabel);
         if (item.Width is int w && item.Height is int h)
-            AddMetaRow("Dimensions", $"{w} × {h}");
-        AddMetaRow("Location", Path.GetDirectoryName(item.Path) ?? item.Path);
+            AddMetaRow(InspectorMetaPanel, "Dimensions", $"{w} × {h}");
+        AddMetaRow(InspectorMetaPanel, "Location", Path.GetDirectoryName(item.Path) ?? item.Path);
 
         InspectorTagsPanel.Children.Clear();
-        foreach (var tag in InferTags(item))
+        var tags = InferTags(item).ToList();
+        InspectorTagsEmpty.Visibility = tags.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        foreach (var tag in tags)
         {
             InspectorTagsPanel.Children.Add(new Border
             {
@@ -817,16 +1146,33 @@ public sealed partial class MainPage : Page
                 Child = new TextBlock
                 {
                     Text = tag,
-                    FontSize = 11,
+                    FontSize = FileRadarChrome.TypeCaption,
                     Foreground = (Brush)Application.Current.Resources["FrAccentBrush"]
                 }
             });
         }
 
+        InspectorMorePanel.Children.Clear();
+        AddMetaRow(InspectorMorePanel, "Path", item.Path);
+        AddMetaRow(InspectorMorePanel, "Extension", string.IsNullOrEmpty(item.Extension) ? "—" : item.Extension);
+        AddMetaRow(InspectorMorePanel, "Modified UTC", item.ModifiedUtc.ToString("u"));
+        var addStack = new Button
+        {
+            Content = "Add to Drop Stack",
+            FontSize = 12,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            Background = new SolidColorBrush(Colors.Transparent),
+            BorderThickness = new Thickness(0),
+            Foreground = (Brush)Application.Current.Resources["FrAccentBrush"],
+            Margin = new Thickness(0, 8, 0, 0)
+        };
+        addStack.Click += AddToDropStack_Click;
+        InspectorMorePanel.Children.Add(addStack);
+
         _ = LoadInspectorPreviewAsync(item);
     }
 
-    private void AddMetaRow(string label, string value)
+    private void AddMetaRow(Panel panel, string label, string value)
     {
         var row = new Grid();
         row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -834,13 +1180,13 @@ public sealed partial class MainPage : Page
         var l = new TextBlock
         {
             Text = label,
-            FontSize = 13,
+            FontSize = FileRadarChrome.TypeBody,
             Foreground = (Brush)Application.Current.Resources["FrMutedBrush"]
         };
         var v = new TextBlock
         {
             Text = value,
-            FontSize = 13,
+            FontSize = FileRadarChrome.TypeBody,
             TextAlignment = TextAlignment.Right,
             TextWrapping = TextWrapping.WrapWholeWords,
             Foreground = (Brush)Application.Current.Resources["FrTextBrush"]
@@ -848,7 +1194,7 @@ public sealed partial class MainPage : Page
         Grid.SetColumn(v, 1);
         row.Children.Add(l);
         row.Children.Add(v);
-        InspectorMetaPanel.Children.Add(row);
+        panel.Children.Add(row);
     }
 
     private static IEnumerable<string> InferTags(FileItem item)
@@ -871,18 +1217,22 @@ public sealed partial class MainPage : Page
         InspectorImage.Visibility = Visibility.Visible;
         InspectorGlyph.Visibility = Visibility.Collapsed;
 
-        // Try dimensions for images
         if (item.CanThumbnail && bmp.PixelWidth > 0)
-            AddMetaRow("Dimensions", $"{bmp.PixelWidth} × {bmp.PixelHeight}");
+            AddMetaRow(InspectorMetaPanel, "Dimensions", $"{bmp.PixelWidth} × {bmp.PixelHeight}");
     }
 
     private async void OpenItem(FileItem item)
     {
         if (item.IsDirectory)
         {
-            App.Library.Navigate(item.Path);
-            _destination = Destination.Browse;
-            HighlightNav(null);
+            if (App.Theme.DualPane && _rightPaneActive)
+                App.Library.NavigateSecondary(item.Path);
+            else
+            {
+                App.Library.Navigate(item.Path);
+                _destination = Destination.Browse;
+                HighlightNav(null);
+            }
             Refresh();
             return;
         }
@@ -896,6 +1246,22 @@ public sealed partial class MainPage : Page
             catch { /* ignore */ }
         }
     }
+
+    private void UpdateTransferHud()
+    {
+        var q = App.Transfers;
+        TransferHud.Visibility = q.HudVisible ? Visibility.Visible : Visibility.Collapsed;
+        if (!q.HudVisible) return;
+        HudHeadline.Text = q.HudHeadline;
+        HudProgress.Value = q.AggregateProgress;
+        HudPercent.Text = $"{(int)Math.Round(q.AggregateProgress * 100)}%";
+        HudPauseBtn.Content = q.IsPaused ? "Resume" : "Pause";
+        HudIcon.Glyph = q.IsPaused ? "\uE769" : "\uE8C8";
+        if (q.ActiveCount == 0 && q.Items.Any(i => i.Status == TransferStatus.Failed))
+            HudPauseBtn.Content = "Dismiss";
+    }
+
+    // —— Event handlers ——
 
     private void ShowInExplorer_Click(object sender, RoutedEventArgs e)
     {
@@ -912,9 +1278,21 @@ public sealed partial class MainPage : Page
         catch { /* ignore */ }
     }
 
+    private void AddToDropStack_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selected is null) return;
+        App.DropStack.Add(_selected.Path);
+    }
+
     private void AppearanceBtn_Click(object sender, RoutedEventArgs e)
     {
         App.Theme.CycleAppearance();
+        Refresh();
+    }
+
+    private void DualPaneBtn_Click(object sender, RoutedEventArgs e)
+    {
+        App.Theme.DualPane = !App.Theme.DualPane;
         Refresh();
     }
 
@@ -928,6 +1306,290 @@ public sealed partial class MainPage : Page
     {
         App.Theme.InspectorOpen = !App.Theme.InspectorOpen;
         Refresh();
+    }
+
+    private void TransfersBtn_Click(object sender, RoutedEventArgs e)
+    {
+        if (!App.Transfers.HudVisible)
+            App.Transfers.EnqueueDemo("Manual preview", 2);
+        UpdateTransferHud();
+    }
+
+    private Flyout BuildOverflowFlyout()
+    {
+        var panel = new StackPanel { MinWidth = 220, Spacing = 2, Padding = new Thickness(4) };
+        Button Item(string label, RoutedEventHandler handler)
+        {
+            var b = new Button
+            {
+                Content = label,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.Left,
+                Background = new SolidColorBrush(Colors.Transparent),
+                BorderThickness = new Thickness(0),
+                Padding = new Thickness(10, 8, 10, 8),
+                FontSize = 13,
+                Foreground = (Brush)Application.Current.Resources["FrTextBrush"]
+            };
+            b.Click += handler;
+            panel.Children.Add(b);
+            return b;
+        }
+        Item("Batch rename…          Ctrl+Shift+R", BatchRename_Click);
+        Item("Compare / Sync…", CompareSync_Click);
+        Item("Save workspace…", SaveWorkspace_Click);
+        Item("Keyboard shortcuts", ShortcutsHelp_Click);
+        return new Flyout { Content = panel, Placement = FlyoutPlacementMode.Bottom };
+    }
+
+    private void OverflowBtn_Click(object sender, RoutedEventArgs e)
+    {
+        BuildOverflowFlyout().ShowAt(OverflowBtn, new FlyoutShowOptions { Placement = FlyoutPlacementMode.BottomEdgeAlignedRight });
+    }
+
+    private void HudPause_Click(object sender, RoutedEventArgs e)
+    {
+        if (App.Transfers.ActiveCount == 0)
+        {
+            App.Transfers.ClearFinished();
+            UpdateTransferHud();
+            return;
+        }
+        App.Transfers.IsPaused = !App.Transfers.IsPaused;
+        UpdateTransferHud();
+    }
+
+    private void HudCancel_Click(object sender, RoutedEventArgs e)
+    {
+        App.Transfers.CancelAll();
+        UpdateTransferHud();
+    }
+
+    private void DropStackClear_Click(object sender, RoutedEventArgs e) => App.DropStack.Clear();
+
+    private async void DropStackPlace_Click(object sender, RoutedEventArgs e)
+    {
+        if (App.DropStack.Count == 0) return;
+        var folder = await PickFolderAsync();
+        if (folder is null) return;
+        App.Transfers.EnqueueMove(App.DropStack.Paths.ToList(), folder);
+        App.DropStack.Clear();
+        UpdateTransferHud();
+    }
+
+    private void DropStack_DragOver(object sender, DragEventArgs e)
+    {
+        e.AcceptedOperation = DataPackageOperation.Copy;
+        e.DragUIOverride.Caption = "Add to Drop Stack";
+        var accent = ((SolidColorBrush)Application.Current.Resources["FrAccentBrush"]).Color;
+        DropStackBorder.Background = new SolidColorBrush(Color.FromArgb(
+            (byte)(FileRadarChrome.DropTargetWashOpacity * 255), accent.R, accent.G, accent.B));
+    }
+
+    private async void DropStack_Drop(object sender, DragEventArgs e)
+    {
+        DropStackBorder.Background = (Brush)Application.Current.Resources["FrPanel2Brush"];
+        if (!e.DataView.Contains(StandardDataFormats.StorageItems)) return;
+        var items = await e.DataView.GetStorageItemsAsync();
+        foreach (var item in items)
+            App.DropStack.Add(item.Path);
+    }
+
+    private void DropStack_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        DropStackBorder.Background = (Brush)Application.Current.Resources["FrPanel2Brush"];
+    }
+
+    private void CopyOnDrop_Changed(object sender, RoutedEventArgs e)
+    {
+        App.Theme.PreferCopyOnDrop = CopyOnDropCheck.IsChecked == true;
+    }
+
+    private async void ChooseRightFolder_Click(object sender, RoutedEventArgs e)
+    {
+        var folder = await PickFolderAsync();
+        if (folder is null) return;
+        App.Library.NavigateSecondary(folder);
+        _rightPaneActive = true;
+        App.Theme.DualPane = true;
+        Refresh();
+    }
+
+    private async void CompareSync_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new ContentDialog
+        {
+            Title = "Compare / Sync",
+            Content = "Pick two folders to preview name differences. Sync apply stays a paid preview — nothing is overwritten here.",
+            PrimaryButtonText = "Choose folders",
+            CloseButtonText = "Close",
+            XamlRoot = XamlRoot
+        };
+        if (await dlg.ShowAsync() != ContentDialogResult.Primary) return;
+        var left = await PickFolderAsync();
+        if (left is null) return;
+        var right = await PickFolderAsync();
+        if (right is null) return;
+        App.Library.Navigate(left);
+        App.Library.NavigateSecondary(right);
+        App.Theme.DualPane = true;
+        _destination = Destination.Browse;
+        HighlightNav(null);
+        Refresh();
+
+        var leftNames = new HashSet<string>(
+            App.Library.ListDirectory(left).Select(i => i.Name), StringComparer.OrdinalIgnoreCase);
+        var rightNames = App.Library.ListDirectory(right).Select(i => i.Name).ToList();
+        var onlyRight = rightNames.Count(n => !leftNames.Contains(n));
+        var onlyLeft = leftNames.Count(n => !rightNames.Contains(n, StringComparer.OrdinalIgnoreCase));
+        SubtitleText.Text = $"Compare preview · only left {onlyLeft} · only right {onlyRight}";
+        SubtitleText.Visibility = Visibility.Visible;
+    }
+
+    private async void BatchRename_Click(object sender, RoutedEventArgs e)
+    {
+        await ShowBatchRenameAsync();
+    }
+
+    private async Task ShowBatchRenameAsync()
+    {
+        var files = _selection.Count > 0 ? _selection.ToList()
+            : App.Library.BuildRecents(8).Take(5).ToList();
+        if (files.Count == 0)
+        {
+            await new ContentDialog
+            {
+                Title = "Batch rename",
+                Content = "Select files first, then rename them here.",
+                CloseButtonText = "OK",
+                XamlRoot = XamlRoot
+            }.ShowAsync();
+            return;
+        }
+
+        var patternBox = new TextBox
+        {
+            Text = "{name}-{n}",
+            PlaceholderText = "{name}-{n}  or  re:find|replace",
+            Margin = new Thickness(0, 8, 0, 8)
+        };
+        var preview = new TextBlock
+        {
+            FontSize = 12,
+            Foreground = (Brush)Application.Current.Resources["FrMutedBrush"],
+            TextWrapping = TextWrapping.WrapWholeWords
+        };
+        void RefreshPreview()
+        {
+            var plan = BatchRenameService.Preview(files, patternBox.Text ?? "");
+            preview.Text = string.Join("\n", plan.Take(8).Select(p => $"{p.File.Name}  →  {p.NewName}"));
+        }
+        patternBox.TextChanged += (_, _) => RefreshPreview();
+        RefreshPreview();
+
+        var stack = new StackPanel { Spacing = 6 };
+        stack.Children.Add(new TextBlock
+        {
+            Text = $"{files.Count} selected · tokens {{name}}, {{n}}, {{date}} · regex: re:find|replace",
+            FontSize = 12,
+            Foreground = (Brush)Application.Current.Resources["FrMutedBrush"],
+            TextWrapping = TextWrapping.WrapWholeWords
+        });
+        stack.Children.Add(patternBox);
+        stack.Children.Add(preview);
+
+        var dlg = new ContentDialog
+        {
+            Title = "Batch rename",
+            Content = stack,
+            PrimaryButtonText = $"Rename {files.Count}",
+            CloseButtonText = "Cancel",
+            XamlRoot = XamlRoot
+        };
+        if (await dlg.ShowAsync() != ContentDialogResult.Primary) return;
+        var plan = BatchRenameService.Preview(files, patternBox.Text ?? "");
+        BatchRenameService.Apply(plan);
+        Refresh();
+    }
+
+    private async void SaveWorkspace_Click(object sender, RoutedEventArgs e)
+    {
+        var box = new TextBox { PlaceholderText = "Workspace name" };
+        var dlg = new ContentDialog
+        {
+            Title = "Save workspace",
+            Content = box,
+            PrimaryButtonText = "Save",
+            CloseButtonText = "Cancel",
+            XamlRoot = XamlRoot
+        };
+        if (await dlg.ShowAsync() != ContentDialogResult.Primary) return;
+        App.Workspaces.Save(box.Text ?? "", App.Library.CurrentPath, App.Library.SecondaryPath,
+            App.Theme.DualPane, App.Theme.InspectorOpen);
+        HighlightNav(null);
+        _destination = Destination.Workspaces;
+        // find Workspaces nav
+        foreach (var child in SidebarPanel.Children)
+        {
+            if (child is Button b && b.Tag is string s && s == "Workspaces")
+            {
+                HighlightNav(b);
+                break;
+            }
+        }
+        Refresh();
+    }
+
+    private async void ShortcutsHelp_Click(object sender, RoutedEventArgs e)
+    {
+        await new ContentDialog
+        {
+            Title = "Keyboard shortcuts",
+            Content = "Ctrl+\\  Dual pane\nCtrl+Shift+R  Batch rename\nCtrl+Shift+T  Transfers\nCtrl+Alt+I  Inspector\nCtrl+1 / Ctrl+2  Grid / List\nCtrl+Shift+A  Appearance\nDelete  Trash selection\nEnter  Open\nAlt+↑  Up",
+            CloseButtonText = "OK",
+            XamlRoot = XamlRoot
+        }.ShowAsync();
+    }
+
+    private void Page_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        var ctrl = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control)
+            .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
+        var shift = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift)
+            .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
+        var alt = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Menu)
+            .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
+
+        if (ctrl && shift && e.Key == VirtualKey.R) { _ = ShowBatchRenameAsync(); e.Handled = true; }
+        else if (ctrl && shift && e.Key == VirtualKey.T) { TransfersBtn_Click(this, new RoutedEventArgs()); e.Handled = true; }
+        else if (ctrl && shift && e.Key == VirtualKey.A) { AppearanceBtn_Click(this, new RoutedEventArgs()); e.Handled = true; }
+        else if (ctrl && alt && e.Key == VirtualKey.I) { InspectorBtn_Click(this, new RoutedEventArgs()); e.Handled = true; }
+        else if (ctrl && e.Key == VirtualKey.Number1) { App.Theme.ViewMode = ViewMode.Grid; Refresh(); e.Handled = true; }
+        else if (ctrl && e.Key == VirtualKey.Number2) { App.Theme.ViewMode = ViewMode.List; Refresh(); e.Handled = true; }
+        else if (ctrl && e.Key == (VirtualKey)0xDC) { DualPaneBtn_Click(this, new RoutedEventArgs()); e.Handled = true; } // \
+        else if (e.Key == VirtualKey.Delete) { TrashBtn_Click(this, new RoutedEventArgs()); e.Handled = true; }
+        else if (e.Key == VirtualKey.Enter && _selected is not null) { OpenItem(_selected); e.Handled = true; }
+        else if (alt && e.Key == VirtualKey.Up) { UpBtn_Click(this, new RoutedEventArgs()); e.Handled = true; }
+    }
+
+    private async Task<string?> PickFolderAsync()
+    {
+        try
+        {
+            var picker = new FolderPicker();
+            picker.FileTypeFilter.Add("*");
+            if (App.MainWindow is not null)
+            {
+                var hwnd = WindowNative.GetWindowHandle(App.MainWindow);
+                InitializeWithWindow.Initialize(picker, hwnd);
+            }
+            var folder = await picker.PickSingleFolderAsync();
+            return folder?.Path;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private void SearchBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
