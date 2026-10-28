@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "FileRadar (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "FileRadar (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
