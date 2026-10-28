@@ -35,6 +35,8 @@ public sealed class FileItem
     public FileKind Kind { get; init; }
     public string Extension { get; init; } = "";
     public bool IsSelected { get; set; }
+    public int? Width { get; set; }
+    public int? Height { get; set; }
 
     public string SizeLabel => IsDirectory
         ? "Folder"
@@ -42,6 +44,33 @@ public sealed class FileItem
 
     public string ModifiedLabel => ModifiedUtc.ToLocalTime()
         .ToString("g", CultureInfo.CurrentCulture);
+
+    public string RelativeTimeLabel
+    {
+        get
+        {
+            var local = ModifiedUtc.ToLocalTime();
+            var now = DateTime.Now;
+            var datePart = local.Date == now.Date
+                ? "Today"
+                : local.Date == now.Date.AddDays(-1)
+                    ? "Yesterday"
+                    : local.ToString("MMM d", CultureInfo.CurrentCulture);
+            return $"{datePart}, {local:h:mm tt}";
+        }
+    }
+
+    public string KindDisplayName => Kind switch
+    {
+        FileKind.Folder => "Folder",
+        FileKind.Images => "Image",
+        FileKind.Videos => "Video",
+        FileKind.Music => "Audio",
+        FileKind.Documents => "Document",
+        FileKind.Archives => "Archive",
+        FileKind.Apps => "App",
+        _ => "File"
+    };
 
     public string KindGlyph => Kind switch
     {
@@ -54,6 +83,16 @@ public sealed class FileItem
         FileKind.Apps => "\uE71D",
         _ => "\uE8A5"
     };
+
+    public bool CanThumbnail
+    {
+        get
+        {
+            if (IsDirectory) return false;
+            var ext = Extension.ToLowerInvariant();
+            return ext is ".png" or ".jpg" or ".jpeg" or ".gif" or ".webp" or ".bmp" or ".tif" or ".tiff";
+        }
+    }
 
     public static FileKind Classify(string path, bool isDir)
     {
@@ -89,6 +128,16 @@ public sealed class FileItem
         }
         return $"{v:0.##} PB";
     }
+}
+
+public sealed class ShelfAlbum
+{
+    public required string Id { get; init; }
+    public required string Title { get; init; }
+    public required string Subtitle { get; init; }
+    public FileItem? Cover { get; init; }
+    public required FileKind Kind { get; init; }
+    public required IReadOnlyList<FileItem> Items { get; init; }
 }
 
 public sealed class ShelfGroup

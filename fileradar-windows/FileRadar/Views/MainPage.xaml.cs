@@ -1,7 +1,13 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices.WindowsRuntime;
 using FileRadar.Models;
+using FileRadar.Services;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
+using Windows.Graphics.Imaging;
+using Windows.Storage;
+using Windows.Storage.Streams;
 using Windows.System;
 using Color = Windows.UI.Color;
 
@@ -13,8 +19,7 @@ public sealed partial class MainPage : Page
     private FileItem? _selected;
     private readonly List<FileItem> _selection = [];
     private bool _systemDark;
-    private bool _suppressNavSelection;
-    private readonly List<NavigationViewItem> _placeItems = [];
+    private Button? _activeNav;
 
     public MainPage()
     {
@@ -24,57 +29,137 @@ public sealed partial class MainPage : Page
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        var theme = Application.Current.RequestedTheme;
-        _systemDark = theme == ApplicationTheme.Dark;
-        BuildPlaces();
-        ApplyTheme();
-        NavigateTo(Destination.Home);
+        try
+        {
+            _systemDark = Application.Current.RequestedTheme == ApplicationTheme.Dark;
+            BuildFavorites();
+            RefreshDiskBar();
+            App.Theme.InspectorOpen = true;
+            ApplyTheme();
+            // Hard-pin Showcase chrome so Home always shows the third pane + disk bar
+            InspectorColumn.Width = new GridLength(340);
+            InspectorBorder.Visibility = Visibility.Visible;
+            DiskBarBorder.Visibility = Visibility.Visible;
+            DiskNameText.Text = "System";
+            DiskFreeText.Text = "Measuring free space…";
+            HighlightNav(NavHome);
+            NavigateTo(Destination.Home);
+            RefreshDiskBar();
+
+            var log = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "FileRadar", "ui-load.log");
+            Directory.CreateDirectory(Path.GetDirectoryName(log)!);
+            if (string.Equals(Environment.GetEnvironmentVariable("FILERADAR_CAPTURE"), "1", StringComparison.Ordinal))
+            {
+                DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, async () =>
+                {
+                    await Task.Delay(1200);
+                    await CaptureSelfAsync();
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex);
+        }
     }
 
-    private void BuildPlaces()
+    private async Task CaptureSelfAsync()
     {
-        foreach (var old in _placeItems)
-            NavView.MenuItems.Remove(old);
-        _placeItems.Clear();
+        try
+        {
+            var rtb = new RenderTargetBitmap();
+            await rtb.RenderAsync(RootGrid);
+            var pixels = await rtb.GetPixelsAsync();
+            var folder = await StorageFolder.GetFolderFromPathAsync(
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FileRadar"));
+            var file = await folder.CreateFileAsync("apple-home-capture.png", CreationCollisionOption.ReplaceExisting);
+            using var stream = await file.OpenAsync(FileAccessMode.ReadWrite);
+            var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, stream);
+            encoder.SetPixelData(
+                BitmapPixelFormat.Bgra8,
+                BitmapAlphaMode.Premultiplied,
+                (uint)rtb.PixelWidth,
+                (uint)rtb.PixelHeight,
+                96, 96,
+                pixels.ToArray());
+            await encoder.FlushAsync();
 
-        foreach (var place in App.Library.QuickPlaces.Where(Directory.Exists))
+            // Also copy next to the exe for easy pickup
+            var dest = Path.Combine(AppContext.BaseDirectory, "fileradar-windows-apple-home.png");
+            File.Copy(file.Path, dest, true);
+            File.AppendAllText(
+                Path.Combine(folder.Path, "ui-load.log"),
+                $"capture {rtb.PixelWidth}x{rtb.PixelHeight} -> {dest}\n");
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                File.AppendAllText(
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FileRadar", "ui-load.log"),
+                    "capture FAIL " + ex + "\n");
+            }
+            catch { /* ignore */ }
+        }
+    }
+
+    private void BuildFavorites()
+    {
+        FavoritesPanel.Children.Clear();
+        foreach (var place in App.Library.FavoritePlaces.Where(Directory.Exists))
         {
             var name = Path.GetFileName(place.TrimEnd('\\', '/'));
             if (string.IsNullOrEmpty(name)) name = place;
-            var item = new NavigationViewItem
+            var btn = new Button
             {
-                Content = name,
-                Tag = "Place:" + place,
-                Icon = new FontIcon { Glyph = "\uE8B7" }
+                Style = (Style)Application.Current.Resources["FrNavButton"],
+                Tag = place,
+                Foreground = (Brush)Application.Current.Resources["FrTextBrush"]
             };
-            NavView.MenuItems.Add(item);
-            _placeItems.Add(item);
+            btn.Content = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Spacing = 10,
+                Children =
+                {
+                    new FontIcon { Glyph = "\uE8B7", FontSize = 14 },
+                    new TextBlock { Text = name }
+                }
+            };
+            btn.Click += Favorite_Click;
+            FavoritesPanel.Children.Add(btn);
         }
     }
 
-    private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+    private void Favorite_Click(object sender, RoutedEventArgs e)
     {
-        if (_suppressNavSelection) return;
-        if (args.SelectedItem is not NavigationViewItem { Tag: string tag }) return;
+        if (sender is not Button { Tag: string path }) return;
+        App.Library.Navigate(path);
+        _destination = Destination.Browse;
+        HighlightNav(null);
+        Refresh();
+    }
 
-        if (tag == "CycleLook")
+    private void RefreshDiskBar()
+    {
+        var (name, free, total) = App.Library.GetSystemDriveInfo();
+        DiskNameText.Text = name;
+        if (total <= 0)
         {
-            App.Theme.CycleLook();
-            // Keep previous destination selected in the nav
-            SelectNavForDestination(_destination);
-            Refresh();
+            DiskFreeText.Text = "Disk capacity unavailable";
+            DiskFreeBar.Value = 0;
             return;
         }
+        DiskFreeText.Text = $"{FileItem.FormatBytes(free)} free of {FileItem.FormatBytes(total)}";
+        DiskFreeBar.Value = Math.Clamp(1.0 - (double)free / total, 0, 1);
+    }
 
-        if (tag.StartsWith("Place:", StringComparison.Ordinal))
-        {
-            var path = tag["Place:".Length..];
-            App.Library.Navigate(path);
-            _destination = Destination.Browse;
-            Refresh();
-            return;
-        }
-
+    private void Nav_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string tag } btn) return;
+        HighlightNav(btn);
         _destination = tag switch
         {
             "Search" => Destination.Search,
@@ -87,123 +172,129 @@ public sealed partial class MainPage : Page
         Refresh();
     }
 
-    private void SelectNavForDestination(Destination dest)
+    private void HighlightNav(Button? btn)
     {
-        _suppressNavSelection = true;
-        try
+        var muted = (Brush)Application.Current.Resources["FrTextBrush"];
+        var sel = (Brush)Application.Current.Resources["FrSelectionBrush"];
+        foreach (var child in SidebarPanel.Children)
         {
-            string? tag = dest switch
+            if (child is Button b && b.Tag is string)
             {
-                Destination.Search => "Search",
-                Destination.Cleanup => "Cleanup",
-                Destination.Duplicates => "Duplicates",
-                Destination.Timeline => "Timeline",
-                Destination.RecycleBin => "RecycleBin",
-                Destination.Browse => null,
-                _ => "Home"
-            };
-
-            if (tag is null)
-            {
-                NavView.SelectedItem = null;
-                return;
-            }
-
-            foreach (var obj in NavView.MenuItems)
-            {
-                if (obj is NavigationViewItem nvi && nvi.Tag as string == tag)
-                {
-                    NavView.SelectedItem = nvi;
-                    return;
-                }
+                b.Background = b == btn ? sel : new SolidColorBrush(Colors.Transparent);
+                b.Foreground = muted;
             }
         }
-        finally
-        {
-            _suppressNavSelection = false;
-        }
+        _activeNav = btn;
     }
 
     private void NavigateTo(Destination dest)
     {
         _destination = dest;
-        SelectNavForDestination(dest);
         Refresh();
     }
 
     private void ApplyTheme()
     {
         var dark = App.Theme.IsDark(_systemDark);
-        var palette = ThemeCatalog.Resolve(App.Theme.Look, dark);
+        // Showcase Home is Modern only — ignore Colourful/Minimal
+        var palette = ThemeCatalog.Resolve(AppLook.Modern, dark);
         App.ApplyThemeResources(Application.Current.Resources, palette);
+
         RootGrid.Background = BrushFrom(palette.Bg);
         TopBar.Background = BrushFrom(palette.Panel);
-        AppearanceBtn.Content = App.Theme.Appearance.ToString();
-        ViewModeBtn.Content = App.Theme.ViewMode.ToString();
-        DualPaneBtn.Content = App.Theme.DualPane ? "Dual pane · On" : "Dual pane";
-        InspectorBtn.Content = App.Theme.InspectorOpen ? "Inspector · On" : "Inspector";
-        LookItem.Content = $"Look: {App.Theme.Look}";
+        SidebarBorder.Background = BrushFrom(palette.Panel);
+        InspectorBorder.Background = BrushFrom(palette.Panel);
 
-        InspectorColumn.Width = App.Theme.InspectorOpen ? new GridLength(300) : new GridLength(0);
-        InspectorBorder.Visibility = App.Theme.InspectorOpen ? Visibility.Visible : Visibility.Collapsed;
+        AppearanceIcon.Glyph = App.Theme.Appearance switch
+        {
+            AppearanceMode.Light => "\uE706",
+            AppearanceMode.Dark => "\uE708",
+            _ => "\uE771"
+        };
 
-        DualColumn.Width = App.Theme.DualPane ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
-        DualPaneBorder.Visibility = App.Theme.DualPane ? Visibility.Visible : Visibility.Collapsed;
+        if (App.Theme.InspectorOpen)
+        {
+            InspectorColumn.Width = new GridLength(340);
+            InspectorBorder.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            InspectorColumn.Width = new GridLength(0);
+            InspectorBorder.Visibility = Visibility.Collapsed;
+        }
 
         RequestedTheme = dark ? ElementTheme.Dark : ElementTheme.Light;
+        App.SyncBackdropTheme(dark);
+        if (_activeNav is not null) HighlightNav(_activeNav);
     }
 
     private static SolidColorBrush BrushFrom(string hex)
     {
         hex = hex.TrimStart('#');
+        byte a = 255;
+        if (hex.Length == 8)
+        {
+            a = Convert.ToByte(hex[..2], 16);
+            hex = hex[2..];
+        }
         var r = Convert.ToByte(hex[..2], 16);
         var g = Convert.ToByte(hex[2..4], 16);
         var b = Convert.ToByte(hex[4..6], 16);
-        return new SolidColorBrush(Color.FromArgb(255, r, g, b));
+        return new SolidColorBrush(Color.FromArgb(a, r, g, b));
     }
 
     private void Refresh()
     {
         ApplyTheme();
         MainContent.Children.Clear();
-        SecondaryContent.Children.Clear();
         _selection.Clear();
+        RefreshDiskBar();
+
+        var isHome = _destination == Destination.Home;
+        BrowseActions.Visibility = isHome ? Visibility.Collapsed : Visibility.Visible;
+        SubtitleText.Visibility = isHome ? Visibility.Collapsed : Visibility.Visible;
 
         switch (_destination)
         {
             case Destination.Home:
                 TitleText.Text = "Home";
-                SubtitleText.Text = "Shelves from Desktop, Documents, Pictures, Downloads";
-                PathText.Text = App.Library.HomeRoot;
-                RenderHome();
+                PathText.Text = "";
+                RenderShowcaseHome();
+                // Seed inspector with first recent so the third pane looks alive (mockup)
+                if (_selected is null)
+                {
+                    var seed = App.Library.BuildRecents(1).FirstOrDefault()
+                               ?? App.Library.BuildAlbumShelves().FirstOrDefault()?.Cover;
+                    if (seed is not null) SelectItem(seed);
+                }
                 break;
             case Destination.Search:
                 TitleText.Text = "Search";
-                SubtitleText.Text = "Plain-language filename search across your places";
+                SubtitleText.Text = "Filename search across your places";
                 PathText.Text = "";
                 RenderFileCollection(App.Library.Search(SearchBox.Text ?? ""), "No matches yet — type a query above.");
                 break;
             case Destination.Cleanup:
                 TitleText.Text = "Cleanup";
-                SubtitleText.Text = "Largest files in Downloads — select and trash";
+                SubtitleText.Text = "Largest files in Downloads";
                 PathText.Text = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
                 RenderFileCollection(App.Library.CleanupCandidates(), "Downloads looks tidy.");
                 break;
             case Destination.Duplicates:
                 TitleText.Text = "Duplicates";
-                SubtitleText.Text = "Same name + size groups (quick scan)";
+                SubtitleText.Text = "Same name + size groups";
                 PathText.Text = "";
                 RenderDuplicates();
                 break;
             case Destination.Timeline:
                 TitleText.Text = "Timeline";
-                SubtitleText.Text = "Files touched in the last two weeks";
+                SubtitleText.Text = "Files from the last two weeks";
                 PathText.Text = "";
                 RenderTimeline();
                 break;
             case Destination.RecycleBin:
                 TitleText.Text = "Recycle Bin";
-                SubtitleText.Text = "FileRadar staging trash (undoable moves)";
+                SubtitleText.Text = "FileRadar staging trash";
                 PathText.Text = App.Library.StagingTrashPath;
                 RenderRecycleBin();
                 break;
@@ -214,27 +305,365 @@ public sealed partial class MainPage : Page
                 RenderFileCollection(App.Library.ListDirectory(App.Library.CurrentPath), "This folder is empty or inaccessible.");
                 break;
         }
-
-        if (App.Theme.DualPane)
-            RenderSecondary();
-
-        StatusText.Text = $"{_destination} · {App.Theme.Look} · {App.Theme.Appearance} · {App.Theme.ViewMode}";
     }
 
-    private void RenderHome()
+    private void RenderShowcaseHome()
     {
-        foreach (var shelf in App.Library.BuildHomeShelves())
+        // —— Shelves ——
+        var shelvesHeader = new Grid { Margin = new Thickness(0, 0, 0, 4) };
+        shelvesHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        shelvesHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+        var shelvesTitle = new StackPanel { Spacing = 2 };
+        shelvesTitle.Children.Add(new TextBlock
         {
-            MainContent.Children.Add(new TextBlock
+            Text = "Shelves",
+            FontSize = 15,
+            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+            Foreground = (Brush)Application.Current.Resources["FrTextBrush"]
+        });
+        shelvesTitle.Children.Add(new TextBlock
+        {
+            Text = "Curated groups of your files",
+            FontSize = 12,
+            Foreground = (Brush)Application.Current.Resources["FrMutedBrush"]
+        });
+        Grid.SetColumn(shelvesTitle, 0);
+        shelvesHeader.Children.Add(shelvesTitle);
+
+        var editBtn = new Button
+        {
+            Content = "Edit Shelves",
+            Style = (Style)Application.Current.Resources["FrGhostButton"],
+            Background = (Brush)Application.Current.Resources["FrPanelBrush"],
+            BorderBrush = (Brush)Application.Current.Resources["FrBorderBrush"],
+            Foreground = (Brush)Application.Current.Resources["FrTextBrush"]
+        };
+        editBtn.Click += (_, _) =>
+        {
+            // Opens Images kind shelf browse as a stand-in for shelf editing
+            var pics = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+            if (Directory.Exists(pics))
             {
-                Text = shelf.Title,
-                FontSize = 15,
-                FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
-                Foreground = (Brush)Application.Current.Resources["FrTextBrush"],
-                Margin = new Thickness(4, 8, 0, 4)
-            });
-            MainContent.Children.Add(BuildItemsPanel(shelf.Items));
+                App.Library.Navigate(pics);
+                _destination = Destination.Browse;
+                HighlightNav(null);
+                Refresh();
+            }
+        };
+        Grid.SetColumn(editBtn, 1);
+        shelvesHeader.Children.Add(editBtn);
+        MainContent.Children.Add(shelvesHeader);
+
+        var albums = App.Library.BuildAlbumShelves();
+        if (albums.Count == 0)
+        {
+            MainContent.Children.Add(EmptyLabel("No shelves yet — once folders are scanned, album cards appear here."));
         }
+        else
+        {
+            var shelfScroll = new ScrollViewer
+            {
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                HorizontalScrollMode = ScrollMode.Enabled,
+                VerticalScrollMode = ScrollMode.Disabled
+            };
+            var shelfRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 16, Padding = new Thickness(0, 4, 0, 8) };
+            foreach (var album in albums)
+                shelfRow.Children.Add(BuildShelfAlbumCard(album));
+            shelfScroll.Content = shelfRow;
+            MainContent.Children.Add(shelfScroll);
+        }
+
+        // —— Recents ——
+        var recentsHeader = new Grid { Margin = new Thickness(0, 8, 0, 4) };
+        recentsHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        recentsHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+        var recentsTitle = new StackPanel { Spacing = 2 };
+        recentsTitle.Children.Add(new TextBlock
+        {
+            Text = "Recents",
+            FontSize = 15,
+            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+            Foreground = (Brush)Application.Current.Resources["FrTextBrush"]
+        });
+        recentsTitle.Children.Add(new TextBlock
+        {
+            Text = "Recently accessed files",
+            FontSize = 12,
+            Foreground = (Brush)Application.Current.Resources["FrMutedBrush"]
+        });
+        Grid.SetColumn(recentsTitle, 0);
+        recentsHeader.Children.Add(recentsTitle);
+
+        var sortLabel = new TextBlock
+        {
+            Text = App.Theme.ViewMode == ViewMode.Grid ? "Grid" : "List",
+            FontSize = 12,
+            VerticalAlignment = VerticalAlignment.Center,
+            Foreground = (Brush)Application.Current.Resources["FrMutedBrush"],
+            Margin = new Thickness(0, 0, 4, 0)
+        };
+        Grid.SetColumn(sortLabel, 1);
+        recentsHeader.Children.Add(sortLabel);
+        MainContent.Children.Add(recentsHeader);
+
+        var recents = App.Library.BuildRecents();
+        if (recents.Count == 0)
+            MainContent.Children.Add(EmptyLabel("No recent files yet."));
+        else if (App.Theme.ViewMode == ViewMode.List)
+            MainContent.Children.Add(BuildRecentsList(recents));
+        else
+            MainContent.Children.Add(BuildRecentsGrid(recents));
+    }
+
+    private FrameworkElement BuildShelfAlbumCard(ShelfAlbum album)
+    {
+        var radius = (double)Application.Current.Resources["FrRadius"];
+        var card = new StackPanel { Width = 200, Spacing = 8 };
+
+        var cover = new Border
+        {
+            Width = 200,
+            Height = 140,
+            CornerRadius = new CornerRadius(radius),
+            Background = KindPlateBrush(album.Kind),
+            BorderBrush = (Brush)Application.Current.Resources["FrBorderBrush"],
+            BorderThickness = new Thickness(1),
+        };
+
+        var coverGrid = new Grid();
+        var glyph = new FontIcon
+        {
+            Glyph = album.Cover?.KindGlyph ?? "\uE8B7",
+            FontSize = 36,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Foreground = (Brush)Application.Current.Resources["FrMutedBrush"]
+        };
+        coverGrid.Children.Add(glyph);
+        var img = new Image { Stretch = Stretch.UniformToFill, Visibility = Visibility.Collapsed };
+        coverGrid.Children.Add(img);
+        cover.Child = coverGrid;
+        card.Children.Add(cover);
+
+        card.Children.Add(new TextBlock
+        {
+            Text = album.Title,
+            FontSize = 13,
+            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+            Foreground = (Brush)Application.Current.Resources["FrTextBrush"]
+        });
+        card.Children.Add(new TextBlock
+        {
+            Text = album.Subtitle,
+            FontSize = 12,
+            Foreground = (Brush)Application.Current.Resources["FrMutedBrush"]
+        });
+
+        card.PointerPressed += (_, _) =>
+        {
+            if (album.Items.Count > 0)
+                SelectItem(album.Items[0]);
+        };
+        card.DoubleTapped += (_, _) =>
+        {
+            // Browse the cover's parent folder
+            var path = album.Cover?.Path;
+            if (path is null) return;
+            var dir = Path.GetDirectoryName(path);
+            if (dir is null || !Directory.Exists(dir)) return;
+            App.Library.Navigate(dir);
+            _destination = Destination.Browse;
+            HighlightNav(null);
+            Refresh();
+        };
+
+        _ = LoadCoverAsync(album.Cover, img, glyph);
+        return card;
+    }
+
+    private async Task LoadCoverAsync(FileItem? item, Image img, FontIcon glyph)
+    {
+        if (item is null) return;
+        var bmp = await ThumbnailService.TryLoadAsync(item.Path, 280);
+        if (bmp is null) return;
+        img.Source = bmp;
+        img.Visibility = Visibility.Visible;
+        glyph.Visibility = Visibility.Collapsed;
+    }
+
+    private Panel BuildRecentsGrid(IReadOnlyList<FileItem> items)
+    {
+        var gv = new GridView
+        {
+            SelectionMode = ListViewSelectionMode.None,
+            IsItemClickEnabled = true
+        };
+        gv.ItemClick += (_, args) =>
+        {
+            if (args.ClickedItem is FrameworkElement fe && fe.Tag is FileItem fi)
+                SelectItem(fi);
+        };
+
+        foreach (var item in items)
+            gv.Items.Add(BuildRecentCard(item));
+
+        return new Grid { Children = { gv } };
+    }
+
+    private FrameworkElement BuildRecentCard(FileItem item)
+    {
+        var radius = (double)Application.Current.Resources["FrRadius"];
+        var card = new Border
+        {
+            Width = 168,
+            Margin = new Thickness(0, 0, 12, 12),
+            Padding = new Thickness(8),
+            CornerRadius = new CornerRadius(radius),
+            Background = (Brush)Application.Current.Resources["FrPanel2Brush"],
+            BorderThickness = new Thickness(0),
+            Tag = item
+        };
+
+        var stack = new StackPanel { Spacing = 8 };
+        var thumb = new Border
+        {
+            Height = 120,
+            CornerRadius = new CornerRadius(radius - 2),
+            Background = KindPlateBrush(item.Kind)
+        };
+        var thumbGrid = new Grid();
+        var glyph = new FontIcon
+        {
+            Glyph = item.KindGlyph,
+            FontSize = 40,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Foreground = (Brush)Application.Current.Resources["FrAccentBrush"]
+        };
+        var img = new Image { Stretch = Stretch.UniformToFill, Visibility = Visibility.Collapsed };
+        thumbGrid.Children.Add(glyph);
+        thumbGrid.Children.Add(img);
+        thumb.Child = thumbGrid;
+        stack.Children.Add(thumb);
+
+        stack.Children.Add(new TextBlock
+        {
+            Text = item.Name,
+            FontSize = 13,
+            MaxLines = 2,
+            TextWrapping = TextWrapping.WrapWholeWords,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            Foreground = (Brush)Application.Current.Resources["FrTextBrush"]
+        });
+        stack.Children.Add(new TextBlock
+        {
+            Text = item.RelativeTimeLabel,
+            FontSize = 11,
+            Foreground = (Brush)Application.Current.Resources["FrMutedBrush"]
+        });
+        card.Child = stack;
+
+        card.PointerPressed += (_, _) =>
+        {
+            SelectItem(item);
+            // subtle selection wash
+            card.Background = (Brush)Application.Current.Resources["FrSelectionBrush"];
+        };
+        card.DoubleTapped += (_, _) => OpenItem(item);
+
+        _ = LoadCoverAsync(item, img, glyph);
+        return card;
+    }
+
+    private Panel BuildRecentsList(IReadOnlyList<FileItem> items)
+    {
+        var list = new StackPanel { Spacing = 0 };
+        var shell = new Border
+        {
+            Background = (Brush)Application.Current.Resources["FrPanel2Brush"],
+            CornerRadius = new CornerRadius((double)Application.Current.Resources["FrRadius"]),
+            Padding = new Thickness(4),
+            Child = list
+        };
+        foreach (var item in items)
+            list.Children.Add(BuildRecentRow(item));
+        return new Grid { Children = { shell } };
+    }
+
+    private FrameworkElement BuildRecentRow(FileItem item)
+    {
+        var row = new Grid
+        {
+            Padding = new Thickness(10, 8, 10, 8),
+            ColumnSpacing = 12,
+            Tag = item
+        };
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(44) });
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(80) });
+
+        var thumb = new Border
+        {
+            Width = 40,
+            Height = 40,
+            CornerRadius = new CornerRadius(6),
+            Background = (Brush)Application.Current.Resources["FrPanelBrush"]
+        };
+        var g = new Grid();
+        var glyph = new FontIcon
+        {
+            Glyph = item.KindGlyph,
+            FontSize = 16,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Foreground = (Brush)Application.Current.Resources["FrMutedBrush"]
+        };
+        var img = new Image { Stretch = Stretch.UniformToFill, Visibility = Visibility.Collapsed };
+        g.Children.Add(glyph);
+        g.Children.Add(img);
+        thumb.Child = g;
+        Grid.SetColumn(thumb, 0);
+        row.Children.Add(thumb);
+
+        var info = new StackPanel { Spacing = 2, VerticalAlignment = VerticalAlignment.Center };
+        info.Children.Add(new TextBlock
+        {
+            Text = item.Name,
+            FontSize = 13,
+            Foreground = (Brush)Application.Current.Resources["FrTextBrush"]
+        });
+        info.Children.Add(new TextBlock
+        {
+            Text = item.RelativeTimeLabel,
+            FontSize = 11,
+            Foreground = (Brush)Application.Current.Resources["FrMutedBrush"]
+        });
+        Grid.SetColumn(info, 1);
+        row.Children.Add(info);
+
+        var size = new TextBlock
+        {
+            Text = item.SizeLabel,
+            FontSize = 11,
+            VerticalAlignment = VerticalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Foreground = (Brush)Application.Current.Resources["FrMutedBrush"]
+        };
+        Grid.SetColumn(size, 2);
+        row.Children.Add(size);
+
+        row.PointerPressed += (_, _) =>
+        {
+            SelectItem(item);
+            row.Background = (Brush)Application.Current.Resources["FrSelectionBrush"];
+        };
+        row.DoubleTapped += (_, _) => OpenItem(item);
+        _ = LoadCoverAsync(item, img, glyph);
+        return row;
     }
 
     private void RenderDuplicates()
@@ -242,20 +671,19 @@ public sealed partial class MainPage : Page
         var groups = App.Library.FindDuplicates();
         if (groups.Count == 0)
         {
-            MainContent.Children.Add(EmptyLabel("No duplicate name+size groups found in a quick scan."));
+            MainContent.Children.Add(EmptyLabel("No duplicate name+size groups found."));
             return;
         }
-
         foreach (var g in groups)
         {
             MainContent.Children.Add(new TextBlock
             {
-                Text = $"{g.Items[0].Name} · {g.Items.Count} copies · wasted {FileItem.FormatBytes(g.WastedBytes)}",
+                Text = $"{g.Items[0].Name} · {g.Items.Count} copies",
                 FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
                 Foreground = (Brush)Application.Current.Resources["FrTextBrush"],
-                Margin = new Thickness(4, 10, 0, 4)
+                Margin = new Thickness(0, 10, 0, 6)
             });
-            MainContent.Children.Add(BuildItemsPanel(g.Items));
+            MainContent.Children.Add(BuildRecentsGrid(g.Items));
         }
     }
 
@@ -267,7 +695,6 @@ public sealed partial class MainPage : Page
             MainContent.Children.Add(EmptyLabel("Nothing recent in the scanned places."));
             return;
         }
-
         foreach (var (day, items) in days)
         {
             MainContent.Children.Add(new TextBlock
@@ -276,9 +703,9 @@ public sealed partial class MainPage : Page
                 FontSize = 15,
                 FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
                 Foreground = (Brush)Application.Current.Resources["FrTextBrush"],
-                Margin = new Thickness(4, 8, 0, 4)
+                Margin = new Thickness(0, 8, 0, 4)
             });
-            MainContent.Children.Add(BuildItemsPanel(items));
+            MainContent.Children.Add(BuildRecentsGrid(items));
         }
     }
 
@@ -310,195 +737,155 @@ public sealed partial class MainPage : Page
             MainContent.Children.Add(EmptyLabel(empty));
             return;
         }
-        MainContent.Children.Add(BuildItemsPanel(items));
-    }
-
-    private void RenderSecondary()
-    {
-        SecondaryContent.Children.Add(new TextBlock
-        {
-            Text = App.Library.SecondaryPath,
-            FontSize = 12,
-            Foreground = (Brush)Application.Current.Resources["FrMutedBrush"],
-            TextWrapping = TextWrapping.Wrap
-        });
-        var items = App.Library.ListDirectory(App.Library.SecondaryPath, 200);
-        SecondaryContent.Children.Add(BuildItemsPanel(items, secondary: true));
+        MainContent.Children.Add(App.Theme.ViewMode == ViewMode.List
+            ? BuildRecentsList(items)
+            : BuildRecentsGrid(items));
     }
 
     private static TextBlock EmptyLabel(string text) => new()
     {
         Text = text,
         Foreground = (Brush)Application.Current.Resources["FrMutedBrush"],
-        Margin = new Thickness(8)
+        Margin = new Thickness(4, 8, 4, 8),
+        FontSize = 13
     };
 
-    private Panel BuildItemsPanel(IReadOnlyList<FileItem> items, bool secondary = false)
+    private static Brush KindPlateBrush(FileKind kind)
     {
-        if (App.Theme.ViewMode == ViewMode.List)
+        // Soft tinted plates (not flat grey utility boxes)
+        var hex = kind switch
         {
-            var list = new StackPanel { Spacing = 2 };
-            foreach (var item in items)
-                list.Children.Add(BuildListRow(item, secondary));
-            return list;
+            FileKind.Images => "#1C3A5F",
+            FileKind.Documents => "#2A3340",
+            FileKind.Videos => "#2A2438",
+            FileKind.Music => "#24352E",
+            FileKind.Archives => "#3A3220",
+            FileKind.Apps => "#2C2C3A",
+            _ => "#2C2C2E"
+        };
+        // Light mode fallthrough — ThemeCatalog already dark by default
+        if (Application.Current.RequestedTheme == ApplicationTheme.Light
+            || (App.MainWindow?.Content as FrameworkElement)?.ActualTheme == ElementTheme.Light)
+        {
+            hex = kind switch
+            {
+                FileKind.Images => "#E8F0FF",
+                FileKind.Documents => "#EEF1F6",
+                FileKind.Videos => "#F0EAF8",
+                FileKind.Music => "#E8F5EF",
+                FileKind.Archives => "#F7F0E4",
+                FileKind.Apps => "#EEEAF5",
+                _ => "#EEF0F3"
+            };
         }
-
-        var gv = new GridView
-        {
-            SelectionMode = ListViewSelectionMode.None,
-            IsItemClickEnabled = true
-        };
-        gv.ItemClick += (_, args) =>
-        {
-            if (args.ClickedItem is FrameworkElement fe && fe.Tag is FileItem fi)
-                SelectItem(fi, secondary);
-        };
-        gv.DoubleTapped += (_, _) =>
-        {
-            if (_selected is not null)
-                OpenItem(_selected, secondary);
-        };
-
-        foreach (var item in items)
-            gv.Items.Add(BuildCard(item));
-
-        var host = new Grid();
-        host.Children.Add(gv);
-        return host;
+        hex = hex.TrimStart('#');
+        return new SolidColorBrush(Color.FromArgb(255,
+            Convert.ToByte(hex[..2], 16),
+            Convert.ToByte(hex[2..4], 16),
+            Convert.ToByte(hex[4..6], 16)));
     }
 
-    private FrameworkElement BuildCard(FileItem item)
-    {
-        var radius = (double)Application.Current.Resources["FrRadius"];
-        var border = new Border
-        {
-            Width = 148,
-            Height = 168,
-            Margin = new Thickness(0, 0, 10, 10),
-            Padding = new Thickness(10),
-            CornerRadius = new CornerRadius(radius),
-            BorderThickness = new Thickness(1),
-            BorderBrush = (Brush)Application.Current.Resources["FrBorderBrush"],
-            Background = (Brush)Application.Current.Resources["FrPanel2Brush"],
-            Tag = item
-        };
-
-        var stack = new StackPanel { Spacing = 8 };
-        stack.Children.Add(new FontIcon
-        {
-            Glyph = item.KindGlyph,
-            FontSize = 36,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            Margin = new Thickness(0, 18, 0, 8),
-            Foreground = (Brush)Application.Current.Resources["FrAccentBrush"]
-        });
-        stack.Children.Add(new TextBlock
-        {
-            Text = item.Name,
-            TextWrapping = TextWrapping.WrapWholeWords,
-            MaxLines = 2,
-            TextTrimming = TextTrimming.CharacterEllipsis,
-            FontSize = 13,
-            Foreground = (Brush)Application.Current.Resources["FrTextBrush"]
-        });
-        stack.Children.Add(new TextBlock
-        {
-            Text = item.SizeLabel,
-            FontSize = 11,
-            Foreground = (Brush)Application.Current.Resources["FrMutedBrush"]
-        });
-        border.Child = stack;
-
-        border.PointerPressed += (_, _) => SelectItem(item, false);
-        border.DoubleTapped += (_, _) => OpenItem(item, false);
-        return border;
-    }
-
-    private FrameworkElement BuildListRow(FileItem item, bool secondary)
-    {
-        var row = new Grid
-        {
-            Padding = new Thickness(8, 6, 8, 6),
-            ColumnSpacing = 12,
-            Tag = item
-        };
-        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
-        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(100) });
-        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(160) });
-
-        var icon = new FontIcon
-        {
-            Glyph = item.KindGlyph,
-            Foreground = (Brush)Application.Current.Resources["FrAccentBrush"]
-        };
-        Grid.SetColumn(icon, 0);
-        var name = new TextBlock
-        {
-            Text = item.Name,
-            VerticalAlignment = VerticalAlignment.Center,
-            Foreground = (Brush)Application.Current.Resources["FrTextBrush"]
-        };
-        Grid.SetColumn(name, 1);
-        var size = new TextBlock
-        {
-            Text = item.SizeLabel,
-            VerticalAlignment = VerticalAlignment.Center,
-            Foreground = (Brush)Application.Current.Resources["FrMutedBrush"]
-        };
-        Grid.SetColumn(size, 2);
-        var modified = new TextBlock
-        {
-            Text = item.ModifiedLabel,
-            VerticalAlignment = VerticalAlignment.Center,
-            Foreground = (Brush)Application.Current.Resources["FrMutedBrush"]
-        };
-        Grid.SetColumn(modified, 3);
-
-        row.Children.Add(icon);
-        row.Children.Add(name);
-        row.Children.Add(size);
-        row.Children.Add(modified);
-        row.Background = new SolidColorBrush(Colors.Transparent);
-        row.PointerPressed += (_, _) => SelectItem(item, secondary);
-        row.DoubleTapped += (_, _) => OpenItem(item, secondary);
-        return row;
-    }
-
-    private void SelectItem(FileItem item, bool secondary)
+    private void SelectItem(FileItem item)
     {
         _selected = item;
         _selection.Clear();
         _selection.Add(item);
-        InspectorName.Text = item.Name;
-        InspectorKind.Text = item.Kind.ToString();
-        InspectorSize.Text = item.SizeLabel;
-        InspectorModified.Text = $"Modified {item.ModifiedLabel}";
-        InspectorPath.Text = item.Path;
-        InspectorGlyph.Glyph = item.KindGlyph;
 
-        if (secondary)
-            StatusText.Text = $"Secondary · {item.Name}";
-        else
-            StatusText.Text = item.Path;
+        InspectorName.Text = item.Name;
+        InspectorModified.Text = item.RelativeTimeLabel;
+        InspectorGlyph.Glyph = item.KindGlyph;
+        InspectorGlyph.Visibility = Visibility.Visible;
+        InspectorImage.Visibility = Visibility.Collapsed;
+        ShowInExplorerBtn.IsEnabled = true;
+
+        InspectorMetaPanel.Children.Clear();
+        AddMetaRow("Kind", item.KindDisplayName);
+        AddMetaRow("File Size", item.SizeLabel);
+        if (item.Width is int w && item.Height is int h)
+            AddMetaRow("Dimensions", $"{w} × {h}");
+        AddMetaRow("Location", Path.GetDirectoryName(item.Path) ?? item.Path);
+
+        InspectorTagsPanel.Children.Clear();
+        foreach (var tag in InferTags(item))
+        {
+            InspectorTagsPanel.Children.Add(new Border
+            {
+                CornerRadius = new CornerRadius(999),
+                Padding = new Thickness(10, 4, 10, 4),
+                Margin = new Thickness(0, 0, 6, 6),
+                Background = (Brush)Application.Current.Resources["FrChipBrush"],
+                Child = new TextBlock
+                {
+                    Text = tag,
+                    FontSize = 11,
+                    Foreground = (Brush)Application.Current.Resources["FrAccentBrush"]
+                }
+            });
+        }
+
+        _ = LoadInspectorPreviewAsync(item);
     }
 
-    private async void OpenItem(FileItem item, bool secondary)
+    private void AddMetaRow(string label, string value)
+    {
+        var row = new Grid();
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        var l = new TextBlock
+        {
+            Text = label,
+            FontSize = 13,
+            Foreground = (Brush)Application.Current.Resources["FrMutedBrush"]
+        };
+        var v = new TextBlock
+        {
+            Text = value,
+            FontSize = 13,
+            TextAlignment = TextAlignment.Right,
+            TextWrapping = TextWrapping.WrapWholeWords,
+            Foreground = (Brush)Application.Current.Resources["FrTextBrush"]
+        };
+        Grid.SetColumn(v, 1);
+        row.Children.Add(l);
+        row.Children.Add(v);
+        InspectorMetaPanel.Children.Add(row);
+    }
+
+    private static IEnumerable<string> InferTags(FileItem item)
+    {
+        var tags = new List<string> { item.KindDisplayName.ToLowerInvariant() };
+        var name = item.Name.ToLowerInvariant();
+        if (name.Contains("screen")) tags.Add("screenshot");
+        if (name.Contains("invoice") || name.Contains("receipt")) tags.Add("finance");
+        if (item.Extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase)) tags.Add("pdf");
+        if (item.CanThumbnail) tags.Add("photo");
+        return tags.Distinct();
+    }
+
+    private async Task LoadInspectorPreviewAsync(FileItem item)
+    {
+        var bmp = await ThumbnailService.TryLoadAsync(item.Path, 480);
+        if (_selected?.Path != item.Path) return;
+        if (bmp is null) return;
+        InspectorImage.Source = bmp;
+        InspectorImage.Visibility = Visibility.Visible;
+        InspectorGlyph.Visibility = Visibility.Collapsed;
+
+        // Try dimensions for images
+        if (item.CanThumbnail && bmp.PixelWidth > 0)
+            AddMetaRow("Dimensions", $"{bmp.PixelWidth} × {bmp.PixelHeight}");
+    }
+
+    private async void OpenItem(FileItem item)
     {
         if (item.IsDirectory)
         {
-            if (secondary)
-                App.Library.NavigateSecondary(item.Path);
-            else
-            {
-                App.Library.Navigate(item.Path);
-                _destination = Destination.Browse;
-                SelectNavForDestination(Destination.Browse);
-            }
+            App.Library.Navigate(item.Path);
+            _destination = Destination.Browse;
+            HighlightNav(null);
             Refresh();
             return;
         }
-
         try
         {
             await Launcher.LaunchUriAsync(new Uri(item.Path));
@@ -506,8 +893,23 @@ public sealed partial class MainPage : Page
         catch
         {
             try { Process.Start(new ProcessStartInfo(item.Path) { UseShellExecute = true }); }
-            catch { StatusText.Text = "Could not open file."; }
+            catch { /* ignore */ }
         }
+    }
+
+    private void ShowInExplorer_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selected is null) return;
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "explorer.exe",
+                Arguments = $"/select,\"{_selected.Path}\"",
+                UseShellExecute = true
+            });
+        }
+        catch { /* ignore */ }
     }
 
     private void AppearanceBtn_Click(object sender, RoutedEventArgs e)
@@ -522,12 +924,6 @@ public sealed partial class MainPage : Page
         Refresh();
     }
 
-    private void DualPaneBtn_Click(object sender, RoutedEventArgs e)
-    {
-        App.Theme.DualPane = !App.Theme.DualPane;
-        Refresh();
-    }
-
     private void InspectorBtn_Click(object sender, RoutedEventArgs e)
     {
         App.Theme.InspectorOpen = !App.Theme.InspectorOpen;
@@ -537,7 +933,7 @@ public sealed partial class MainPage : Page
     private void SearchBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
         _destination = Destination.Search;
-        SelectNavForDestination(Destination.Search);
+        HighlightNav(null);
         Refresh();
     }
 
@@ -553,29 +949,19 @@ public sealed partial class MainPage : Page
         if (parent is null) return;
         App.Library.Navigate(parent);
         _destination = Destination.Browse;
-        SelectNavForDestination(Destination.Browse);
         Refresh();
     }
 
     private void TrashBtn_Click(object sender, RoutedEventArgs e)
     {
-        if (_selection.Count == 0)
-        {
-            StatusText.Text = "Select files to trash.";
-            return;
-        }
+        if (_selection.Count == 0) return;
         App.Library.MoveToTrash(_selection.ToList());
-        StatusText.Text = $"Moved {_selection.Count} item(s) to FileRadar trash.";
         Refresh();
     }
 
     private void OpenBtn_Click(object sender, RoutedEventArgs e)
     {
-        if (_selected is null)
-        {
-            StatusText.Text = "Select a file first.";
-            return;
-        }
-        OpenItem(_selected, false);
+        if (_selected is null) return;
+        OpenItem(_selected);
     }
 }

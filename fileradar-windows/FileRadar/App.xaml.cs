@@ -39,7 +39,7 @@ public partial class App : Application
 
         TrySetMicaBackdrop(_window);
 
-        _window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1440, 900));
+        _window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1480, 920));
         _window.Activate();
     }
 
@@ -83,10 +83,17 @@ public partial class App : Application
             };
         }
 
-        _micaController = new MicaController { Kind = MicaKind.Base };
+        _micaController = new MicaController { Kind = MicaKind.BaseAlt };
         _micaController.AddSystemBackdropTarget(window.As<Microsoft.UI.Composition.ICompositionSupportsSystemBackdrop>());
         _micaController.SetSystemBackdropConfiguration(_backdropConfig);
         return true;
+    }
+
+    public static void SyncBackdropTheme(bool dark)
+    {
+        // Updated from MainPage when appearance cycles
+        if (MainWindow?.Content is FrameworkElement root)
+            root.RequestedTheme = dark ? ElementTheme.Dark : ElementTheme.Light;
     }
 
     public static void ApplyThemeResources(ResourceDictionary resources, Models.ThemePalette palette)
@@ -121,6 +128,7 @@ public partial class App : Application
         SetColor("FrMuted", palette.Muted);
         SetColor("FrBorder", palette.Border);
         SetColor("FrChip", palette.Chip);
+        SetColor("FrSelection", palette.Selection);
         resources["FrRadius"] = palette.Radius;
     }
 }

@@ -1,37 +1,31 @@
 # FileRadar for Windows
 
-WinUI 3 / .NET 8 Explorer replacement matching the Mac FileRadar look system.
+WinUI 3 / .NET 8 Explorer replacement. **Default Home is Showcase** — three-pane Apple-like layout matching the Mac mockup (Shelves + Recents + Inspector).
 
 ## Features (v1)
 
-- Apple-like **Modern** default (neutral slate + blue accent, Mica frosted chrome)
-- Appearance: System / Light / Dark in primary toolbar
-- Calm Look cycle (Modern ↔ Elegant) in nav footer — Colourful/Minimal de-emphasized
-- NavigationView sidebar: Library + Places
-- Home shelves, grid/list, inspector, dual-pane, staging trash, search
+- **Showcase Home (default):** horizontal Shelves album cards, Recents thumbnails with relative time, rich Inspector (preview, metadata, tags, Show in Explorer)
+- Soft frosted Mica chrome, calm slate + blue accent; Dark appearance by default
+- Sidebar: Library destinations + Favorites + disk-free bar
+- Quiet toolbar (search + compact appearance / view / inspector) — no Look: Modern footer, no Colourful/Minimal chrome, no Up/Trash/Open strip on Home
+- Search, Cleanup, Duplicates, Timeline, Recycle Bin, browse
 
 ## Run (portable exe)
-
-Double-click:
 
 ```
 c:\Users\saran\Desktop\FileRadar Windows\dist\FileRadar.exe
 ```
 
-Or unzip `FileRadarWindows-1.0.0-b1-20261028.zip` and run `FileRadar\FileRadar.exe`.
-
-**WinAppSDK / runtime deps must sit beside the exe.** This is an unpackaged self-contained publish (`WindowsPackageType=None`, `WindowsAppSDKSelfContained=true`). Keep the whole `dist\` folder together — do not copy `FileRadar.exe` alone.
-
-True single-file (`PublishSingleFile=true`) **publishes but crashes at launch** on WinUI 3 / Windows App SDK (CLR unhandled exception). Use the portable folder layout instead.
+Keep the whole `dist\` folder together (WinAppSDK self-contained).
 
 ## Build / publish
 
 ```powershell
 cd fileradar-windows\FileRadar
-dotnet restore
-dotnet build -c Release -r win-x64 -p:Platform=x64
 dotnet publish -c Release -r win-x64 -p:Platform=x64 --self-contained true -p:PublishSingleFile=false -o ..\..\dist
 ```
+
+Optional UI capture: set `FILERADAR_CAPTURE=1` before launch to write `fileradar-windows-apple-home.png` beside the exe.
 
 ## Version
 

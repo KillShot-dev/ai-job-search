@@ -88,39 +88,111 @@ public sealed class LibraryService
             .ToList();
     }
 
-    public IReadOnlyList<ShelfGroup> BuildHomeShelves()
+    public IReadOnlyList<string> FavoritePlaces { get; } =
+    [
+        Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
+        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\Downloads",
+        Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+    ];
+
+    public IReadOnlyList<FileItem> GatherLibraryFiles(int perRoot = 100)
     {
-        var roots = QuickPlaces.Where(Directory.Exists).Take(4).ToList();
+        var roots = QuickPlaces.Where(Directory.Exists).Take(5).ToList();
         var all = new List<FileItem>();
         foreach (var root in roots)
-            all.AddRange(ListDirectory(root, 80).Where(i => !i.IsDirectory));
+            all.AddRange(ListDirectory(root, perRoot).Where(i => !i.IsDirectory));
+        return all;
+    }
 
-        var recent = all
+    public IReadOnlyList<FileItem> BuildRecents(int max = 24)
+        => GatherLibraryFiles()
             .OrderByDescending(i => i.ModifiedUtc)
-            .Take(24)
+            .Take(max)
             .ToList();
 
-        var shelves = new List<ShelfGroup>
-        {
-            new()
-            {
-                Title = "Recents",
-                Kind = FileKind.Other,
-                Items = recent
-            }
-        };
+    /// <summary>Showcase album shelves — kind groups with cover images (mockup).</summary>
+    public IReadOnlyList<ShelfAlbum> BuildAlbumShelves()
+    {
+        var all = GatherLibraryFiles();
+        var albums = new List<ShelfAlbum>();
 
         foreach (var kind in new[] { FileKind.Images, FileKind.Documents, FileKind.Videos, FileKind.Music, FileKind.Archives })
         {
             var items = all.Where(i => i.Kind == kind)
                 .OrderByDescending(i => i.ModifiedUtc)
-                .Take(18)
+                .Take(40)
                 .ToList();
-            if (items.Count > 0)
-                shelves.Add(new ShelfGroup { Title = kind.ToString(), Kind = kind, Items = items });
+            if (items.Count == 0) continue;
+            var cover = items.FirstOrDefault(i => i.CanThumbnail) ?? items[0];
+            albums.Add(new ShelfAlbum
+            {
+                Id = $"kind-{kind}",
+                Title = kind switch
+                {
+                    FileKind.Images => "Images",
+                    FileKind.Documents => "Documents",
+                    FileKind.Videos => "Videos",
+                    FileKind.Music => "Music",
+                    FileKind.Archives => "Archives",
+                    _ => kind.ToString()
+                },
+                Subtitle = $"{items.Count} file{(items.Count == 1 ? "" : "s")}",
+                Cover = cover,
+                Kind = kind,
+                Items = items
+            });
         }
 
-        return shelves;
+        // Smart-ish collections from filenames
+        AddSmart(albums, all, "Screenshots", i =>
+            i.Name.Contains("screenshot", StringComparison.OrdinalIgnoreCase)
+            || i.Name.StartsWith("Screen Shot", StringComparison.OrdinalIgnoreCase));
+        AddSmart(albums, all, "Large files", i => i.SizeBytes >= 50L * 1024 * 1024);
+        AddSmart(albums, all, "PDFs", i => i.Extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase));
+
+        return albums;
+    }
+
+    private static void AddSmart(List<ShelfAlbum> albums, IReadOnlyList<FileItem> all, string title, Func<FileItem, bool> pred)
+    {
+        var items = all.Where(pred).OrderByDescending(i => i.ModifiedUtc).Take(40).ToList();
+        if (items.Count == 0) return;
+        albums.Add(new ShelfAlbum
+        {
+            Id = $"smart-{title}",
+            Title = title,
+            Subtitle = $"{items.Count} file{(items.Count == 1 ? "" : "s")}",
+            Cover = items.FirstOrDefault(i => i.CanThumbnail) ?? items[0],
+            Kind = items[0].Kind,
+            Items = items
+        });
+    }
+
+    public IReadOnlyList<ShelfGroup> BuildHomeShelves()
+    {
+        // Legacy helper — prefer BuildAlbumShelves + BuildRecents for Showcase Home.
+        var albums = BuildAlbumShelves();
+        var list = new List<ShelfGroup>
+        {
+            new() { Title = "Recents", Kind = FileKind.Other, Items = BuildRecents() }
+        };
+        list.AddRange(albums.Select(a => new ShelfGroup { Title = a.Title, Kind = a.Kind, Items = a.Items }));
+        return list;
+    }
+
+    public (string Name, long Free, long Total) GetSystemDriveInfo()
+    {
+        try
+        {
+            var root = Path.GetPathRoot(Environment.GetFolderPath(Environment.SpecialFolder.Windows)) ?? "C:\\";
+            var drive = new DriveInfo(root);
+            var name = string.IsNullOrWhiteSpace(drive.VolumeLabel) ? $"Local Disk ({drive.Name.TrimEnd('\\')})" : drive.VolumeLabel;
+            return (name, drive.AvailableFreeSpace, drive.TotalSize);
+        }
+        catch
+        {
+            return ("Disk", 0, 0);
+        }
     }
 
     public IReadOnlyList<FileItem> Search(string query, int max = 200)
