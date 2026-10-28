@@ -1,22 +1,56 @@
 import SwiftUI
 
 // MARK: - Clean Up (principle 2: decisions; principle 10: Trash only, confirm bulk)
+// Expandable DisclosureGroup cards, per-file checkboxes, live trash totals, Quick Look.
 
 struct CleanupView: View {
     var trash: TrashService
     @EnvironmentObject var store: FileStore
     @EnvironmentObject var license: LicenseManager
+    @EnvironmentObject var theme: ThemeSettings
     @State private var showLicense = false
-    @State private var confirmingCard: CleanupCard?
+    @State private var confirming = false
     @State private var completedMessage: String?
+    @State private var selectedIDs: Set<String> = []
+    @State private var expandedCards: Set<String> = []
+
+    private var cards: [CleanupCard] { CleanupEngine.cards(for: store.files) }
+    private func cardKey(_ card: CleanupCard) -> String { card.type.rawValue }
+
+    private var selectedFiles: [FileItem] {
+        let all = cards.flatMap(\.files)
+        return all.filter { selectedIDs.contains($0.id) }
+    }
+
+    private var selectedBytes: Int64 {
+        selectedFiles.reduce(0) { $0 + $1.size }
+    }
 
     var body: some View {
-        VStack(alignment: .leading) {
-            Text("Clean Up").font(FileRadarFont.title()).padding(.horizontal)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Clean Up").font(FileRadarFont.title())
+                Spacer()
+                if license.isAllowed(.cleanup), !selectedFiles.isEmpty {
+                    Button {
+                        confirming = true
+                    } label: {
+                        Label(
+                            "Move \(selectedFiles.count) to Trash · \(ByteCountFormatter.string(fromByteCount: selectedBytes, countStyle: .file))",
+                            systemImage: "trash"
+                        )
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(theme.look.accent)
+                    .accessibilityHint("Moves the checked files to Trash. Nothing is deleted outright.")
+                }
+            }
+            .padding(.horizontal)
+            .padding(.bottom, 8)
+
             if !license.isAllowed(.cleanup) {
                 LockedFeatureView(feature: .cleanup) { showLicense = true }
             } else if let message = completedMessage {
-                // Principle 8: satisfying completion, not a dry toast.
                 VStack(spacing: 8) {
                     Image(systemName: "checkmark.circle.fill").font(.largeTitle).foregroundStyle(.green)
                     Text(message).font(FileRadarFont.heading())
@@ -27,46 +61,103 @@ struct CleanupView: View {
                         store.restoreFiles(restored.compactMap { SyncCompareService.fileItem(for: $0.originalURL) })
                         completedMessage = nil
                     }
-                        .keyboardShortcut("z", modifiers: .command)
+                    .keyboardShortcut("z", modifiers: .command)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if cards.isEmpty {
+                EmptyStateView(title: "All clear",
+                               message: "No old installers, forgotten downloads, old screenshots, or big old videos were found. Nicely kept.")
             } else {
-                let cards = CleanupEngine.cards(for: store.files)
-                if cards.isEmpty {
-                    EmptyStateView(title: "All clear",
-                                   message: "No old installers, forgotten downloads, old screenshots, or big old videos were found. Nicely kept.")
-                } else {
-                    List(cards) { card in
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(card.type.rawValue).font(FileRadarFont.heading())
-                            Text(card.type.explanation).font(FileRadarFont.body()).foregroundStyle(.secondary)
-                            Text("\(card.files.count) files · \(ByteCountFormatter.string(fromByteCount: card.totalSize, countStyle: .file))")
-                                .font(FileRadarFont.caption()).foregroundStyle(.secondary)
-                            Button("Move all to Trash") { confirmingCard = card }
-                                .buttonStyle(.borderedProminent)
-                                .accessibilityHint("Moves these files to Trash. Nothing is deleted outright.")
-                        }.padding(.vertical, 4)
+                List {
+                    ForEach(cards) { card in
+                        DisclosureGroup(
+                            isExpanded: Binding(
+                                get: { expandedCards.contains(cardKey(card)) },
+                                set: { open in
+                                    if open { expandedCards.insert(cardKey(card)) }
+                                    else { expandedCards.remove(cardKey(card)) }
+                                }
+                            )
+                        ) {
+                            ForEach(card.files) { file in
+                                HStack(spacing: 10) {
+                                    Toggle(isOn: Binding(
+                                        get: { selectedIDs.contains(file.id) },
+                                        set: { on in
+                                            if on { selectedIDs.insert(file.id) }
+                                            else { selectedIDs.remove(file.id) }
+                                        }
+                                    )) {
+                                        EmptyView()
+                                    }
+                                    .toggleStyle(.checkbox)
+                                    .labelsHidden()
+
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(file.name).font(FileRadarFont.body()).lineLimit(1)
+                                        Text(ByteCountFormatter.string(fromByteCount: file.size, countStyle: .file))
+                                            .font(FileRadarFont.caption()).foregroundStyle(.secondary)
+                                    }
+                                    Spacer()
+                                    Button {
+                                        QuickLookHelper.shared.show(files: [file])
+                                    } label: {
+                                        Image(systemName: "eye")
+                                    }
+                                    .buttonStyle(.borderless)
+                                    .help("Quick Look")
+                                    .accessibilityLabel("Quick Look \(file.name)")
+                                }
+                                .padding(.vertical, 2)
+                            }
+                            HStack {
+                                Button(card.files.allSatisfy { selectedIDs.contains($0.id) } ? "Deselect all" : "Select all") {
+                                    let ids = Set(card.files.map(\.id))
+                                    if ids.isSubset(of: selectedIDs) {
+                                        selectedIDs.subtract(ids)
+                                    } else {
+                                        selectedIDs.formUnion(ids)
+                                    }
+                                }
+                                .font(FileRadarFont.caption())
+                                Spacer()
+                            }
+                            .padding(.top, 4)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(card.type.rawValue).font(FileRadarFont.heading())
+                                Text(card.type.explanation)
+                                    .font(FileRadarFont.body()).foregroundStyle(.secondary)
+                                Text("\(card.files.count) files · \(ByteCountFormatter.string(fromByteCount: card.totalSize, countStyle: .file)) · \(cardSelectedCount(card)) selected")
+                                    .font(FileRadarFont.caption()).foregroundStyle(.secondary)
+                            }
+                            .padding(.vertical, 4)
+                        }
                     }
                 }
             }
         }
         .sheet(isPresented: $showLicense) { LicenseEntryView() }
-        .alert("Move these files to Trash?", isPresented: .init(
-            get: { confirmingCard != nil },
-            set: { if !$0 { confirmingCard = nil } }
-        )) {
+        .alert("Move these files to Trash?", isPresented: $confirming) {
             Button("Move to Trash", role: .destructive) {
-                guard let card = confirmingCard else { return }
-                // Principle 5: the completion message names where files went.
-                let moved = trash.trash(card.files)
+                let moved = trash.trash(selectedFiles)
                 store.removeFiles(matching: Set(moved.map { $0.originalURL.path }))
                 completedMessage = "\(moved.count) files moved to Trash. You can restore them from Finder, or undo here."
-                confirmingCard = nil
+                selectedIDs.removeAll()
+                confirming = false
             }
-            Button("Cancel", role: .cancel) { confirmingCard = nil }
+            Button("Cancel", role: .cancel) { confirming = false }
         } message: {
-            Text("Files in Trash can be restored. This does not delete anything outright.")
+            Text("\(selectedFiles.count) files · \(ByteCountFormatter.string(fromByteCount: selectedBytes, countStyle: .file)). Files in Trash can be restored. This does not delete anything outright.")
         }
+        .onAppear {
+            // Expand the first card by default so checkboxes are discoverable.
+            if let first = cards.first { expandedCards.insert(cardKey(first)) }
+        }
+    }
+
+    private func cardSelectedCount(_ card: CleanupCard) -> Int {
+        card.files.filter { selectedIDs.contains($0.id) }.count
     }
 }
 

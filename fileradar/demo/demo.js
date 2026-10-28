@@ -567,14 +567,17 @@
     if (state.dualPane && e.altKey && e.key === "2") { e.preventDefault(); focusPane("right"); }
   });
 
-  // Look + theme toggles
+  // Look + theme toggles (4 looks × Light/Dark)
+  var LOOKS = ["modern", "elegant", "colourful", "minimal"];
   function setLook(look) {
+    if (LOOKS.indexOf(look) < 0) look = "modern";
     document.body.dataset.look = look;
-    document.querySelectorAll("[data-look-btn]").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.lookBtn === look); });
+    document.querySelectorAll("[data-look-btn]").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.lookBtn === look ? "true" : "false"); });
   }
   function setTheme(theme) {
+    if (theme !== "light" && theme !== "dark") theme = "light";
     document.body.dataset.theme = theme;
-    document.querySelectorAll("[data-theme-btn]").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.themeBtn === theme); });
+    document.querySelectorAll("[data-theme-btn]").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.themeBtn === theme ? "true" : "false"); });
   }
   document.querySelectorAll("[data-look-btn]").forEach(function (b) { b.onclick = function () { setLook(b.dataset.lookBtn); }; });
   document.querySelectorAll("[data-theme-btn]").forEach(function (b) { b.onclick = function () { setTheme(b.dataset.themeBtn); }; });
@@ -780,8 +783,12 @@
     add("Clear Drop Stack", "stack", function () { state.dropStack = []; renderDropStack(); toast("Drop Stack cleared."); });
     add("New tab", "tabs", function () { var next = FOLDERS.filter(function (loc) { return state.tabs.indexOf(loc) < 0; })[0]; if (!next) { toast("All sample folders are already open as tabs."); return; } openTab(next); activateTab(next); });
     add("Reopen closed tab", "tabs", reopenClosedTab);
-    add("Toggle Colourful look", "appearance", function () { setLook("colourful"); });
-    add("Toggle Minimal look", "appearance", function () { setLook("minimal"); });
+    add("Modern look", "appearance", function () { setLook("modern"); });
+    add("Elegant look", "appearance", function () { setLook("elegant"); });
+    add("Colourful look", "appearance", function () { setLook("colourful"); });
+    add("Minimal look", "appearance", function () { setLook("minimal"); });
+    add("Light appearance", "appearance", function () { setTheme("light"); });
+    add("Dark appearance", "appearance", function () { setTheme("dark"); });
     add("Switch to Light theme", "appearance", function () { setTheme("light"); });
     add("Switch to Dark theme", "appearance", function () { setTheme("dark"); });
     add("View as Grid", "view", function () { state.layout = "grid"; render(false); });
@@ -857,7 +864,7 @@
     if (banner && banner.parentNode) banner.parentNode.insertBefore(bar, banner.nextSibling);
   })();
 
-  setLook("colourful"); setTheme("light");
+  setLook("modern"); setTheme("light");
   render(false);
   renderFolderSizes();
   renderFavorites();

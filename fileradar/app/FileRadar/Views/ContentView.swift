@@ -62,11 +62,14 @@ struct ContentView: View {
     @AppStorage("previewStripEnabled") private var previewStripEnabled = true
     @State private var activeIsRight = false
     @State private var showBatchRename = false
+    @State private var showTransfers = false
     @StateObject private var trash = TrashService()
+    @ObservedObject private var transferQueue = TransferQueue.shared
 
     var body: some View {
         splitChrome
             .tint(theme.look.accent)
+            .preferredColorScheme(theme.colorScheme)
             .fileRadarAtmosphere(theme.look)
             .modifier(ContentSheetsModifier(
                 showLicense: $showLicense,
@@ -116,23 +119,25 @@ struct ContentView: View {
     private var splitChrome: some View {
         NavigationSplitView {
             List(selection: $destination) {
+                // Four sidebar sections — Library, Collections, Tools, Places.
                 Section("Library") {
                     NavigationLink(value: Destination.home) { Label("Home", systemImage: "house") }
                     NavigationLink(value: Destination.search) { Label("Search", systemImage: "magnifyingglass") }
                     NavigationLink(value: Destination.timeline) { Label("Timeline", systemImage: "calendar") }
                     NavigationLink(value: Destination.diskMap) { Label("Disk Map", systemImage: "square.grid.3x3") }
-                    NavigationLink(value: Destination.extras) { Label("Extras", systemImage: "wand.and.stars") }
                     NavigationLink(value: Destination.muse) { Label("Muse", systemImage: "sparkles") }
                 }
-                Section("Kinds") {
+                Section("Collections") {
                     ForEach([FileKind.image, .video, .audio, .document, .archive, .app], id: \.self) { kind in
                         NavigationLink(value: Destination.kind(kind)) {
                             Label(kind.displayName, systemImage: kind.systemImage)
                         }
                     }
-                }
-                if !favorites.paths.isEmpty {
-                    Section("Favorites") {
+                    NavigationLink(value: Destination.smartFolder("Large Files")) { Label("Large Files", systemImage: "doc.fill") }
+                    NavigationLink(value: Destination.smartFolder("Screenshots")) { Label("Screenshots", systemImage: "camera") }
+                    NavigationLink(value: Destination.smartFolder("Receipts & invoices")) { Label("Receipts & invoices", systemImage: "receipt") }
+                    NavigationLink(value: Destination.smartFolder("Unfinished drafts")) { Label("Unfinished drafts", systemImage: "pencil") }
+                    if !favorites.paths.isEmpty {
                         ForEach(favorites.paths, id: \.self) { path in
                             let url = URL(fileURLWithPath: path)
                             NavigationLink(value: Destination.favorite(url)) {
@@ -140,9 +145,7 @@ struct ContentView: View {
                             }
                         }
                     }
-                }
-                if license.isAllowed(.savedSearches), !savedSearches.items.isEmpty {
-                    Section("Saved Searches") {
+                    if license.isAllowed(.savedSearches) {
                         ForEach(savedSearches.items) { item in
                             NavigationLink(value: Destination.savedSearch(item.id)) {
                                 Label(item.name, systemImage: "bookmark")
@@ -153,28 +156,23 @@ struct ContentView: View {
                         }
                     }
                 }
-                Section("Smart Folders") {
-                    NavigationLink(value: Destination.smartFolder("Large Files")) { Label("Large Files", systemImage: "doc.fill") }
-                    NavigationLink(value: Destination.smartFolder("Screenshots")) { Label("Screenshots", systemImage: "camera") }
-                    NavigationLink(value: Destination.smartFolder("Receipts & invoices")) { Label("Receipts & invoices", systemImage: "receipt") }
-                    NavigationLink(value: Destination.smartFolder("Unfinished drafts")) { Label("Unfinished drafts", systemImage: "pencil") }
-                }
-                Section("Clean Up") {
+                Section("Tools") {
                     NavigationLink(value: Destination.cleanup) { Label("Clean Up", systemImage: "trash") }
                     NavigationLink(value: Destination.duplicates) { Label("Duplicates", systemImage: "doc.on.doc") }
-                }
-                Section("Workspaces & Compare") {
                     NavigationLink(value: Destination.workspaces) { Label("Workspaces", systemImage: "square.grid.2x2") }
                     NavigationLink(value: Destination.syncCompare) { Label("Compare Folders", systemImage: "arrow.left.arrow.right") }
+                    NavigationLink(value: Destination.extras) { Label("Extras", systemImage: "wand.and.stars") }
                 }
-                Section("Holding & Transfers") {
-                    DropStackView()
-                    TransferQueueView()
-                }
-                if !store.pinnedFolderURLs.isEmpty {
-                    Section("Pinned") {
+                Section("Places") {
+                    if store.pinnedFolderURLs.isEmpty {
+                        Text("Pin folders from a file’s context menu.")
+                            .font(FileRadarFont.caption())
+                            .foregroundStyle(.secondary)
+                    } else {
                         ForEach(store.pinnedFolderURLs, id: \.self) { url in
-                            NavigationLink(value: Destination.pinned(url)) { Label(url.lastPathComponent, systemImage: "pin") }
+                            NavigationLink(value: Destination.pinned(url)) {
+                                Label(url.lastPathComponent, systemImage: "pin")
+                            }
                         }
                     }
                 }
@@ -182,15 +180,21 @@ struct ContentView: View {
             .listStyle(.sidebar)
             .navigationTitle("FileRadar")
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                DiskFreeBar()
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
+                VStack(spacing: 8) {
+                    DropStackView()
+                        .padding(.horizontal, 10)
+                    DiskFreeBar()
+                        .padding(.horizontal, 12)
+                }
+                .padding(.vertical, 10)
+                .background(theme.look.chromeMaterial)
             }
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     if let current = playback.current {
                         Button(action: { playback.toggle(current) }) {
-                            Label(playback.isPlaying ? "Pause" : "Play", systemImage: playback.isPlaying ? "pause.fill" : "play.fill")
+                            Label(playback.isPlaying ? "Pause" : "Play",
+                                  systemImage: playback.isPlaying ? "pause.fill" : "play.fill")
                         }
                         .help("Play or pause \(current.name)")
                         .accessibilityLabel(playback.isPlaying ? "Pause \(current.name)" : "Play \(current.name)")
@@ -212,8 +216,10 @@ struct ContentView: View {
                     .background(.bar)
                     .transition(.move(edge: .top).combined(with: .opacity))
                 }
-                TabBarView(tabState: tabState) { folder in
-                    destination = .pinned(folder)
+                if showTabBar {
+                    TabBarView(tabState: tabState) { folder in
+                        destination = .pinned(folder)
+                    }
                 }
                 ZStack(alignment: .bottom) {
                     VStack(spacing: 0) {
@@ -250,60 +256,123 @@ struct ContentView: View {
                     showInspector = true
                 }
             }
-            .toolbar {
-                ToolbarItem(placement: .navigation) {
-                    Button("Inspector") { showInspector.toggle() }
-                        .keyboardShortcut("i", modifiers: [.command, .option])
-                }
-                ToolbarItem(placement: .navigation) {
-                    Button("Command Palette…") { showPalette = true }
-                        .keyboardShortcut("k", modifiers: .command)
-                        .help("Command palette: every action, by keyboard (Cmd-K).")
-                }
-                ToolbarItem(placement: .navigation) {
-                    Button(dualPaneEnabled ? "Single Pane" : "Dual Pane") { dualPaneEnabled.toggle() }
-                        .help("Dual-pane mode is optional and off by default.")
-                }
-                ToolbarItem(placement: .navigation) {
-                    Button("Jump Panes") { activeIsRight.toggle() }
-                        .keyboardShortcut(.tab, modifiers: .control)
-                        .disabled(!dualPaneEnabled)
-                }
-                ToolbarItem(placement: .navigation) {
-                    Button(previewStripEnabled ? "Hide Preview" : "Show Preview") {
-                        previewStripEnabled.toggle()
-                    }
-                    .keyboardShortcut("p", modifiers: [.command, .shift])
-                    .help("Quiet preview strip under the file list (Shift-Cmd-P).")
-                }
-                ToolbarItem(placement: .navigation) {
-                    Button("Add Folder…") { store.addFolderInteractive() }
-                        .help("Add a folder with a security-scoped bookmark and index it.")
-                }
-                ToolbarItem(placement: .navigation) {
-                    Button("Rename…") { showBatchRename = true }
-                        .keyboardShortcut("r", modifiers: [.command, .shift])
-                        .disabled(store.selectedIDs.isEmpty)
-                        .help("Batch rename the current selection (Shift-Cmd-R).")
-                }
-                ToolbarItem(placement: .navigation) {
-                    Picker("Sort", selection: $store.sort) {
-                        ForEach(FileStore.SortOrder.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
-                    }
-                    .pickerStyle(.menu)
-                    .accessibilityLabel("Sort files")
-                }
-                ToolbarItem(placement: .navigation) {
-                    Picker("View", selection: $store.viewMode) {
-                        Text("Grid").tag(FileStore.ViewMode.grid)
-                        Text("List").tag(FileStore.ViewMode.list)
-                        Text("Columns").tag(FileStore.ViewMode.columns)
-                        Text("Showcase").tag(FileStore.ViewMode.showcase)
-                    }
-                    .pickerStyle(.segmented)
-                    .accessibilityLabel("Grid, list, columns, or showcase")
+            .searchable(text: $searchText, placement: .toolbar, prompt: "Search files…")
+            .onSubmit(of: .search) {
+                if !searchText.isEmpty { destination = .search }
+            }
+            .onChange(of: searchText) { _, new in
+                if !new.isEmpty, destination != .search {
+                    destination = .search
                 }
             }
+            .toolbar { detailToolbar }
+        }
+    }
+
+    /// Tab strip only when tabs exist or the current destination is folder-scoped.
+    private var showTabBar: Bool {
+        !tabState.tabs.isEmpty || isFolderDestination || dualPaneEnabled
+    }
+
+    @ToolbarContentBuilder
+    private var detailToolbar: some ToolbarContent {
+        ToolbarItemGroup(placement: .primaryAction) {
+            Button {
+                theme.cycleAppearance()
+            } label: {
+                Image(systemName: theme.appearance.systemImage)
+            }
+            .help("Appearance: \(theme.appearance.rawValue). Click to cycle System / Light / Dark.")
+            .accessibilityLabel("Appearance \(theme.appearance.rawValue)")
+
+            Menu {
+                ForEach(AppLook.allCases) { look in
+                    Button {
+                        theme.look = look
+                    } label: {
+                        Label(look.rawValue, systemImage: look.systemImage)
+                    }
+                }
+            } label: {
+                Image(systemName: "paintpalette")
+            }
+            .help("Look: \(theme.look.rawValue). Shift-Cmd-L cycles looks.")
+            .accessibilityLabel("Look \(theme.look.rawValue)")
+
+            Button {
+                dualPaneEnabled.toggle()
+            } label: {
+                Image(systemName: dualPaneEnabled ? "rectangle.split.2x1.fill" : "rectangle.split.2x1")
+            }
+            .help("Dual-pane mode is optional and off by default.")
+            .accessibilityLabel(dualPaneEnabled ? "Single pane" : "Dual pane")
+
+            Menu {
+                Picker("View", selection: $store.viewMode) {
+                    Label("Grid", systemImage: "square.grid.2x2").tag(FileStore.ViewMode.grid)
+                    Label("List", systemImage: "list.bullet").tag(FileStore.ViewMode.list)
+                    Label("Columns", systemImage: "rectangle.split.3x1").tag(FileStore.ViewMode.columns)
+                    Label("Showcase", systemImage: "rectangle.portrait.on.rectangle.portrait").tag(FileStore.ViewMode.showcase)
+                }
+            } label: {
+                Image(systemName: "square.grid.2x2")
+            }
+            .help("View mode")
+            .accessibilityLabel("View mode")
+
+            Menu {
+                Picker("Sort", selection: $store.sort) {
+                    ForEach(FileStore.SortOrder.allCases, id: \.self) {
+                        Text($0.rawValue.capitalized).tag($0)
+                    }
+                }
+            } label: {
+                Image(systemName: "arrow.up.arrow.down")
+            }
+            .help("Sort files")
+            .accessibilityLabel("Sort files")
+
+            Button {
+                showInspector.toggle()
+            } label: {
+                Image(systemName: showInspector ? "sidebar.trailing" : "sidebar.right")
+            }
+            .keyboardShortcut("i", modifiers: [.command, .option])
+            .help("Toggle inspector")
+            .accessibilityLabel("Inspector")
+
+            Button {
+                showTransfers.toggle()
+            } label: {
+                Image(systemName: transferQueue.activeCount > 0
+                      ? "arrow.left.arrow.right.circle.fill"
+                      : "arrow.left.arrow.right.circle")
+            }
+            .help("Transfer queue")
+            .popover(isPresented: $showTransfers, arrowEdge: .bottom) {
+                TransferQueueView()
+                    .frame(width: 320, height: 280)
+                    .padding(8)
+            }
+
+            Menu {
+                Button("Command Palette…") { showPalette = true }
+                    .keyboardShortcut("k", modifiers: .command)
+                Button("Jump Panes") { activeIsRight.toggle() }
+                    .keyboardShortcut(.tab, modifiers: .control)
+                    .disabled(!dualPaneEnabled)
+                Button(previewStripEnabled ? "Hide Preview Strip" : "Show Preview Strip") {
+                    previewStripEnabled.toggle()
+                }
+                .keyboardShortcut("p", modifiers: [.command, .shift])
+                Button("Add Folder…") { store.addFolderInteractive() }
+                Button("Rename…") { showBatchRename = true }
+                    .keyboardShortcut("r", modifiers: [.command, .shift])
+                    .disabled(store.selectedIDs.isEmpty)
+            } label: {
+                Image(systemName: "ellipsis.circle")
+            }
+            .help("More actions")
         }
     }
 
@@ -369,7 +438,7 @@ struct ContentView: View {
         case .cleanup: CleanupView(trash: trash)
         case .duplicates: DuplicatesView(trash: trash)
         case .timeline: TimelineView()
-        case .diskMap: DiskMapView()
+        case .diskMap: DiskMapView(destination: $destination)
         case .extras: ExtrasView()
         case .kind(let kind): FileCollectionView(title: kind.displayName, files: store.files.filter { $0.kind == kind })
         case .source(let name): FileCollectionView(title: name, files: store.files.filter { $0.downloadSource.displayName == name })

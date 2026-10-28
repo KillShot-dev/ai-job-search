@@ -64,18 +64,33 @@ struct QuickSearchPanelView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            TextField("Quick Search — type in plain words", text: $query)
-                .textFieldStyle(.roundedBorder)
-                .onChange(of: query) { _, new in
-                    withAnimation(FileRadarMotion.chip) { parsed = SearchQueryParser.parse(new) }
-                }
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 10) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.secondary)
+                    .imageScale(.large)
+                TextField("Quick Search — type in plain words", text: $query)
+                    .textFieldStyle(.plain)
+                    .font(FileRadarFont.heading())
+                    .onChange(of: query) { _, new in
+                        withAnimation(FileRadarMotion.chip) { parsed = SearchQueryParser.parse(new) }
+                    }
+            }
+            .padding(.horizontal, 14).padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(Color.primary.opacity(0.06))
+            )
+
             if !parsed.chips.isEmpty {
-                HStack { ForEach(parsed.chips) { chip in
-                    Text(chip.sentence).font(FileRadarFont.caption())
-                        .padding(.horizontal, 8).padding(.vertical, 4)
-                        .background(Capsule().fill(Color.accentColor.opacity(0.15)))
-                } }
+                HStack(spacing: 6) {
+                    ForEach(parsed.chips) { chip in
+                        Text(chip.sentence).font(FileRadarFont.caption())
+                            .padding(.horizontal, 8).padding(.vertical, 4)
+                            .background(Capsule().fill(Color.accentColor.opacity(0.15)))
+                            .transition(.move(edge: .leading).combined(with: .opacity))
+                    }
+                }
             }
             if license?.isAllowed(.quickSearch) != true {
                 Text("Quick Search is a full-version feature. Unlock to search from this panel.")
@@ -85,24 +100,38 @@ struct QuickSearchPanelView: View {
             } else if results.isEmpty {
                 Text("No matches.").font(FileRadarFont.caption()).foregroundStyle(.secondary)
             } else {
-                List(results) { file in
-                    HStack {
-                        Image(systemName: file.kind.systemImage)
-                        VStack(alignment: .leading) {
-                            Text(file.name).lineLimit(1)
-                            Text(file.url.deletingLastPathComponent().lastPathComponent)
-                                .font(FileRadarFont.caption()).foregroundStyle(.secondary)
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 2) {
+                        ForEach(results) { file in
+                            Button {
+                                NSWorkspace.shared.activateFileViewerSelecting([file.url])
+                            } label: {
+                                HStack(spacing: 10) {
+                                    Image(systemName: file.kind.systemImage)
+                                        .foregroundStyle(Color.accentColor)
+                                        .frame(width: 20)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(file.name).font(FileRadarFont.body()).lineLimit(1)
+                                        Text(file.url.deletingLastPathComponent().lastPathComponent)
+                                            .font(FileRadarFont.caption()).foregroundStyle(.secondary)
+                                    }
+                                    Spacer()
+                                    Text(ByteCountFormatter.string(fromByteCount: file.size, countStyle: .file))
+                                        .font(FileRadarFont.caption()).foregroundStyle(.tertiary)
+                                }
+                                .padding(.horizontal, 10).padding(.vertical, 8)
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
                         }
-                        Spacer()
-                    }
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        NSWorkspace.shared.activateFileViewerSelecting([file.url])
                     }
                 }
             }
             Spacer(minLength: 0)
-        }.padding()
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.ultraThinMaterial)
     }
 }
 
@@ -286,16 +315,15 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            Section("Look") {
+            Section("Look & Style") {
                 Picker("Look", selection: $theme.look) {
-                    ForEach(AppLook.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                    ForEach(AppLook.allCases) { Text($0.rawValue).tag($0) }
                 }
-                Toggle("Use system appearance", isOn: $theme.useSystemAppearance)
-                if !theme.useSystemAppearance {
-                    Toggle("Dark appearance", isOn: $theme.forceDark)
+                Picker("Appearance", selection: $theme.appearance) {
+                    ForEach(AppearanceMode.allCases) { Text($0.rawValue).tag($0) }
                 }
                 Toggle("Compact density", isOn: $theme.compactDensity)
-                Text("Both looks use one type scale and one accent system, in light and dark. Compact tightens sidebar and grid spacing.")
+                Text("Four looks share one type scale and one accent system, each in System, Light, or Dark. Compact tightens sidebar and grid spacing. Cycle looks with Shift-Cmd-L.")
                     .font(FileRadarFont.caption()).foregroundStyle(.secondary)
             }
             Section("Quick Search") {

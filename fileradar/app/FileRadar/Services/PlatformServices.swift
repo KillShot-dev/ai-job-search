@@ -87,12 +87,32 @@ final class QuickSearchPanel {
             let view = QuickSearchPanelView(store: store, license: license)
             let hosting = NSHostingController(rootView: view)
             let p = NSPanel(contentViewController: hosting)
-            p.styleMask = [.titled, .closable, .fullSizeContentView]
+            // Frosted HUD: borderless floating panel with vibrancy.
+            p.styleMask = [.borderless, .fullSizeContentView, .nonactivatingPanel]
             p.setContentSize(NSSize(width: 560, height: 420))
             p.isFloatingPanel = true
             p.level = .floating
-            p.title = "Quick Search"
+            p.titleVisibility = .hidden
+            p.titlebarAppearsTransparent = true
+            p.isOpaque = false
+            p.backgroundColor = .clear
+            p.hasShadow = true
+            p.isMovableByWindowBackground = true
+            if let content = p.contentView {
+                content.wantsLayer = true
+                content.layer?.cornerRadius = 18
+                content.layer?.masksToBounds = true
+            }
             panel = p
+        }
+        // Recenter near the active screen’s optical middle each show.
+        if let screen = NSScreen.main {
+            let size = panel?.frame.size ?? NSSize(width: 560, height: 420)
+            let origin = NSPoint(
+                x: screen.visibleFrame.midX - size.width / 2,
+                y: screen.visibleFrame.midY - size.height / 3
+            )
+            panel?.setFrameOrigin(origin)
         }
         panel?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)

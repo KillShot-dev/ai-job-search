@@ -1,5 +1,5 @@
-/* FileRadar demo styles — two looks (colourful / minimal) × light / dark.
-   One type scale, one layout; only palette and corner radius change. */
+/* FileRadar demo styles — four looks (modern / elegant / colourful / minimal)
+   × light / dark. One type scale, one layout; only palette and radius change. */
 * { box-sizing: border-box; }
 :root {
   --card: 150px; /* card thumbnail size, set by the size control */
@@ -10,6 +10,38 @@ button, input, select { font: inherit; }
 button { cursor: pointer; }
 :focus-visible { outline: 3px solid #0a84ff; outline-offset: 2px; }
 
+/* ---------- Modern look: cool blue, soft glass ---------- */
+body[data-look="modern"][data-theme="light"] {
+  --bg: #f2f5fa; --panel: #ffffff; --panel2: #e8eef7; --text: #0f172a; --muted: #5b6b7c;
+  --border: #d5dee9; --accent: #0a6cff; --accent2: #0d9488; --chip: #e3efff;
+  --wash: radial-gradient(1100px 520px at 8% -8%, #dbeafe 0%, transparent 55%),
+           radial-gradient(800px 420px at 100% 0%, #e0f2fe 0%, transparent 50%);
+  --kind-images: #0a6cff; --kind-videos: #6366f1; --kind-music: #db2777; --kind-documents: #0d9488; --kind-archives: #b45309; --kind-apps: #2563eb;
+  --radius: 10px; --shadow: 0 2px 10px rgba(15,23,42,.08);
+}
+body[data-look="modern"][data-theme="dark"] {
+  --bg: #0b1220; --panel: #141c2b; --panel2: #1c2638; --text: #e8eef7; --muted: #94a3b8;
+  --border: #2a364a; --accent: #5ea0ff; --accent2: #2dd4bf; --chip: #1e3a5f;
+  --kind-images: #5ea0ff; --kind-videos: #a5b4fc; --kind-music: #f472b6; --kind-documents: #2dd4bf; --kind-archives: #fbbf24; --kind-apps: #60a5fa;
+  --radius: 10px; --shadow: 0 2px 12px rgba(0,0,0,.4);
+}
+/* ---------- Elegant look: deep teal, softer radii ---------- */
+body[data-look="elegant"][data-theme="light"] {
+  --bg: #f4f7f6; --panel: #ffffff; --panel2: #e7efed; --text: #14201e; --muted: #5a6b68;
+  --border: #d2ddd9; --accent: #1f736b; --accent2: #8b6914; --chip: #dff3ef;
+  --wash: radial-gradient(1000px 500px at 12% -10%, #d9ebe7 0%, transparent 55%),
+           radial-gradient(700px 400px at 100% 0%, #f0e6c8 0%, transparent 45%);
+  --kind-images: #1f736b; --kind-videos: #4b6b8a; --kind-music: #8b4d6b; --kind-documents: #3d6b4f; --kind-archives: #8b6914; --kind-apps: #2f5d8a;
+  --radius: 16px; --shadow: 0 4px 18px rgba(20,32,30,.08);
+  --font: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+}
+body[data-look="elegant"][data-theme="dark"] {
+  --bg: #101816; --panel: #1a2421; --panel2: #24302c; --text: #e8f2ef; --muted: #9bb0aa;
+  --border: #2f3f3a; --accent: #3db8ab; --accent2: #d4a84b; --chip: #1f3a35;
+  --kind-images: #3db8ab; --kind-videos: #7aa0c2; --kind-music: #d08ab0; --kind-documents: #6fbf8e; --kind-archives: #d4a84b; --kind-apps: #6ea0d4;
+  --radius: 16px; --shadow: 0 4px 18px rgba(0,0,0,.4);
+  --font: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+}
 /* ---------- Colourful look ---------- */
 body[data-look="colourful"][data-theme="light"] {
   --bg: #f3eee6; --panel: #fffcf7; --panel2: #f6efe4; --text: #1a1714; --muted: #6b6259;
@@ -38,7 +70,9 @@ body[data-look="minimal"][data-theme="dark"] {
   --kind-images: #ccc; --kind-videos: #ccc; --kind-music: #ccc; --kind-documents: #ccc; --kind-archives: #ccc; --kind-apps: #ccc;
   --radius: 6px; --shadow: 0 1px 4px rgba(0,0,0,.4);
 }
-body { background: var(--bg); color: var(--text); }
+body { background: var(--bg); color: var(--text); font-family: var(--font); }
+body[data-look="modern"],
+body[data-look="elegant"],
 body[data-look="colourful"] { background-image: var(--wash, none); background-attachment: fixed; }
 .trial-banner { display:flex; gap:10px; align-items:center; justify-content:space-between; padding:8px 16px; background: var(--panel2); border-bottom:1px solid var(--border); font-size:13px; }
 .trial-banner strong { color: var(--accent); }

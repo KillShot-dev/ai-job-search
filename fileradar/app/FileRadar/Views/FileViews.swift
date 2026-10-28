@@ -5,8 +5,8 @@ import UniformTypeIdentifiers
 // MARK: - Shared file grid / list + card + context menu (principles 3, 4, 9)
 
 /// One file, shown big: thumbnail first, chrome second (principle 3).
-/// Thumbnails load through `ThumbnailCache` (async) so big libraries do
-/// not stutter on the main thread.
+/// Selection ring, hover dims overlay (opacity only — no layout jitter),
+/// and aspect framing by kind.
 struct FileCardView: View {
     var file: FileItem
     var size: CGFloat
@@ -15,16 +15,38 @@ struct FileCardView: View {
     @EnvironmentObject var favorites: FavoritesStore
     @State private var hovering = false
 
+    private var selected: Bool { store.selectedIDs.contains(file.id) }
+    private var thumbHeight: CGFloat { size * file.kind.cardAspect }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             ZStack(alignment: .topTrailing) {
-                AsyncFileThumbnail(file: file, size: CGSize(width: size, height: size * 0.75))
+                AsyncFileThumbnail(file: file, size: CGSize(width: size, height: thumbHeight))
+                    .frame(width: size, height: thumbHeight)
+                    .clipped()
+
+                // Hover dims overlay — opacity-only so layout never jitters.
+                RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
+                    .fill(Color.black.opacity(hovering && !selected ? 0.22 : 0))
+                    .allowsHitTesting(false)
+
+                if hovering, let dims = dimensionsText {
+                    Text(dims)
+                        .font(FileRadarFont.caption())
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 6).padding(.vertical, 3)
+                        .background(.ultraThinMaterial, in: Capsule())
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                        .padding(6)
+                        .allowsHitTesting(false)
+                        .transition(.opacity)
+                }
+
                 if favorites.contains(file.url) {
                     Image(systemName: "star.fill")
                         .font(.caption2)
                         .foregroundStyle(.yellow)
                         .padding(6)
-                        .transition(.scale.combined(with: .opacity))
                 }
                 if file.isICloudOnly {
                     Label("iCloud only — not downloaded", systemImage: "icloud")
@@ -34,23 +56,30 @@ struct FileCardView: View {
                         .padding(6)
                 }
             }
+            .frame(width: size, height: thumbHeight)
+            .clipShape(RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
+                    .strokeBorder(selected ? theme.look.accent : Color.clear, lineWidth: 2.5)
+            )
+            .shadow(color: selected ? theme.look.accent.opacity(0.35) : .clear, radius: 4, y: 0)
+
             Text(file.name).font(FileRadarFont.body()).lineLimit(2)
                 .accessibilityLabel(file.name)
             Text("\(file.kind.displayName) · \(ByteCountFormatter.string(fromByteCount: file.size, countStyle: .file))")
                 .font(FileRadarFont.caption()).foregroundStyle(.secondary)
-            if hovering, let dims = dimensionsText {
-                Text(dims).font(FileRadarFont.caption()).foregroundStyle(.secondary)
-                    .transition(.opacity)
-            }
         }
+        .frame(width: size, alignment: .leading)
         .padding(6)
         .background(
             RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
-                .fill(hovering ? Color.accentColor.opacity(0.06) : Color.clear)
+                .fill(selected ? theme.look.accent.opacity(0.08) : Color.clear)
         )
         .animation(FileRadarMotion.selection, value: hovering)
+        .animation(FileRadarMotion.selection, value: selected)
         .onHover { hovering = $0 }
         .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(selected ? .isSelected : [])
         .accessibilityHint("Double-click to open. Press Space for Quick Look. Right-click for more actions.")
         .contextMenu { fileContextMenu(for: file) }
         .onDrag { NSItemProvider(object: file.url as NSURL) }

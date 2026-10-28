@@ -5,12 +5,13 @@
   var cfg = window.FileRadarConfig || {};
   var root = document.documentElement;
 
-  // --- Theme: look (colourful / minimal) + mode (light / dark) ---
+  // --- Theme: look (modern / elegant / colourful / minimal) + mode (light / dark) ---
+  var LOOKS = ["modern", "elegant", "colourful", "minimal"];
   function applyTheme() {
     // Stored values are theme names only; anything else falls back to the
     // defaults instead of being applied to the document.
     var look = localStorage.getItem("fileradar-look");
-    if (look !== "colourful" && look !== "minimal") look = "colourful";
+    if (LOOKS.indexOf(look) < 0) look = "modern";
     var mode = localStorage.getItem("fileradar-mode");
     if (mode !== "light" && mode !== "dark") mode = null;
     if (!mode) {

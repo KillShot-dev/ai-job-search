@@ -6,7 +6,7 @@
 <title>FileRadar — Web Demo (Sample Library)</title>
 <link rel="stylesheet" href="demo.css">
 </head>
-<body data-look="colourful" data-theme="light">
+<body data-look="modern" data-theme="light">
 <a class="sr-only" href="#main">Skip to main content</a>
 
 <div class="banner" role="note">
@@ -28,11 +28,15 @@
     <button id="columnsBtn" aria-pressed="false">Columns</button>
     <button id="saveSearchBtn" title="Save the current search (demo-local)">Save search</button>
   </div>
+  <div class="toggles" role="group" aria-label="Look">
+    <button data-look-btn="modern" aria-pressed="true">Modern</button>
+    <button data-look-btn="elegant" aria-pressed="false">Elegant</button>
+    <button data-look-btn="colourful" aria-pressed="false">Colourful</button>
+    <button data-look-btn="minimal" aria-pressed="false">Minimal</button>
+  </div>
   <div class="toggles" role="group" aria-label="Appearance">
-    <button data-look-btn="colourful" aria-pressed="true">🎨 Colourful look</button>
-    <button data-look-btn="minimal" aria-pressed="false">⬜ Minimal look</button>
-    <button data-theme-btn="light" aria-pressed="true">☀️ Light</button>
-    <button data-theme-btn="dark" aria-pressed="false">🌙 Dark</button>
+    <button data-theme-btn="light" aria-pressed="true">Light</button>
+    <button data-theme-btn="dark" aria-pressed="false">Dark</button>
   </div>
 </header>
 

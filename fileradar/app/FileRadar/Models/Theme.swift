@@ -1,20 +1,27 @@
 import SwiftUI
 import AppKit
 
-/// Principle 7: two looks from one system. One type scale, one accent
-/// system; the look only changes palette and surface treatment, in both
-/// light and dark. Never two different layouts.
+/// Four looks from one system. Layout stays identical; only palette,
+/// corner radii, materials, and type design change — in both light and dark.
 ///
 /// Visual direction (intentionally NOT purple-on-white, cream+terracotta,
-/// or newspaper density): Colourful = warm amber/copper accent on soft
-/// stone materials; Minimal = near-monochrome with hairline separators
-/// and slightly tighter radii. Both stay native-macOS, not web-dashboard.
-enum AppLook: String, CaseIterable {
+/// or newspaper density):
+/// - Modern — cool blue accent, soft glass chrome
+/// - Elegant — deep teal + serif titles, larger radii
+/// - Colourful — warm copper accent on soft stone materials
+/// - Minimal — near-monochrome with hairline separators
+enum AppLook: String, CaseIterable, Identifiable {
+    case modern = "Modern"
+    case elegant = "Elegant"
     case colourful = "Colourful"
     case minimal = "Minimal"
 
+    var id: String { rawValue }
+
     var accent: Color {
         switch self {
+        case .modern: return Color(red: 0.04, green: 0.42, blue: 1.0) // vivid blue
+        case .elegant: return Color(red: 0.12, green: 0.45, blue: 0.42) // deep teal
         case .colourful: return Color(red: 0.91, green: 0.42, blue: 0.24) // copper
         case .minimal: return .primary
         }
@@ -22,6 +29,8 @@ enum AppLook: String, CaseIterable {
 
     var cardCorner: CGFloat {
         switch self {
+        case .modern: return 10
+        case .elegant: return 16
         case .colourful: return 12
         case .minimal: return 6
         }
@@ -29,48 +38,143 @@ enum AppLook: String, CaseIterable {
 
     var chromeMaterial: Material {
         switch self {
+        case .modern: return .ultraThinMaterial
+        case .elegant: return .regularMaterial
         case .colourful: return .ultraThinMaterial
         case .minimal: return .bar
+        }
+    }
+
+    var titleDesign: Font.Design {
+        switch self {
+        case .modern, .colourful: return .rounded
+        case .elegant: return .serif
+        case .minimal: return .default
+        }
+    }
+
+    var atmosphereOpacity: Double {
+        switch self {
+        case .modern: return 0.05
+        case .elegant: return 0.07
+        case .colourful: return 0.06
+        case .minimal: return 0.03
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .modern: return "circle.hexagongrid.fill"
+        case .elegant: return "seal.fill"
+        case .colourful: return "paintpalette.fill"
+        case .minimal: return "circle.lefthalf.filled"
+        }
+    }
+}
+
+/// System / Light / Dark — three appearance modes reachable from toolbar,
+/// View menu, Settings, Home pills, demo, and site.
+enum AppearanceMode: String, CaseIterable, Identifiable {
+    case system = "System"
+    case light = "Light"
+    case dark = "Dark"
+
+    var id: String { rawValue }
+
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: return nil
+        case .light: return .light
+        case .dark: return .dark
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .system: return "circle.lefthalf.filled"
+        case .light: return "sun.max"
+        case .dark: return "moon.fill"
         }
     }
 }
 
 final class ThemeSettings: ObservableObject {
     @Published var look: AppLook {
-        didSet { UserDefaults.standard.set(look.rawValue, forKey: "look") }
+        didSet {
+            UserDefaults.standard.set(look.rawValue, forKey: "look")
+            FileRadarFont.activeLook = look
+        }
     }
-    @Published var useSystemAppearance = true {
-        didSet { UserDefaults.standard.set(useSystemAppearance, forKey: "useSystemAppearance") }
-    }
-    @Published var forceDark = false {
-        didSet { UserDefaults.standard.set(forceDark, forKey: "forceDark") }
+    @Published var appearance: AppearanceMode {
+        didSet { UserDefaults.standard.set(appearance.rawValue, forKey: "appearanceMode") }
     }
     /// Slightly denser chrome for power users (sidebar + list rows).
     @Published var compactDensity = false {
         didSet { UserDefaults.standard.set(compactDensity, forKey: "compactDensity") }
     }
 
-    var colorScheme: ColorScheme? {
-        if useSystemAppearance { return nil }
-        return forceDark ? .dark : .light
+    var colorScheme: ColorScheme? { appearance.colorScheme }
+
+    /// Cycle Light → Dark → System for the toolbar toggle.
+    func cycleAppearance() {
+        switch appearance {
+        case .light: appearance = .dark
+        case .dark: appearance = .system
+        case .system: appearance = .light
+        }
+    }
+
+    /// Cycle through the four looks (⇧⌘L).
+    func cycleLook() {
+        let all = AppLook.allCases
+        guard let idx = all.firstIndex(of: look) else {
+            look = .modern
+            return
+        }
+        look = all[(idx + 1) % all.count]
     }
 
     init() {
-        self.look = AppLook(rawValue: UserDefaults.standard.string(forKey: "look") ?? "") ?? .colourful
-        self.useSystemAppearance = UserDefaults.standard.object(forKey: "useSystemAppearance") as? Bool ?? true
-        self.forceDark = UserDefaults.standard.bool(forKey: "forceDark")
+        let storedLook = UserDefaults.standard.string(forKey: "look") ?? ""
+        let resolvedLook = AppLook(rawValue: storedLook) ?? .modern
+        self.look = resolvedLook
+        FileRadarFont.activeLook = resolvedLook
+
+        if let raw = UserDefaults.standard.string(forKey: "appearanceMode"),
+           let mode = AppearanceMode(rawValue: raw) {
+            self.appearance = mode
+        } else {
+            // Migrate legacy toggles.
+            let useSystem = UserDefaults.standard.object(forKey: "useSystemAppearance") as? Bool ?? true
+            let forceDark = UserDefaults.standard.bool(forKey: "forceDark")
+            if useSystem {
+                self.appearance = .system
+            } else {
+                self.appearance = forceDark ? .dark : .light
+            }
+        }
         self.compactDensity = UserDefaults.standard.bool(forKey: "compactDensity")
     }
 }
 
-/// One type scale used by every view (principle 7). Uses rounded design
-/// for titles (warmth) and default for body (legibility) — still system
-/// fonts, so Dynamic Type / accessibility sizes apply.
+/// One type scale used by every view. Design (rounded / serif / default)
+/// follows the active look so titles stay coherent with the palette.
 enum FileRadarFont {
-    static func title() -> Font { .system(size: 26, weight: .bold, design: .rounded) }
-    static func heading() -> Font { .system(size: 15, weight: .semibold, design: .default) }
-    static func body() -> Font { .system(size: 13, weight: .regular, design: .default) }
-    static func caption() -> Font { .system(size: 11, weight: .regular, design: .default) }
+    /// Updated whenever `ThemeSettings.look` changes.
+    static var activeLook: AppLook = .modern
+
+    static func title(_ look: AppLook = activeLook) -> Font {
+        .system(size: 26, weight: .bold, design: look.titleDesign)
+    }
+    static func heading(_ look: AppLook = activeLook) -> Font {
+        .system(size: 15, weight: .semibold, design: look == .elegant ? .serif : .default)
+    }
+    static func body(_ look: AppLook = activeLook) -> Font {
+        .system(size: 13, weight: .regular, design: .default)
+    }
+    static func caption(_ look: AppLook = activeLook) -> Font {
+        .system(size: 11, weight: .regular, design: .default)
+    }
 }
 
 /// Shared motion curves — short, explanatory, never decorative bounce.
@@ -92,7 +196,7 @@ struct FileRadarAtmosphere: ViewModifier {
                 Color(nsColor: .windowBackgroundColor)
                 LinearGradient(
                     colors: [
-                        look.accent.opacity(look == .colourful ? 0.06 : 0.03),
+                        look.accent.opacity(look.atmosphereOpacity),
                         Color.clear
                     ],
                     startPoint: .topLeading,
@@ -108,5 +212,20 @@ struct FileRadarAtmosphere: ViewModifier {
 extension View {
     func fileRadarAtmosphere(_ look: AppLook) -> some View {
         modifier(FileRadarAtmosphere(look: look))
+    }
+}
+
+/// Aspect ratio for card framing by file kind (images taller, docs square, etc.).
+extension FileKind {
+    var cardAspect: CGFloat {
+        switch self {
+        case .image: return 0.75       // 4:3 landscape-ish height/width
+        case .video: return 0.5625     // 16:9
+        case .audio: return 1.0        // square
+        case .document: return 1.25    // portrait page
+        case .archive, .app: return 1.0
+        case .folder: return 0.85
+        case .other: return 0.85
+        }
     }
 }

@@ -58,6 +58,18 @@ struct FileRadarApp: App {
                 Button("List View") { store.viewMode = .list }.keyboardShortcut("2", modifiers: .command)
                 Button("Column View") { store.viewMode = .columns }.keyboardShortcut("3", modifiers: .command)
                 Button("Showcase View") { store.viewMode = .showcase }.keyboardShortcut("4", modifiers: .command)
+                Divider()
+                Button("Cycle Look") { theme.cycleLook() }
+                    .keyboardShortcut("l", modifiers: [.command, .shift])
+            }
+            CommandMenu("Look & Style") {
+                ForEach(AppLook.allCases) { look in
+                    Button(look.rawValue) { theme.look = look }
+                }
+                Divider()
+                ForEach(AppearanceMode.allCases) { mode in
+                    Button(mode.rawValue) { theme.appearance = mode }
+                }
             }
             CommandMenu("Go") {
                 Button("Quick Search…") { QuickSearchPanel.shared.show() }

@@ -36,29 +36,95 @@ struct TimelineView: View {
 }
 
 // MARK: - Disk Map treemap (beat-extra, on-device)
+// Auto-builds on appear; storage breakdown bar by kind; clickable proportional rows.
 
 struct DiskMapView: View {
+    @Binding var destination: Destination
     @EnvironmentObject var store: FileStore
+    @EnvironmentObject var theme: ThemeSettings
     @State private var root: DiskNode?
 
+    private var kindBreakdown: [(FileKind, Int64)] {
+        let grouped = Dictionary(grouping: store.files, by: \.kind)
+        return FileKind.allCases.compactMap { kind in
+            guard let files = grouped[kind], !files.isEmpty else { return nil }
+            return (kind, files.reduce(0) { $0 + $1.size })
+        }.sorted { $0.1 > $1.1 }
+    }
+
+    private var totalBytes: Int64 {
+        kindBreakdown.reduce(0) { $0 + $1.1 }
+    }
+
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("Disk Map").font(FileRadarFont.title()).padding(.horizontal)
-            Text("Each rectangle is a folder, sized by how much space it takes. Bigger rectangles, bigger footprint.")
+            Text("Each bar is a folder, sized by how much space it takes. Bigger bars, bigger footprint. Tap a row to open that folder.")
                 .font(FileRadarFont.caption()).foregroundStyle(.secondary).padding(.horizontal)
+
+            if totalBytes > 0 {
+                storageBreakdownBar
+                    .padding(.horizontal)
+            }
+
             if let root {
-                TreemapView(node: root)
+                TreemapView(node: root) { child in
+                    if let url = child.url {
+                        if !store.pinnedFolderURLs.contains(url) {
+                            store.pinnedFolderURLs.append(url)
+                        }
+                        withAnimation(FileRadarMotion.panel) {
+                            destination = .pinned(url)
+                        }
+                    }
+                }
+            } else if store.files.isEmpty {
+                EmptyStateView(title: "Nothing indexed yet",
+                               message: "Add a folder to index, then the disk map builds itself. Nothing is moved or deleted.")
             } else {
-                EmptyStateView(title: "Disk map not built yet",
-                               message: "Tap Build disk map to size up your indexed folders. Nothing is moved or deleted.")
-                Button("Build disk map") { root = buildTree() }.padding()
+                ProgressView("Building disk map…")
+                    .padding()
             }
         }
+        .onAppear { rebuild() }
+        .onChange(of: store.files.count) { _, _ in rebuild() }
+    }
+
+    private var storageBreakdownBar: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Storage by kind").font(FileRadarFont.heading())
+            GeometryReader { geo in
+                HStack(spacing: 2) {
+                    ForEach(kindBreakdown, id: \.0) { kind, bytes in
+                        let fraction = CGFloat(bytes) / CGFloat(max(totalBytes, 1))
+                        RoundedRectangle(cornerRadius: 3, style: .continuous)
+                            .fill(theme.look.accent.opacity(0.25 + 0.55 * fraction))
+                            .frame(width: max(4, geo.size.width * fraction))
+                            .help("\(kind.displayName): \(ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file))")
+                    }
+                }
+            }
+            .frame(height: 18)
+            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+
+            FlowKindLegend(items: kindBreakdown, accent: theme.look.accent)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
+                .fill(Color.primary.opacity(0.04))
+        )
+    }
+
+    private func rebuild() {
+        guard !store.files.isEmpty else {
+            root = nil
+            return
+        }
+        root = buildTree()
     }
 
     private func buildTree() -> DiskNode {
-        // One level deep by top folder + kind, so the map stays legible.
-        // A full recursive treemap is a straightforward extension of this node tree.
         let byFolder = Dictionary(grouping: store.files) { $0.url.deletingLastPathComponent().lastPathComponent }
         let children = byFolder.map { name, files in
             DiskNode(name: name, url: files.first?.url.deletingLastPathComponent(),
@@ -70,24 +136,62 @@ struct DiskMapView: View {
     }
 }
 
+private struct FlowKindLegend: View {
+    var items: [(FileKind, Int64)]
+    var accent: Color
+
+    var body: some View {
+        HStack(spacing: 10) {
+            ForEach(items.prefix(6), id: \.0) { kind, bytes in
+                HStack(spacing: 4) {
+                    Circle().fill(accent.opacity(0.55)).frame(width: 8, height: 8)
+                    Text("\(kind.displayName) · \(ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file))")
+                        .font(FileRadarFont.caption())
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+}
+
 /// Simple proportional treemap: children laid out as rows whose widths are
-/// proportional to size. Deliberately simple and legible over a fancy
-/// squarified layout that is hard to read on first sight.
+/// proportional to size. Rows are buttons — tap opens that folder below.
 struct TreemapView: View {
     var node: DiskNode
+    var onSelect: (DiskNode) -> Void = { _ in }
+    @EnvironmentObject var theme: ThemeSettings
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             ForEach(node.children) { child in
-                HStack(spacing: 0) {
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(Color.accentColor.opacity(0.35))
-                        .frame(width: max(40, 300 * CGFloat(child.size) / CGFloat(max(node.size, 1))), height: 44)
-                        .overlay(Text(child.name).font(FileRadarFont.caption()).lineLimit(1).padding(4), alignment: .leading)
-                    Text(ByteCountFormatter.string(fromByteCount: child.size, countStyle: .file))
-                        .font(FileRadarFont.caption()).foregroundStyle(.secondary).padding(.leading, 8)
+                Button {
+                    onSelect(child)
+                } label: {
+                    HStack(spacing: 0) {
+                        RoundedRectangle(cornerRadius: theme.look.cardCorner / 2, style: .continuous)
+                            .fill(theme.look.accent.opacity(0.35))
+                            .frame(width: max(40, 320 * CGFloat(child.size) / CGFloat(max(node.size, 1))), height: 44)
+                            .overlay(
+                                Text(child.name)
+                                    .font(FileRadarFont.caption())
+                                    .lineLimit(1)
+                                    .padding(4),
+                                alignment: .leading
+                            )
+                        Text(ByteCountFormatter.string(fromByteCount: child.size, countStyle: .file))
+                            .font(FileRadarFont.caption())
+                            .foregroundStyle(.secondary)
+                            .padding(.leading, 8)
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.right")
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                    }
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
                 .accessibilityLabel("\(child.name), \(ByteCountFormatter.string(fromByteCount: child.size, countStyle: .file))")
+                .accessibilityHint("Shows files in this folder.")
             }
             if node.children.isEmpty {
                 Text("No folders to map yet.").foregroundStyle(.secondary)

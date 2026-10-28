@@ -7,6 +7,7 @@ struct HomeView: View {
     @Binding var destination: Destination
     @EnvironmentObject var store: FileStore
     @EnvironmentObject var license: LicenseManager
+    @EnvironmentObject var theme: ThemeSettings
     @State private var showLicense = false
 
     var body: some View {
@@ -23,13 +24,17 @@ struct HomeView: View {
     private var classicHome: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                Text("Home").font(FileRadarFont.title())
+                HStack(alignment: .firstTextBaseline) {
+                    Text("Home").font(FileRadarFont.title())
+                    Spacer()
+                    lookHeaderPills
+                }
                 if store.isIndexing {
                     Label("Indexing your files in the background…", systemImage: "arrow.triangle.2.circlepath")
                         .font(FileRadarFont.caption()).foregroundStyle(.secondary)
                 }
-                VStack(alignment: .leading) {
-                    Text("Recent").font(FileRadarFont.heading())
+                VStack(alignment: .leading, spacing: 10) {
+                    shelfHeader("Recent", seeAll: { destination = .search })
                     if store.recents.isEmpty {
                         EmptyStateView(title: "No recent files yet",
                                        message: "Once FileRadar finishes its first background index, your newest files will live here.")
@@ -51,8 +56,8 @@ struct HomeView: View {
                 }
                 ForEach(store.shelves, id: \.0) { kind, files in
                     if !files.isEmpty {
-                        VStack(alignment: .leading) {
-                            Text(kind.displayName).font(FileRadarFont.heading())
+                        VStack(alignment: .leading, spacing: 10) {
+                            shelfHeader(kind.displayName, seeAll: { destination = .kind(kind) })
                             ScrollView(.horizontal, showsIndicators: false) {
                                 HStack(spacing: 16) {
                                     ForEach(files.prefix(20)) { file in
@@ -68,30 +73,68 @@ struct HomeView: View {
                         }
                     }
                 }
-                // Downloaded From grouping (beat the brief: by source, not just by date).
-                VStack(alignment: .leading) {
+                // Downloaded From — clickable pills navigate to source destinations.
+                VStack(alignment: .leading, spacing: 10) {
                     Text("Downloaded From").font(FileRadarFont.heading())
                     let groups = Dictionary(grouping: store.files) { $0.downloadSource.displayName }
-                    ForEach(groups.keys.sorted(), id: \.self) { key in
-                        HStack {
-                            Text(key)
-                            Spacer()
-                            Text("\(groups[key]?.count ?? 0) files").foregroundStyle(.secondary)
+                    FlowLayout(spacing: 8) {
+                        ForEach(groups.keys.sorted(), id: \.self) { key in
+                            Button {
+                                withAnimation(FileRadarMotion.panel) { destination = .source(key) }
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Text(key)
+                                    Text("\(groups[key]?.count ?? 0)")
+                                        .foregroundStyle(.secondary)
+                                }
+                                .font(FileRadarFont.caption())
+                                .padding(.horizontal, 10).padding(.vertical, 6)
+                                .background(Capsule().fill(theme.look.accent.opacity(0.12)))
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Downloaded from \(key), \(groups[key]?.count ?? 0) files")
                         }
-                        .font(FileRadarFont.body())
                     }
                 }
-                // Beat-extras teaser row (all on-device, all real views).
-                VStack(alignment: .leading) {
+                // Bento smart collections — 2-column interactive tiles.
+                VStack(alignment: .leading, spacing: 10) {
                     Text("Smart Collections").font(FileRadarFont.heading())
-                    ForEach(TagService.smartCollections(in: store.files), id: \.title) { col in
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text(col.title).font(FileRadarFont.body())
-                                Text(col.explanation).font(FileRadarFont.caption()).foregroundStyle(.secondary)
+                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+                        ForEach(TagService.smartCollections(in: store.files), id: \.title) { col in
+                            Button {
+                                withAnimation(FileRadarMotion.panel) {
+                                    destination = .smartFolder(col.title)
+                                }
+                            } label: {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    HStack {
+                                        Image(systemName: "sparkles.rectangle.stack")
+                                            .foregroundStyle(theme.look.accent)
+                                        Spacer()
+                                        Text("\(col.files.count)")
+                                            .font(FileRadarFont.caption())
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    Text(col.title).font(FileRadarFont.heading()).multilineTextAlignment(.leading)
+                                    Text(col.explanation)
+                                        .font(FileRadarFont.caption())
+                                        .foregroundStyle(.secondary)
+                                        .multilineTextAlignment(.leading)
+                                        .lineLimit(2)
+                                }
+                                .padding(14)
+                                .frame(maxWidth: .infinity, minHeight: 96, alignment: .topLeading)
+                                .background(
+                                    RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
+                                        .fill(Color.primary.opacity(0.04))
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
+                                        .strokeBorder(theme.look.accent.opacity(0.18), lineWidth: 1)
+                                )
                             }
-                            Spacer()
-                            Text("\(col.files.count)").foregroundStyle(.secondary)
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("\(col.title), \(col.files.count) files")
                         }
                     }
                 }
@@ -100,6 +143,102 @@ struct HomeView: View {
                 }
             }.padding()
         }
+    }
+
+    private var lookHeaderPills: some View {
+        HStack(spacing: 6) {
+            ForEach(AppLook.allCases) { look in
+                Button {
+                    theme.look = look
+                } label: {
+                    Text(look.rawValue)
+                        .font(FileRadarFont.caption())
+                        .padding(.horizontal, 8).padding(.vertical, 4)
+                        .background(
+                            Capsule().fill(theme.look == look
+                                           ? theme.look.accent.opacity(0.18)
+                                           : Color.primary.opacity(0.05))
+                        )
+                        .overlay(
+                            Capsule().strokeBorder(theme.look == look
+                                                   ? theme.look.accent.opacity(0.45)
+                                                   : Color.clear, lineWidth: 1)
+                        )
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Look \(look.rawValue)")
+                .accessibilityAddTraits(theme.look == look ? .isSelected : [])
+            }
+            Divider().frame(height: 16)
+            ForEach(AppearanceMode.allCases) { mode in
+                Button {
+                    theme.appearance = mode
+                } label: {
+                    Image(systemName: mode.systemImage)
+                        .font(.system(size: 11, weight: .semibold))
+                        .padding(6)
+                        .background(
+                            Circle().fill(theme.appearance == mode
+                                          ? theme.look.accent.opacity(0.18)
+                                          : Color.primary.opacity(0.05))
+                        )
+                }
+                .buttonStyle(.plain)
+                .help(mode.rawValue)
+                .accessibilityLabel("Appearance \(mode.rawValue)")
+            }
+        }
+    }
+
+    private func shelfHeader(_ title: String, seeAll: @escaping () -> Void) -> some View {
+        HStack {
+            Text(title).font(FileRadarFont.heading())
+            Spacer()
+            Button("See All", action: seeAll)
+                .font(FileRadarFont.caption())
+                .buttonStyle(.borderless)
+                .foregroundStyle(theme.look.accent)
+        }
+    }
+}
+
+/// Lightweight wrapping layout for Downloaded From pills.
+private struct FlowLayout: Layout {
+    var spacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let result = arrange(proposal: proposal, subviews: subviews)
+        return result.size
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let result = arrange(proposal: proposal, subviews: subviews)
+        for (index, origin) in result.origins.enumerated() {
+            subviews[index].place(at: CGPoint(x: bounds.minX + origin.x, y: bounds.minY + origin.y),
+                                  proposal: .unspecified)
+        }
+    }
+
+    private func arrange(proposal: ProposedViewSize, subviews: Subviews) -> (size: CGSize, origins: [CGPoint]) {
+        let maxWidth = proposal.width ?? .infinity
+        var origins: [CGPoint] = []
+        var x: CGFloat = 0
+        var y: CGFloat = 0
+        var rowHeight: CGFloat = 0
+        var maxX: CGFloat = 0
+        for sub in subviews {
+            let size = sub.sizeThatFits(.unspecified)
+            if x + size.width > maxWidth, x > 0 {
+                x = 0
+                y += rowHeight + spacing
+                rowHeight = 0
+            }
+            origins.append(CGPoint(x: x, y: y))
+            rowHeight = max(rowHeight, size.height)
+            x += size.width + spacing
+            maxX = max(maxX, x - spacing)
+        }
+        return (CGSize(width: maxX, height: y + rowHeight), origins)
     }
 }
 
