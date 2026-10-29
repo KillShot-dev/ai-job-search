@@ -1,6 +1,6 @@
 import Foundation
 import CryptoKit
-import Vision
+@preconcurrency import Vision
 import AppKit
 
 /// Duplicates — paid feature (gated by callers via LicenseManager).
@@ -87,11 +87,16 @@ enum DuplicateFinder {
                 let request = VNGenerateImageFeaturePrintRequest { request, _ in
                     continuation.resume(returning: request.results?.first as? VNFeaturePrintObservation)
                 }
-                let handler = VNImageRequestHandler(cgImage: cg, options: [:])
-                do {
-                    try handler.perform([request])
-                } catch {
-                    continuation.resume(returning: nil)
+                // Vision types are not Sendable; keep perform on one queue and
+                // only touch these locals from that queue after creation.
+                nonisolated(unsafe) let unsafeRequest = request
+                nonisolated(unsafe) let unsafeHandler = VNImageRequestHandler(cgImage: cg, options: [:])
+                DispatchQueue.global(qos: .userInitiated).async {
+                    do {
+                        try unsafeHandler.perform([unsafeRequest])
+                    } catch {
+                        continuation.resume(returning: nil)
+                    }
                 }
             }
         }.value

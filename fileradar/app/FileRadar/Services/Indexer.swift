@@ -39,9 +39,10 @@ final class FileStore: ObservableObject {
 
     /// Soft caps so a first launch against huge Desktop/Documents trees cannot
     /// pin the main actor with hundreds of thousands of rows + OCR + thumbs.
-    static let maxIndexedFiles = 25_000
-    static let maxOCREnrichments = 120
-    static let maxOCRBytes: Int64 = 8_000_000
+    /// `nonisolated` so Indexer (off the main actor) can use the defaults.
+    nonisolated static let maxIndexedFiles = 25_000
+    nonisolated static let maxOCREnrichments = 120
+    nonisolated static let maxOCRBytes: Int64 = 8_000_000
 
     var shelves: [(FileKind, [FileItem])] {
         [.image, .video, .audio, .document, .archive, .app].map { kind in
@@ -217,6 +218,12 @@ final class FileStore: ObservableObject {
         var cameraModel: String?
     }
 
+    /// Box so enrichment can mutate a batch across `await` without capturing
+    /// a mutable local in a `@Sendable` detached task (Swift 6).
+    private final class EnrichmentUpdatesBox: @unchecked Sendable {
+        var updates: [EnrichmentPatch] = []
+    }
+
     private func enrichInBackground(_ snapshot: [FileItem]) {
         enrichmentTask?.cancel()
         let maxOCR = Self.maxOCREnrichments
@@ -225,7 +232,7 @@ final class FileStore: ObservableObject {
         let metaBudget = min(snapshot.count, 2_000)
         let newest = snapshot.sorted { $0.modifiedDate > $1.modifiedDate }.prefix(metaBudget)
         enrichmentTask = Task.detached(priority: .utility) {
-            var updates: [EnrichmentPatch] = []
+            let box = EnrichmentUpdatesBox()
             var ocrBudget = maxOCR
             for file in newest where !file.isICloudOnly {
                 if Task.isCancelled { return }
@@ -251,18 +258,18 @@ final class FileStore: ObservableObject {
                 enriched.height = meta.height
                 enriched.cameraModel = meta.cameraModel
                 let tags = TagService.autoTags(for: enriched)
-                updates.append(EnrichmentPatch(
+                box.updates.append(EnrichmentPatch(
                     id: file.id, ocr: ocr, tags: tags, downloadSource: source,
                     width: meta.width, height: meta.height, cameraModel: meta.cameraModel
                 ))
-                if updates.count >= 25 {
-                    let batch = updates
-                    updates.removeAll(keepingCapacity: true)
+                if box.updates.count >= 25 {
+                    let batch = box.updates
+                    box.updates.removeAll(keepingCapacity: true)
                     await MainActor.run { self.applyEnrichmentBatch(batch) }
                 }
             }
-            if !updates.isEmpty {
-                let batch = updates
+            if !box.updates.isEmpty {
+                let batch = box.updates
                 await MainActor.run { self.applyEnrichmentBatch(batch) }
             }
         }
@@ -557,7 +564,8 @@ struct Indexer {
                 .isDirectoryKey, .fileSizeKey, .contentModificationDateKey, .creationDateKey,
                 .ubiquitousItemDownloadingStatusKey,
             ], options: [.skipsHiddenFiles, .skipsPackageDescendants]) else { continue }
-            for case let url as URL in enumerator {
+            // nextObject() — DirectoryEnumerator.makeIterator() is unavailable in async.
+            while let url = enumerator.nextObject() as? URL {
                 if Task.isCancelled { break }
                 if results.count >= maxFiles { break }
                 guard let values = try? url.resourceValues(forKeys: [

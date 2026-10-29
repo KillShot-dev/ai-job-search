@@ -129,7 +129,7 @@ struct DiskMapView: View {
         root = tree
     }
 
-    private static func buildTree(from files: [FileItem]) -> DiskNode {
+    nonisolated private static func buildTree(from files: [FileItem]) -> DiskNode {
         let byFolder = Dictionary(grouping: files) { $0.url.deletingLastPathComponent().lastPathComponent }
         let children = byFolder.map { name, files in
             DiskNode(name: name, url: files.first?.url.deletingLastPathComponent(),
