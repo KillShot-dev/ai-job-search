@@ -122,7 +122,16 @@ public partial class App : Application
         {
             var c = Parse(hex);
             resources[key + "Color"] = c;
-            resources[key + "Brush"] = new SolidColorBrush(c);
+            // Mutate the existing brush in place so XAML {StaticResource Fr*Brush}
+            // bindings (path bars, sidebar, etc.) and any live TextBlock Foreground
+            // references update together. Replacing the dictionary entry orphans the
+            // brushes still held by the visual tree and leaves dark-theme white text
+            // on light backgrounds (especially the focused dual-pane list).
+            var brushKey = key + "Brush";
+            if (resources.ContainsKey(brushKey) && resources[brushKey] is SolidColorBrush scb)
+                scb.Color = c;
+            else
+                resources[brushKey] = new SolidColorBrush(c);
         }
 
         SetColor("FrAccent", palette.Accent);
