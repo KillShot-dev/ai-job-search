@@ -54,8 +54,9 @@ npm run preview
 
 Seven Android icon pack finishes live under `/products`. Icon grids ship in
 `public/assets/apps/01-luma-*.png` … `07-luma-*.png`. Copy and Play package IDs
-are in `src/data/apps.ts`. Store CTAs use
-`https://play.google.com/store/apps/details?id=<package>`.
+are in `src/data/apps.ts`. Until packs are published, all Play CTAs use
+`https://play.google.com/store` (`PLAY_STORE_HOME`). Swap to `play(packageId)`
+or the developer listing URL when live.
 
 ## Legal
 

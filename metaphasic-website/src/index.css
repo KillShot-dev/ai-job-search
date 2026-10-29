@@ -1136,6 +1136,27 @@ p {
   text-align: center;
 }
 
+.products-play-row {
+  margin-top: 1.75rem;
+}
+
+.products-play-btn {
+  gap: 0.65rem;
+}
+
+.play-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  flex-shrink: 0;
+}
+
+.play-badge svg {
+  display: block;
+}
+
 /* Section headers with horizontal rule accent */
 .section-head {
   margin-bottom: clamp(2.5rem, 6vw, 4rem);
@@ -1513,6 +1534,19 @@ p {
   text-transform: uppercase;
   color: var(--text-soft);
   white-space: nowrap;
+}
+
+.marquee-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.25s var(--ease-out);
+  pointer-events: auto;
+}
+
+.marquee-link:hover,
+.marquee-link:focus-visible {
+  color: var(--accent);
+  outline: none;
 }
 
 .marquee-dot {

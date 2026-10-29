@@ -1,19 +1,35 @@
+export type MarqueeItem = {
+  label: string
+  href?: string
+}
+
 type Props = {
-  items: string[]
+  items: Array<string | MarqueeItem>
   label?: string
 }
 
-/** Infinite editorial ticker — technique adapted from Site of Sites–style agency marquees. */
+function normalize(item: string | MarqueeItem): MarqueeItem {
+  return typeof item === 'string' ? { label: item } : item
+}
+
+/** Infinite editorial ticker — optional per-item anchor links. */
 export function Marquee({ items, label = 'Marquee' }: Props) {
-  const row = [...items, ...items]
+  const normalized = items.map(normalize)
+  const row = [...normalized, ...normalized]
 
   return (
-    <div className="marquee" role="presentation" aria-label={label}>
+    <div className="marquee" aria-label={label}>
       <div className="marquee-track">
         {row.map((item, i) => (
-          <span key={`${item}-${i}`} className="marquee-item">
+          <span key={`${item.label}-${i}`} className="marquee-item">
             <span className="marquee-dot" aria-hidden="true" />
-            {item}
+            {item.href ? (
+              <a className="marquee-link" href={item.href}>
+                {item.label}
+              </a>
+            ) : (
+              item.label
+            )}
           </span>
         ))}
       </div>
