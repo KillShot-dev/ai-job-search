@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- App Sandbox: on. FileRadar only touches files the user has granted
+	     access to (user-selected read/write), plus the standard Downloads /
+	     Documents / Desktop folders once the user picks them in-app.
+	     There is NO entitlement for full-disk access: that is a user-granted
+	     System Settings permission (Privacy &amp; Security → Full Disk Access),
+	     not something an app can grant itself. See README.md. -->
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<key>com.apple.security.files.user-selected.read-write</key>
+	<true/>
+	<key>com.apple.security.files.downloads.read-write</key>
+	<true/>
+	<!-- RELEASE entitlements. This file must NEVER contain the debug
+	     "get-task-allow" entitlement: it lets a debugger attach and must
+	     not ship (an earlier draft listed it as false; false is inert,
+	     but absence is unambiguous and is what a reviewer/notarization
+	     check looks for — so the key is deliberately spelled out only
+	     in the Debug file, never here, not even in a comment). Debug
+	     builds use FileRadar.Debug.entitlements instead, and a
+	     build-phase guard fails any Release build whose entitlements
+	     contain the key set to true. See README.md Security posture. -->
+	<!-- Muse chat additions (justified, least-privilege — nothing else
+	     added, and nothing below weakens the sandbox):
+	     - com.apple.security.network.client: outgoing HTTPS ONLY, for the
+	       developer-configured Model API endpoint used by Muse sign-in
+	       and chat (Services/MuseAuthService.swift). No network server
+	       entitlement, no per-host exceptions: HTTPS-only is enforced in
+	       code (MuseConfig.load() rejects non-HTTPS base URLs), so no
+	       ATS exception is needed or allowed.
+	     - com.apple.security.device.audio-input: microphone, for voice
+	       commands in Muse chat. Gated at runtime by the
+	       NSMicrophoneUsageDescription prompt in Info.plist.
+	     - Speech recognition: see the VERIFY-IN-XCODE note on the key
+	       below. Gated at runtime by the NSSpeechRecognitionUsageDescription
+	       prompt in Info.plist. Audio is never stored.
+	     Deliberately NOT added: the debugger-attach entitlement (Debug
+	     file only; the build-phase guard still fails any Release build
+	     carrying it),
+	     full-disk access (a user-granted System Settings permission, not
+	     an entitlement), and any other network or device capability. -->
+	<key>com.apple.security.network.client</key>
+	<true/>
+	<key>com.apple.security.device.audio-input</key>
+	<true/>
+	<!-- VERIFY-IN-XCODE: the speech-recognition sandbox key below could
+	     NOT be verified against Apple documentation available to this
+	     build. It matches the key reported by third-party macOS apps
+	     using the Speech framework, but another third-party source states
+	     Speech needs only the Info.plist usage string and no sandbox
+	     entitlement at all. In Xcode, confirm this key is accepted by
+	     code signing / notarization: if Xcode or codesign rejects it (or
+	     if Apple's entitlement reference does not list it), DELETE this
+	     key and rely on the NSSpeechRecognitionUsageDescription string in
+	     Info.plist alone. Do NOT present this key as Apple-verified until
+	     that check passes. -->
+	<key>com.apple.security.device.speech-recognition</key>
+	<true/>
+</dict>
+</plist>

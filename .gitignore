@@ -32,6 +32,11 @@ linkedin_Profile.pdf
 !cover_letters/OpenFonts/fonts/**
 # Luma icon-pack exports are product assets, not personal photos
 !luma/**/*.png
+# metaPhasic website brand + product assets (required for static deploy)
+!metaphasic-website/public/**/*.png
+!metaphasic-website/public/**/*.jpg
+!metaphasic-website/public/**/*.jpeg
+!metaphasic-website/public/**/*.svg
 
 # OS files
 .DS_Store

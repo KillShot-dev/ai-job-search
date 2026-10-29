@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleExecutable</key>
+	<string>FileRadar</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.metaphasicgroup.fileradar</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>FileRadar</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.productivity</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>14.0</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright © metaPhasic Group. All rights reserved.</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+	<key>NSSupportsAutomaticGraphicsSwitching</key>
+	<true/>
+	<!-- Muse sign-in + voice (added for the Muse chat feature; see
+	     Services/MuseAuthService.swift and Services/MuseConfig.swift).
+	     XCODE VERIFICATION CHECKLIST (this project file is hand-written,
+	     so verify each item by hand after editing — do not assume Xcode
+	     picked them up):
+	       1. Target > Info > URL Types: one entry whose URL Schemes list
+	          contains "fileradar" (URL Identifier
+	          com.metaphasicgroup.fileradar). This is what lets the
+	          browser return control to FileRadar at
+	          fileradar://muse-callback after Muse sign-in. If the scheme
+	          is missing here, sign-in completes in the browser but the
+	          app never receives the authorization code.
+	       2. Target > Info > Privacy strings: NSMicrophoneUsageDescription
+	          and NSSpeechRecognitionUsageDescription below must both
+	          appear. macOS shows these exact strings in the permission
+	          prompts the first time voice is used in Muse chat.
+	       3. Target > Build Settings > Info.plist File must still point
+	          at FileRadar/Info.plist, and GENERATE_INFOPLIST_FILE must
+	          stay NO — otherwise Xcode regenerates this file and drops
+	          these keys.
+	     No App Transport Security exceptions are declared here or
+	     anywhere else: Muse network calls are HTTPS-only, enforced in
+	     code (MuseConfig.load() rejects non-HTTPS base URLs). -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.metaphasicgroup.fileradar</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>fileradar</string>
+			</array>
+		</dict>
+	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>FileRadar uses the microphone for voice commands in Muse chat. Audio is never stored.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>FileRadar transcribes your voice commands for Muse chat. Audio is never stored.</string>
+	<!-- LSUIElement is intentionally NOT set: FileRadar is a normal windowed app
+	     that also provides a MenuBarExtra; it must stay visible in the Dock. -->
+	<!-- Monetization / distribution (public values only — never put Stripe
+	     secrets, App Store Connect API keys, or webhook secrets here):
+	       FRDistribution = "direct" (website serials + optional trial) or
+	                        "mas" (Mac App Store / StoreKit only).
+	       FRStoreKitProductID = App Store Connect product id (public).
+	       FRLicensingBaseURL = optional HTTPS base for validate/activate
+	                            (website builds). Leave empty for offline
+	                            serial checksum + Keychain only. -->
+	<key>FRDistribution</key>
+	<string>direct</string>
+	<key>FRStoreKitProductID</key>
+	<string>com.metaphasicgroup.fileradar.full</string>
+	<key>FRLicensingBaseURL</key>
+	<string></string>
+</dict>
+</plist>

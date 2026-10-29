@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- DEBUG-ONLY entitlements. Never Archive / notarize / submit with this
+	     file. get-task-allow lets a debugger attach. Muse keys match Release
+	     so Debug can exercise sign-in and voice; Speech key is VERIFY-IN-XCODE
+	     (same note as FileRadar.entitlements). -->
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<key>com.apple.security.files.user-selected.read-write</key>
+	<true/>
+	<key>com.apple.security.files.downloads.read-write</key>
+	<true/>
+	<key>com.apple.security.network.client</key>
+	<true/>
+	<key>com.apple.security.device.audio-input</key>
+	<true/>
+	<!-- VERIFY-IN-XCODE: delete if codesign rejects (see Release entitlements). -->
+	<key>com.apple.security.device.speech-recognition</key>
+	<true/>
+	<key>com.apple.security.get-task-allow</key>
+	<true/>
+</dict>
+</plist>
