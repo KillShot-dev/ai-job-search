@@ -399,6 +399,12 @@ enum FolderAccessConsent {
         }
         isCompleted = true
     }
+
+    /// Escape hatch — enter the app without granting roots or starting index.
+    /// User can Add Folder… later; sheet will not reappear.
+    static func completeSkipped() {
+        isCompleted = true
+    }
 }
 
 /// Security-scoped bookmark store so sandboxed Add Folder grants survive relaunch.

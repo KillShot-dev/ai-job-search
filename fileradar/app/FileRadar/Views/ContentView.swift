@@ -89,28 +89,27 @@ struct ContentView: View {
     private var chromeAccent: Color { chromeView.accent }
 
     var body: some View {
-        splitChrome
-            .tint(chromeAccent)
-            .preferredColorScheme(theme.colorScheme)
-            .fileRadarAtmosphere(theme.look)
-            .modifier(ContentSheetsModifier(
-                showLicense: $showLicense,
-                showPalette: $showPalette,
-                showBatchRename: $showBatchRename,
-                showFolderAccess: $showFolderAccess,
-                selectedFiles: selectedFiles,
-                onPalette: performPalette,
-                onRenameApplied: { plan in
-                    for (old, newURL) in plan {
-                        store.updateFileURL(from: old.url, to: newURL)
+        ZStack {
+            splitChrome
+                .tint(chromeAccent)
+                .preferredColorScheme(theme.colorScheme)
+                .fileRadarAtmosphere(theme.look)
+                // While the consent card is up, chrome must not receive hits
+                // (Drop Stack / transfer dock previously sat above the card).
+                .allowsHitTesting(!showFolderAccess)
+                .modifier(ContentSheetsModifier(
+                    showLicense: $showLicense,
+                    showPalette: $showPalette,
+                    showBatchRename: $showBatchRename,
+                    selectedFiles: selectedFiles,
+                    onPalette: performPalette,
+                    onRenameApplied: { plan in
+                        for (old, newURL) in plan {
+                            store.updateFileURL(from: old.url, to: newURL)
+                        }
                     }
-                },
-                onFolderAccessFinished: {
-                    tabState.seedDefaultsAfterConsent()
-                    store.refreshIndex()
-                }
-            ))
-            .modifier(ContentNotificationsModifier(
+                ))
+                .modifier(ContentNotificationsModifier(
                 destination: $destination,
                 searchText: $searchText,
                 showBatchRename: $showBatchRename,
@@ -172,6 +171,48 @@ struct ContentView: View {
                 QuickLookHelper.shared.show(files: selected)
                 return .handled
             }
+
+            if showFolderAccess {
+                // Dimmer is behind the card only — never a transparent plate above buttons.
+                Color.black.opacity(0.45)
+                    .ignoresSafeArea()
+                    .contentShape(Rectangle())
+                    .accessibilityHidden(true)
+
+                FolderAccessOnboardingView(
+                    onChooseFolders: handleOnboardingChooseFolders,
+                    onStartDownloads: handleOnboardingStartDownloads,
+                    onSkip: handleOnboardingSkip
+                )
+                .zIndex(1)
+            }
+        }
+    }
+
+    /// NSOpenPanel over the root overlay (not a SwiftUI sheet). Card stays
+    /// until grant succeeds so cancel never leaves the user without an escape.
+    private func handleOnboardingChooseFolders() {
+        DispatchQueue.main.async {
+            if let urls = SecurityBookmarkStore.pickAndStoreFolders(allowsMultiple: true), !urls.isEmpty {
+                FolderAccessConsent.completeWithBookmarks(urls)
+                showFolderAccess = false
+                tabState.seedDefaultsAfterConsent()
+                store.refreshIndex()
+            }
+            // Cancel → card remains; Continue without indexing still available.
+        }
+    }
+
+    private func handleOnboardingStartDownloads() {
+        FolderAccessConsent.completeWithDownloadsOnly()
+        showFolderAccess = false
+        tabState.seedDefaultsAfterConsent()
+        store.refreshIndex()
+    }
+
+    private func handleOnboardingSkip() {
+        FolderAccessConsent.completeSkipped()
+        showFolderAccess = false
     }
 
     /// Sidebar row via `Label` + `.tag` for `List(selection:)` — no Button /
@@ -906,11 +947,9 @@ private struct ContentSheetsModifier: ViewModifier {
     @Binding var showLicense: Bool
     @Binding var showPalette: Bool
     @Binding var showBatchRename: Bool
-    @Binding var showFolderAccess: Bool
     var selectedFiles: [FileItem]
     var onPalette: (PaletteAction) -> Void
     var onRenameApplied: ([(FileItem, URL)]) -> Void
-    var onFolderAccessFinished: () -> Void
 
     func body(content: Content) -> some View {
         content
@@ -918,12 +957,6 @@ private struct ContentSheetsModifier: ViewModifier {
             .sheet(isPresented: $showPalette) { CommandPaletteView(onSelect: onPalette) }
             .sheet(isPresented: $showBatchRename) {
                 BatchRenameSheet(files: selectedFiles) { plan in onRenameApplied(plan) }
-            }
-            .sheet(isPresented: $showFolderAccess) {
-                FolderAccessOnboardingView {
-                    showFolderAccess = false
-                    onFolderAccessFinished()
-                }
             }
     }
 }
