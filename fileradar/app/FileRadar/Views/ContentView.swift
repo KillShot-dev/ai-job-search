@@ -73,6 +73,7 @@ struct ContentView: View {
     @State private var workspaceChromeTab = "Work"
     @State private var showQueueDrawer = true
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    @State private var showFolderAccess = false
     @StateObject private var trash = TrashService()
     @ObservedObject private var transferQueue = TransferQueue.shared
 
@@ -96,12 +97,17 @@ struct ContentView: View {
                 showLicense: $showLicense,
                 showPalette: $showPalette,
                 showBatchRename: $showBatchRename,
+                showFolderAccess: $showFolderAccess,
                 selectedFiles: selectedFiles,
                 onPalette: performPalette,
                 onRenameApplied: { plan in
                     for (old, newURL) in plan {
                         store.updateFileURL(from: old.url, to: newURL)
                     }
+                },
+                onFolderAccessFinished: {
+                    tabState.seedDefaultsAfterConsent()
+                    store.refreshIndex()
                 }
             ))
             .modifier(ContentNotificationsModifier(
@@ -265,9 +271,7 @@ struct ContentView: View {
                     sidebarItem("Search", systemImage: "magnifyingglass", .search, nav: .search)
                     ForEach(standardPlaces, id: \.path) { place in
                         Button {
-                            tabState.setFirstFolder(place)
-                            destination = .browser
-                            dualPaneEnabled = true
+                            openStandardPlace(place)
                         } label: {
                             FRSidebarLabel(title: place.lastPathComponent) {
                                 FRPlaceIcon(place: FRPlaceKind.from(url: place), size: .sidebar)
@@ -347,13 +351,16 @@ struct ContentView: View {
                         sidebarItem("Shelves", systemImage: "square.stack", .home, nav: .shelves)
                     }
                 }
-            }
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            if chromeView != .previewTheater {
-                DropStackView()
-                    .padding(.horizontal, 8)
-                    .padding(.bottom, 6)
+                // Drop Stack lives in the List (not safeAreaInset). An inset
+                // hit plate previously swallowed sidebar activations.
+                if chromeView != .previewTheater {
+                    Section {
+                        DropStackView()
+                            .listRowInsets(EdgeInsets(top: 4, leading: 8, bottom: 8, trailing: 8))
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                    }
+                }
             }
         }
     }
@@ -644,8 +651,16 @@ struct ContentView: View {
         if store.viewMode == .showcase {
             store.viewMode = .list
         }
-        // Defer heavy work so the first frame paints and clicks respond.
-        if store.files.isEmpty {
+        // One consent sheet — never fire indexing / open panels in parallel.
+        // Prior installs that already have bookmarks skip the sheet once.
+        if !FolderAccessConsent.isCompleted, SecurityBookmarkStore.hasStoredFolders() {
+            FolderAccessConsent.useDownloadsEntitlement = true
+            FolderAccessConsent.isCompleted = true
+            tabState.seedDefaultsAfterConsent()
+        }
+        if !FolderAccessConsent.isCompleted {
+            showFolderAccess = true
+        } else if store.files.isEmpty {
             Task { @MainActor in
                 await Task.yield()
                 store.refreshIndex()
@@ -688,26 +703,45 @@ struct ContentView: View {
 
     private var selectedFile: FileItem? { selectedFiles.first }
 
+    /// Navigate to a standard place only when already granted; otherwise open
+    /// the single consent sheet (never a second stacked open panel at launch).
+    private func openStandardPlace(_ place: URL) {
+        if FolderAccessConsent.canBrowse(place) {
+            tabState.setFirstFolder(place)
+            destination = .browser
+            dualPaneEnabled = true
+            return
+        }
+        if !FolderAccessConsent.isCompleted {
+            showFolderAccess = true
+            return
+        }
+        // User previously consented but this root was not among bookmarks —
+        // add it through the shared multi-select panel (one dialog).
+        if let folders = SecurityBookmarkStore.pickAndStoreFolders(), !folders.isEmpty {
+            tabState.setFirstFolder(folders[0])
+            destination = .browser
+            dualPaneEnabled = true
+            store.refreshIndex()
+        }
+    }
+
     private func chooseLeftPaneFolder() {
-        let panel = NSOpenPanel()
-        panel.canChooseDirectories = true
-        panel.canChooseFiles = false
-        panel.prompt = "Use as left pane"
-        guard panel.runModal() == .OK, let folder = panel.url else { return }
+        // Reuse bookmark-aware picker so grants persist and do not stack with
+        // a bare NSOpenPanel that never stores scope.
+        guard let folder = SecurityBookmarkStore.pickAndStoreFolder() else { return }
         tabState.setFirstFolder(folder)
         activeIsRight = false
         destination = .browser
+        store.refreshIndex()
     }
 
     private func chooseRightPaneFolder() {
-        let panel = NSOpenPanel()
-        panel.canChooseDirectories = true
-        panel.canChooseFiles = false
-        panel.prompt = "Use as right pane"
-        guard panel.runModal() == .OK, let folder = panel.url else { return }
+        guard let folder = SecurityBookmarkStore.pickAndStoreFolder() else { return }
         tabState.setSecondFolder(folder)
         activeIsRight = true
         destination = .browser
+        store.refreshIndex()
     }
 
     private func trashSelected() {
@@ -846,9 +880,11 @@ private struct ContentSheetsModifier: ViewModifier {
     @Binding var showLicense: Bool
     @Binding var showPalette: Bool
     @Binding var showBatchRename: Bool
+    @Binding var showFolderAccess: Bool
     var selectedFiles: [FileItem]
     var onPalette: (PaletteAction) -> Void
     var onRenameApplied: ([(FileItem, URL)]) -> Void
+    var onFolderAccessFinished: () -> Void
 
     func body(content: Content) -> some View {
         content
@@ -856,6 +892,12 @@ private struct ContentSheetsModifier: ViewModifier {
             .sheet(isPresented: $showPalette) { CommandPaletteView(onSelect: onPalette) }
             .sheet(isPresented: $showBatchRename) {
                 BatchRenameSheet(files: selectedFiles) { plan in onRenameApplied(plan) }
+            }
+            .sheet(isPresented: $showFolderAccess) {
+                FolderAccessOnboardingView {
+                    showFolderAccess = false
+                    onFolderAccessFinished()
+                }
             }
     }
 }

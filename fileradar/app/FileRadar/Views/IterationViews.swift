@@ -498,6 +498,8 @@ struct DualPaneView: View {
                       onChoose: @escaping () -> Void,
                       onActivate: @escaping () -> Void) -> some View {
         VStack(spacing: 0) {
+            // Path-bar Buttons already call onActivate. Do not wrap them in
+            // an outer onTapGesture — it competed with crumb / house hits.
             ZStack(alignment: .trailing) {
                 Group {
                     if chromeView == .radarGlass {
@@ -517,8 +519,6 @@ struct DualPaneView: View {
                     .padding(.trailing, 10)
                     .allowsHitTesting(false)
             }
-            .contentShape(Rectangle())
-            .onTapGesture(perform: onActivate)
             .accessibilityAddTraits(isActive ? .isSelected : [])
             .accessibilityLabel("\(folder.lastPathComponent) pane")
 
@@ -561,29 +561,10 @@ enum FolderBrowser {
         let fromIndex = indexed.filter {
             $0.url.deletingLastPathComponent().standardizedFileURL.path == standardized.path
         }
-        if !fromIndex.isEmpty { return fromIndex }
-
-        let fm = FileManager.default
-        guard let urls = try? fm.contentsOfDirectory(
-            at: standardized,
-            includingPropertiesForKeys: [.isDirectoryKey, .fileSizeKey, .contentModificationDateKey, .creationDateKey],
-            options: [.skipsHiddenFiles]
-        ) else { return [] }
-
-        return urls.compactMap { url -> FileItem? in
-            let values = try? url.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey, .contentModificationDateKey, .creationDateKey])
-            let isDir = values?.isDirectory ?? false
-            return FileItem(
-                url: url,
-                kind: FileKind.from(url: url, isDirectory: isDir),
-                size: Int64(values?.fileSize ?? 0),
-                modifiedDate: values?.contentModificationDate ?? Date(),
-                createdDate: values?.creationDate ?? Date(),
-                downloadSource: .unknown,
-                tags: [],
-                isICloudOnly: false
-            )
-        }
+        // Index only. A contentsOfDirectory fallback here ran on the main actor
+        // during every body eval and blocked in open() on Files-and-Folders TCC
+        // (or a huge Downloads tree) — freezing the UI so buttons looked dead.
+        return fromIndex
     }
 }
 

@@ -96,25 +96,31 @@ final class FileStore: ObservableObject {
     }
 
     /// Re-index currently pinned + bookmarked folders (FSEvents / Add Folder).
+    /// Gated on `FolderAccessConsent` so launch never walks roots (or pops
+    /// access UI) before the user confirms once.
     func refreshIndex() {
+        // Snapshot / QA bypasses consent so evidence shots still fill shelves.
+        let snapshotting = ProcessInfo.processInfo.environment["FILERADAR_SNAPSHOT_PATH"] != nil
+        if !snapshotting, !FolderAccessConsent.isCompleted {
+            isIndexing = false
+            return
+        }
         var folders = SecurityBookmarkStore.resolvedFolders()
         folders.append(contentsOf: pinnedFolderURLs)
-        // Snapshot / QA: prefer a small Downloads/FileRadarDemo folder so Home
-        // shelves fill quickly for mockup evidence shots.
-        if ProcessInfo.processInfo.environment["FILERADAR_SNAPSHOT_PATH"] != nil {
+        if snapshotting {
             let demo = FileManager.default.homeDirectoryForCurrentUser
                 .appendingPathComponent("Downloads/FileRadarDemo")
             if FileManager.default.fileExists(atPath: demo.path) {
                 folders = [demo]
             }
         }
-        if folders.isEmpty {
-            // Default to Downloads only. Indexing Desktop + Documents on a
-            // developer Mac (tens of GB, node_modules, etc.) freezes the UI
-            // for minutes even when the walk is off-main — the publish of a
-            // huge @Published array + thumbnail storm is what kills clicks.
-            let home = FileManager.default.homeDirectoryForCurrentUser
-            folders = [home.appendingPathComponent("Downloads")]
+        if folders.isEmpty, FolderAccessConsent.useDownloadsEntitlement || snapshotting {
+            // Downloads entitlement path — no bookmark / open panel needed.
+            folders = [FolderAccessConsent.downloadsURL]
+        }
+        guard !folders.isEmpty else {
+            isIndexing = false
+            return
         }
         // Deduplicate by path
         var seen = Set<String>()
@@ -324,20 +330,99 @@ final class FileStore: ObservableObject {
     }
 }
 
+/// Single launch consent for folder roots + indexing. Prevents serial TCC /
+/// open-panel stacks for Desktop, Documents, Downloads, and index start.
+enum FolderAccessConsent {
+    static let completedKey = "com.metaphasicgroup.fileradar.folderAccess.v1"
+    /// When true, indexing may use the Downloads entitlement without a bookmark.
+    static let useDownloadsKey = "com.metaphasicgroup.fileradar.folderAccess.useDownloads"
+
+    static var isCompleted: Bool {
+        get {
+            if UserDefaults.standard.bool(forKey: completedKey) { return true }
+            // Local QA / snapshot automation — never block AX or evidence shots.
+            if ProcessInfo.processInfo.environment["FILERADAR_FOLDER_CONSENT"] == "1"
+                || ProcessInfo.processInfo.environment["FILERADAR_SNAPSHOT_PATH"] != nil {
+                return true
+            }
+            return false
+        }
+        set { UserDefaults.standard.set(newValue, forKey: completedKey) }
+    }
+
+    static var useDownloadsEntitlement: Bool {
+        get {
+            if UserDefaults.standard.bool(forKey: useDownloadsKey) { return true }
+            if ProcessInfo.processInfo.environment["FILERADAR_FOLDER_CONSENT"] == "1"
+                || ProcessInfo.processInfo.environment["FILERADAR_SNAPSHOT_PATH"] != nil {
+                return true
+            }
+            return false
+        }
+        set { UserDefaults.standard.set(newValue, forKey: useDownloadsKey) }
+    }
+
+    static var downloadsURL: URL {
+        FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Downloads")
+    }
+
+    /// True when disk listing is safe (won't block main on TCC).
+    /// Downloads uses the sandbox entitlement — always listable.
+    /// Other roots need a stored security-scoped bookmark.
+    static func canBrowse(_ url: URL) -> Bool {
+        let path = url.standardizedFileURL.path
+        if path == downloadsURL.path || path.hasPrefix(downloadsURL.path + "/") {
+            return true
+        }
+        if SecurityBookmarkStore.storedPaths.contains(where: {
+            path == $0 || path.hasPrefix($0 + "/")
+        }) { return true }
+        return false
+    }
+
+    static func completeWithDownloadsOnly() {
+        useDownloadsEntitlement = true
+        isCompleted = true
+    }
+
+    static func completeWithBookmarks(_ urls: [URL]) {
+        for url in urls { SecurityBookmarkStore.store(url) }
+        if urls.contains(where: { $0.standardizedFileURL.path == downloadsURL.path }) {
+            useDownloadsEntitlement = true
+        }
+        isCompleted = true
+    }
+}
+
 /// Security-scoped bookmark store so sandboxed Add Folder grants survive relaunch.
 enum SecurityBookmarkStore {
     private static let defaultsKey = "com.metaphasicgroup.fileradar.folderBookmarks"
+    /// Paths already holding an active security scope this process.
+    private static var accessingPaths = Set<String>()
 
     static func pickAndStoreFolder() -> URL? {
+        pickAndStoreFolders(allowsMultiple: false)?.first
+    }
+
+    /// One NSOpenPanel — multi-select roots for onboarding / Add Folder.
+    static func pickAndStoreFolders(allowsMultiple: Bool = true) -> [URL]? {
         let panel = NSOpenPanel()
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
-        panel.allowsMultipleSelection = false
-        panel.prompt = "Add Folder"
-        guard panel.runModal() == .OK, let url = panel.url else { return nil }
-        store(url)
-        _ = url.startAccessingSecurityScopedResource()
-        return url
+        panel.allowsMultipleSelection = allowsMultiple
+        panel.prompt = allowsMultiple ? "Grant Access" : "Add Folder"
+        panel.message = allowsMultiple
+            ? "Select the folders FileRadar may index (Desktop, Documents, Downloads, or any others)."
+            : nil
+        panel.directoryURL = FileManager.default.homeDirectoryForCurrentUser
+        guard panel.runModal() == .OK, !panel.urls.isEmpty else { return nil }
+        var stored: [URL] = []
+        for url in panel.urls {
+            store(url)
+            startAccessingOnce(url)
+            stored.append(url)
+        }
+        return stored
     }
 
     static func store(_ url: URL) {
@@ -345,11 +430,16 @@ enum SecurityBookmarkStore {
                                                includingResourceValuesForKeys: nil,
                                                relativeTo: nil) else { return }
         var map = loadMap()
-        map[url.path] = data
+        map[url.standardizedFileURL.path] = data
         if let encoded = try? JSONEncoder().encode(map.map { BookmarkRecord(path: $0.key, data: $0.value) }) {
             UserDefaults.standard.set(encoded, forKey: defaultsKey)
         }
     }
+
+    static func hasStoredFolders() -> Bool { !loadMap().isEmpty }
+
+    /// Bookmark path keys only — no resolve / startAccessing (safe for UI checks).
+    static var storedPaths: [String] { Array(loadMap().keys) }
 
     static func resolvedFolders() -> [URL] {
         var urls: [URL] = []
@@ -359,15 +449,25 @@ enum SecurityBookmarkStore {
                                      options: [.withSecurityScope, .withoutUI],
                                      relativeTo: nil,
                                      bookmarkDataIsStale: &isStale) else { continue }
-            _ = url.startAccessingSecurityScopedResource()
+            startAccessingOnce(url)
             urls.append(url)
         }
         return urls
     }
 
     static func startAccessing(_ folders: [URL]) -> [URL] {
-        for url in folders { _ = url.startAccessingSecurityScopedResource() }
+        for url in folders { startAccessingOnce(url) }
         return folders
+    }
+
+    /// Avoid stacking duplicate startAccessingSecurityScopedResource calls for
+    /// the same path during launch / refresh storms.
+    private static func startAccessingOnce(_ url: URL) {
+        let path = url.standardizedFileURL.path
+        guard !accessingPaths.contains(path) else { return }
+        if url.startAccessingSecurityScopedResource() {
+            accessingPaths.insert(path)
+        }
     }
 
     private struct BookmarkRecord: Codable {

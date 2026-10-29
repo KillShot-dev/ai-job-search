@@ -355,3 +355,85 @@ struct SelectionPreviewStrip: View {
         .accessibilityLabel(file.map { "Preview of \($0.name)" } ?? "Empty preview strip")
     }
 }
+
+// MARK: - Single folder-access consent (launch)
+
+/// One sheet at first launch. User either multi-selects roots in a single
+/// NSOpenPanel or starts with Downloads (sandbox entitlement). Indexing
+/// stays gated until this finishes — no serial Desktop/Documents/Downloads
+/// prompts and no parallel open-panel storms.
+struct FolderAccessOnboardingView: View {
+    var onFinished: () -> Void
+    @EnvironmentObject var theme: ThemeSettings
+    @State private var busy = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            Text("Choose folders to index")
+                .font(FileRadarFont.title())
+            Text("FileRadar indexes only the folders you grant. Pick Desktop, Documents, Downloads, and any others in one step — or start with Downloads alone. You will not be asked again for folders you already granted.")
+                .font(FileRadarFont.body())
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            VStack(alignment: .leading, spacing: 10) {
+                Label("One dialog for every root you select", systemImage: "folder.badge.plus")
+                Label("Bookmarks persist across relaunches", systemImage: "bookmark")
+                Label("Indexing starts only after you confirm", systemImage: "magnifyingglass")
+            }
+            .font(FileRadarFont.caption())
+            .foregroundStyle(.secondary)
+
+            Spacer(minLength: 8)
+
+            VStack(spacing: 10) {
+                Button {
+                    chooseFolders()
+                } label: {
+                    Text("Choose Folders…")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .disabled(busy)
+                .accessibilityLabel("Choose folders")
+
+                Button {
+                    startWithDownloads()
+                } label: {
+                    Text("Start with Downloads only")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
+                .disabled(busy)
+                .accessibilityLabel("Start with Downloads only")
+            }
+        }
+        .padding(28)
+        .frame(width: 440, height: 360)
+        .background(Color(nsColor: .windowBackgroundColor))
+        .preferredColorScheme(theme.colorScheme)
+        .interactiveDismissDisabled(true)
+    }
+
+    private func chooseFolders() {
+        busy = true
+        // Present the panel after the sheet paints so we never stack two
+        // modal sessions on the first frame.
+        DispatchQueue.main.async {
+            if let urls = SecurityBookmarkStore.pickAndStoreFolders(allowsMultiple: true), !urls.isEmpty {
+                FolderAccessConsent.completeWithBookmarks(urls)
+                busy = false
+                onFinished()
+            } else {
+                busy = false
+            }
+        }
+    }
+
+    private func startWithDownloads() {
+        FolderAccessConsent.completeWithDownloadsOnly()
+        onFinished()
+    }
+}

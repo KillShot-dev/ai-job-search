@@ -264,35 +264,61 @@ final class TabState: ObservableObject {
     private let key = "com.metaphasicgroup.fileradar.tabs.v2"
 
     init() {
-        // v3 ForkLift-primary: seed Documents | Downloads for dual-pane launch.
-        // Ignore empty v2 payloads that cleared tabs for Showcase Home.
+        // Prefer persisted tabs that are already granted. Drop Documents/Desktop
+        // leftovers that would probe inaccessible roots on first paint.
         if let data = UserDefaults.standard.data(forKey: key),
            let saved = try? JSONDecoder().decode([TabItem].self, from: data),
            !saved.isEmpty {
-            tabs = saved
-            selectedID = saved.first?.id
+            let granted = saved.filter { FolderAccessConsent.canBrowse($0.folder) }
+            if !granted.isEmpty {
+                tabs = granted
+                selectedID = granted.first?.id
+            } else if FolderAccessConsent.isCompleted {
+                seedDefaultsAfterConsent()
+            } else {
+                tabs = []
+                selectedID = nil
+            }
+        } else if FolderAccessConsent.isCompleted {
+            seedDefaultsAfterConsent()
+            UserDefaults.standard.removeObject(forKey: "com.metaphasicgroup.fileradar.tabs.v1")
         } else {
-            let home = FileManager.default.homeDirectoryForCurrentUser
-            let documents = home.appendingPathComponent("Documents")
-            let downloads = home.appendingPathComponent("Downloads")
-            tabs = [TabItem(folder: documents), TabItem(folder: downloads)]
-            selectedID = tabs.first?.id
+            tabs = []
+            selectedID = nil
             UserDefaults.standard.removeObject(forKey: "com.metaphasicgroup.fileradar.tabs.v1")
         }
+    }
+
+    /// After the single consent sheet, pin dual-pane to granted roots.
+    func seedDefaultsAfterConsent() {
+        let bookmarks = SecurityBookmarkStore.resolvedFolders()
+        let downloads = FolderAccessConsent.downloadsURL
+        var roots: [URL] = Array(bookmarks.prefix(2))
+        if roots.isEmpty, FolderAccessConsent.useDownloadsEntitlement {
+            roots = [downloads]
+        }
+        if roots.count == 1 {
+            roots.append(downloads)
+        }
+        if roots.isEmpty {
+            roots = [downloads]
+        }
+        tabs = roots.map { TabItem(folder: $0) }
+        selectedID = tabs.first?.id
     }
 
     var selectedTab: TabItem? { tabs.first { $0.id == selectedID } ?? tabs.first }
 
     /// Left dual-pane folder (selected / first tab).
+    /// Never resolve bookmarks here — body eval would re-enter AttributeGraph.
     var firstFolder: URL {
-        selectedTab?.folder
-            ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Documents")
+        selectedTab?.folder ?? FolderAccessConsent.downloadsURL
     }
 
     /// The second pane's folder: the second tab when there is one, else Downloads.
     var secondFolder: URL {
         if tabs.count > 1 { return tabs[1].folder }
-        return FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Downloads")
+        return FolderAccessConsent.downloadsURL
     }
 
     /// Pin the dual-pane left side to a chosen folder.
