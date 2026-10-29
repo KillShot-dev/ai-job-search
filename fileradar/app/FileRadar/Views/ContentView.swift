@@ -89,19 +89,18 @@ struct ContentView: View {
     private var chromeAccent: Color { chromeView.accent }
 
     var body: some View {
-        // Consent overlays via `.overlay` so dismissed state leaves zero sibling
-        // plates in the hit-test tree (root ZStack + full-frame Color previously
-        // competed with chrome after dismiss in edge cases).
+        // Consent as overlay only — do NOT gate chrome with
+        // `.allowsHitTesting(!showFolderAccess)`. That modifier left the
+        // hosting view non-interactive after dismiss on some launches
+        // (menus still worked; toolbar/sidebar mouse + AX content did not).
         splitChrome
             .tint(chromeAccent)
             .preferredColorScheme(theme.colorScheme)
             .fileRadarAtmosphere(theme.look)
-            // While the consent card is up, chrome must not receive hits
-            // (Drop Stack / transfer dock previously sat above the card).
-            .allowsHitTesting(!showFolderAccess)
             .overlay {
                 if showFolderAccess {
                     ZStack {
+                        // Dimmer intercepts chrome hits only while consent is up.
                         Color.black.opacity(0.45)
                             .ignoresSafeArea()
                             .contentShape(Rectangle())
@@ -112,8 +111,6 @@ struct ContentView: View {
                             onSkip: handleOnboardingSkip
                         )
                     }
-                    // Overlay group only accepts hits while presented.
-                    .allowsHitTesting(true)
                 }
             }
             .modifier(ContentSheetsModifier(
@@ -144,7 +141,12 @@ struct ContentView: View {
                 onSelectAll: selectAllVisible,
                 onTrashSelection: trashSelected
             ))
-            .onAppear(perform: bootstrap)
+            .onAppear {
+                bootstrap()
+                // Hardening: some launches left the WindowGroup ordered front
+                // but not key / mouse-ready after onboarding overlay work.
+                FileRadarAppDelegate.activateMainWindow()
+            }
             .onChange(of: chromeViewRaw) { _, _ in
                 applyChromeDefaults()
             }
