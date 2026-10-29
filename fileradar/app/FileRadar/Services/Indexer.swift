@@ -140,6 +140,11 @@ final class FileStore: ObservableObject {
         rebuildRecents()
     }
 
+    /// Convenience: remove by file URLs (Trash / Transfer / Rename / SyncCompare).
+    func removeFiles(withURLs urls: [URL]) {
+        removeFiles(matching: Set(urls.map(\.path)))
+    }
+
     /// Update a file's URL after rename/move (keeps selection when possible).
     func updateFileURL(from old: URL, to new: URL) {
         let oldPath = old.path

@@ -260,7 +260,7 @@ struct ContentView: View {
                     }
                 }
             } else {
-                Section("Favorites") {
+                Section("Library") {
                     sidebarItem("Browser", systemImage: "rectangle.split.2x1", .browser, nav: .browser)
                     sidebarItem("Search", systemImage: "magnifyingglass", .search, nav: .search)
                     ForEach(standardPlaces, id: \.path) { place in
@@ -289,25 +289,14 @@ struct ContentView: View {
                     }
                 }
                 if chromeView != .workspaceTabs {
-                    Section("Places") {
-                        if store.pinnedFolderURLs.isEmpty {
-                            Text("Pin folders from a file’s context menu.")
-                                .font(FileRadarFont.caption())
-                                .foregroundStyle(.secondary)
-                        } else {
-                            ForEach(store.pinnedFolderURLs, id: \.self) { url in
-                                sidebarItem(url.lastPathComponent, systemImage: "pin", .pinned(url), place: .pin)
-                            }
-                        }
+                    Section("Shelves") {
+                        sidebarItem("Shelves", systemImage: "square.stack", .home, nav: .shelves)
+                        sidebarItem("Workspaces", systemImage: "square.grid.2x2", .workspaces, nav: .workspaces)
                     }
-                    Section("Tools") {
+                    Section("Smart Views") {
                         sidebarItem("Clean Up", systemImage: "trash", .cleanup, nav: .cleanup)
                         sidebarItem("Duplicates", systemImage: "doc.on.doc", .duplicates, nav: .duplicates)
                         sidebarItem("Compare Folders", systemImage: "arrow.left.arrow.right", .syncCompare, nav: .sync)
-                        sidebarItem("Workspaces", systemImage: "square.grid.2x2", .workspaces, nav: .workspaces)
-                    }
-                    Section("More") {
-                        sidebarItem("Shelves", systemImage: "square.stack", .home, nav: .shelves)
                         sidebarItem("Timeline", systemImage: "calendar", .timeline, nav: .timeline)
                         sidebarItem("Disk Map", systemImage: "square.grid.3x3", .diskMap, nav: .diskMap)
                         sidebarItem("Muse", systemImage: "sparkles", .muse, nav: .muse)
@@ -324,8 +313,20 @@ struct ContentView: View {
                             }
                         }
                     }
+                    Section("Locations") {
+                        if store.pinnedFolderURLs.isEmpty {
+                            Text("Pin folders from a file’s context menu.")
+                                .font(FileRadarFont.caption())
+                                .foregroundStyle(.secondary)
+                        } else {
+                            ForEach(store.pinnedFolderURLs, id: \.self) { url in
+                                sidebarItem(url.lastPathComponent, systemImage: "pin", .pinned(url), place: .pin)
+                            }
+                        }
+                        DiskFreeBar()
+                    }
                 } else {
-                    Section("Places") {
+                    Section("Locations") {
                         ForEach(["Pictures", "Music", "Movies"], id: \.self) { name in
                             let url = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(name)
                             Button {
@@ -342,14 +343,17 @@ struct ContentView: View {
                             .buttonStyle(.plain)
                         }
                     }
-                    Section("Tools") {
+                    Section("Shelves") {
                         sidebarItem("Shelves", systemImage: "square.stack", .home, nav: .shelves)
                     }
                 }
-                Section {
-                    DropStackView()
-                    DiskFreeBar()
-                }
+            }
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if chromeView != .previewTheater {
+                DropStackView()
+                    .padding(.horizontal, 8)
+                    .padding(.bottom, 6)
             }
         }
     }
@@ -513,8 +517,23 @@ struct ContentView: View {
             } label: {
                 FRToolbarGlyph(kind: .appearance(theme.appearance), accent: chromeAccent)
             }
-            .help("Appearance: \(theme.appearance.rawValue). Click to cycle System / Light / Dark.")
+            .help("Appearance: \(theme.appearance.rawValue). Click to cycle System / Light / Dark. ⇧⌘L toggles Light/Dark.")
             .accessibilityLabel("Appearance \(theme.appearance.rawValue)")
+
+            Menu {
+                Picker("Look", selection: Binding(
+                    get: { theme.look },
+                    set: { theme.look = $0 }
+                )) {
+                    ForEach(AppLook.allCases) { look in
+                        Label(look.rawValue, systemImage: look.systemImage).tag(look)
+                    }
+                }
+            } label: {
+                FRToolbarGlyph(kind: .look(theme.look), accent: chromeAccent)
+            }
+            .help("Look: \(theme.look.rawValue)")
+            .accessibilityLabel("Look \(theme.look.rawValue)")
 
             Menu {
                 Picker("Chrome", selection: $chromeViewRaw) {

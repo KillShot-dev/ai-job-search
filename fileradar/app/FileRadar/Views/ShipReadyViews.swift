@@ -122,6 +122,8 @@ struct AsyncFileThumbnail: View {
     }
 }
 
+typealias AsyncFileThumbnailView = AsyncFileThumbnail
+
 // MARK: - Manual tag editor (inspector module)
 
 struct ManualTagEditor: View {

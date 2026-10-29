@@ -476,7 +476,7 @@ struct SettingsView: View {
                     .textFieldStyle(.roundedBorder)
                     .onSubmit { saveMuseAPIKey() }
                 HStack {
-                    Button("Save API key") { saveMuseAPIKey() }
+                    Button("Save API Key") { saveMuseAPIKey() }
                         .disabled(museAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     if museAuth.apiKeyConfigured() {
                         Button("Clear API key") {

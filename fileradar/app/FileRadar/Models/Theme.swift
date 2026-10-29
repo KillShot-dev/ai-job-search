@@ -190,7 +190,16 @@ final class ThemeSettings: ObservableObject {
         }
     }
 
-    /// Cycle through the four looks (⇧⌘L).
+    /// Toggle Light ↔ Dark (⇧⌘L). System resolves to Dark first.
+    func toggleLightDark() {
+        switch appearance {
+        case .light: appearance = .dark
+        case .dark: appearance = .light
+        case .system: appearance = .dark
+        }
+    }
+
+    /// Cycle through the four looks (View → Cycle Look).
     func cycleLook() {
         let all = AppLook.allCases
         guard let idx = all.firstIndex(of: look) else {
@@ -271,7 +280,7 @@ enum FileRadarChrome {
     static let spaceHUDPadY: CGFloat = 12
 
     static let hudMaxWidth: CGFloat = 440
-    static let selectionStroke: CGFloat = 2
+    static let selectionStroke: CGFloat = 2.5
     static let activePaneStroke: CGFloat = 1.5
 
     static func selectionWash(_ accent: Color = FileRadarChrome.accent) -> Color {

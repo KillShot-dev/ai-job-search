@@ -68,10 +68,12 @@ final class QuickSearchPanel {
     private var panel: NSPanel?
     private weak var store: FileStore?
     private weak var license: LicenseManager?
+    private weak var theme: ThemeSettings?
 
-    func configure(store: FileStore, license: LicenseManager) {
+    func configure(store: FileStore, license: LicenseManager, theme: ThemeSettings) {
         self.store = store
         self.license = license
+        self.theme = theme
     }
 
     func show() {
@@ -84,8 +86,9 @@ final class QuickSearchPanel {
             return
         }
         if panel == nil {
-            let view = QuickSearchPanelView(store: store, license: license)
-            let hosting = NSHostingController(rootView: view)
+            let content = QuickSearchPanelView(store: store, license: license)
+                .environmentObject(theme ?? ThemeSettings())
+            let hosting = NSHostingController(rootView: content)
             let p = NSPanel(contentViewController: hosting)
             // Frosted HUD: borderless floating panel with vibrancy.
             p.styleMask = [.borderless, .fullSizeContentView, .nonactivatingPanel]
@@ -175,7 +178,7 @@ struct FileRadarShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: GetLatestDownloadIntent(),
             phrases: ["Get my latest download in \(.applicationName)"],
-            shortTitle: "Latest Download",
+            shortTitle: "Get Latest Download",
             systemImageName: "arrow.down.circle"
         )
     }

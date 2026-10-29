@@ -38,7 +38,7 @@ struct FileRadarApp: App {
                     store.manualTagNames = { [manualTags] path in
                         manualTags.tags(for: path).map(\.name)
                     }
-                    QuickSearchPanel.shared.configure(store: store, license: license)
+                    QuickSearchPanel.shared.configure(store: store, license: license, theme: theme)
                     // Never touch Keychain synchronously here — sample showed
                     // refreshEntitlements → TrialManager.refresh → SecItem
                     // blocking MainActor for the entire open event.
@@ -145,18 +145,21 @@ struct FileRadarApp: App {
                 ForEach(AppearanceMode.allCases) { mode in
                     Button(mode.rawValue) { theme.appearance = mode }
                 }
+                Button("Toggle Light / Dark") { theme.toggleLightDark() }
+                    .keyboardShortcut("l", modifiers: [.command, .shift])
                 Divider()
                 Button("Cycle Look") { theme.cycleLook() }
-                    .keyboardShortcut("l", modifiers: [.command, .shift])
             }
             CommandMenu("Appearance") {
                 ForEach(AppearanceMode.allCases) { mode in
                     Button(mode.rawValue) { theme.appearance = mode }
                 }
+                Button("Toggle Light / Dark") { theme.toggleLightDark() }
                 Divider()
                 ForEach(AppLook.allCases) { look in
                     Button(look.rawValue) { theme.look = look }
                 }
+                Button("Cycle Look") { theme.cycleLook() }
             }
             CommandMenu("Go") {
                 Button("Quick Search…") { QuickSearchPanel.shared.show() }

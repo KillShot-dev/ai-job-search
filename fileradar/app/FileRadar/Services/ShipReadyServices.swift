@@ -398,15 +398,20 @@ enum LicenseServerClient {
 @MainActor
 final class ThumbnailCache {
     static let shared = ThumbnailCache()
-    private var memory: [String: NSImage] = [:]
+    private let memory = NSCache<NSString, NSImage>()
     private var inflight: [String: [CheckedContinuation<NSImage?, Never>]] = [:]
 
-    func image(for url: URL) -> NSImage? { memory[url.path] }
+    init() {
+        memory.countLimit = 256
+        memory.totalCostLimit = 64 * 1024 * 1024
+    }
+
+    func image(for url: URL) -> NSImage? { memory.object(forKey: url.path as NSString) }
 
     func load(url: URL, isICloudOnly: Bool) async -> NSImage? {
         let key = url.path
         if isICloudOnly { return nil }
-        if let cached = memory[key] { return cached }
+        if let cached = memory.object(forKey: key as NSString) { return cached }
         return await withCheckedContinuation { (continuation: CheckedContinuation<NSImage?, Never>) in
             if var waiters = inflight[key] {
                 waiters.append(continuation)
@@ -419,7 +424,10 @@ final class ThumbnailCache {
             QLThumbnailGenerator.shared.generateBestRepresentation(for: request) { rep, _ in
                 Task { @MainActor in
                     let image = rep?.nsImage
-                    if let image { self.memory[key] = image }
+                    if let image {
+                        let cost = Int(image.size.width * image.size.height * 4)
+                        self.memory.setObject(image, forKey: key as NSString, cost: max(cost, 1))
+                    }
                     let waiters = self.inflight.removeValue(forKey: key) ?? []
                     for waiter in waiters { waiter.resume(returning: image) }
                 }
@@ -428,7 +436,7 @@ final class ThumbnailCache {
     }
 
     func clear() {
-        memory.removeAll()
+        memory.removeAllObjects()
         let waiters = inflight
         inflight.removeAll()
         for (_, list) in waiters {

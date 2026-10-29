@@ -40,9 +40,11 @@ struct ShowcaseHomeView: View {
                         Label("Indexing your files in the background…", systemImage: "arrow.triangle.2.circlepath")
                             .font(FileRadarFont.caption()).foregroundStyle(.secondary)
                     }
+                    homeLookAppearancePills
                 }
 
                 shelvesSection
+                smartCollectionsBento
                 recentsSection
 
                 if !license.isUnlocked {
@@ -59,6 +61,56 @@ struct ShowcaseHomeView: View {
         .sheet(isPresented: $showLicense) { LicenseEntryView() }
     }
 
+    private var homeLookAppearancePills: some View {
+        HStack(spacing: 8) {
+            ForEach(AppLook.allCases) { look in
+                Button {
+                    theme.look = look
+                } label: {
+                    Text(look.rawValue)
+                        .font(FileRadarFont.caption())
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(
+                            Capsule().fill(theme.look == look
+                                           ? theme.look.accent.opacity(0.18)
+                                           : Color.primary.opacity(0.06))
+                        )
+                        .overlay(
+                            Capsule().strokeBorder(
+                                theme.look == look ? theme.look.accent.opacity(0.55) : Color.clear,
+                                lineWidth: 1
+                            )
+                        )
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Look \(look.rawValue)")
+                .accessibilityAddTraits(theme.look == look ? .isSelected : [])
+            }
+            Divider().frame(height: 16)
+            ForEach(AppearanceMode.allCases) { mode in
+                Button {
+                    theme.appearance = mode
+                } label: {
+                    Image(systemName: mode.systemImage)
+                        .font(.system(size: 11, weight: .semibold))
+                        .padding(6)
+                        .background(
+                            Circle().fill(theme.appearance == mode
+                                          ? theme.look.accent.opacity(0.18)
+                                          : Color.primary.opacity(0.06))
+                        )
+                }
+                .buttonStyle(.plain)
+                .help(mode.rawValue)
+                .accessibilityLabel("Appearance \(mode.rawValue)")
+                .accessibilityAddTraits(theme.appearance == mode ? .isSelected : [])
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.top, 6)
+    }
+
     private var shelvesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
@@ -70,21 +122,21 @@ struct ShowcaseHomeView: View {
                 }
                 Spacer()
                 Button("Edit Shelves") {
-                    // Shelves are kind- and smart-collection-derived; open Kinds via Images.
+                    // Shelves are kind-derived; open Kinds via Images.
                     destination = .kind(.image)
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
-                .help("Shelves map to kinds and smart collections. Open a kind shelf to browse.")
+                .help("Shelves map to kinds. Open a kind shelf to browse.")
             }
 
-            if albumShelves.isEmpty {
+            if kindShelves.isEmpty {
                 EmptyStateView(title: "No shelves yet",
-                               message: "Once FileRadar indexes your folders, kind shelves and smart collections appear here as album cards.")
+                               message: "Once FileRadar indexes your folders, kind shelves appear here as album cards.")
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: FileRadarChrome.spaceCardGap) {
-                        ForEach(albumShelves) { album in
+                        ForEach(kindShelves) { album in
                             ShelfAlbumCard(album: album)
                                 .onTapGesture {
                                     withAnimation(FileRadarMotion.panel) {
@@ -94,6 +146,57 @@ struct ShowcaseHomeView: View {
                         }
                     }
                     .padding(.vertical, 2)
+                }
+            }
+        }
+    }
+
+    private var smartCollectionsBento: some View {
+        let cols = TagService.smartCollections(in: store.files).filter { !$0.files.isEmpty }
+        return Group {
+            if !cols.isEmpty {
+                VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Smart Collections").font(FileRadarFont.heading())
+                        Text("On-device groups from tags and OCR")
+                            .font(FileRadarFont.caption())
+                            .foregroundStyle(.secondary)
+                    }
+                    LazyVGrid(
+                        columns: [GridItem(.adaptive(minimum: 160), spacing: FileRadarChrome.spaceCardGap)],
+                        spacing: FileRadarChrome.spaceCardGap
+                    ) {
+                        ForEach(Array(cols.enumerated()), id: \.offset) { _, col in
+                            Button {
+                                withAnimation(FileRadarMotion.panel) {
+                                    destination = .smartFolder(col.title)
+                                }
+                            } label: {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
+                                            .fill(theme.look.accent.opacity(0.12))
+                                        if let cover = col.files.first(where: { $0.kind == .image && !$0.isICloudOnly })
+                                            ?? col.files.first {
+                                            AsyncFileThumbnailView(file: cover, size: CGSize(width: 160, height: 100))
+                                        } else {
+                                            Image(systemName: "sparkles.rectangle.stack")
+                                                .font(.system(size: 28, weight: .medium))
+                                                .foregroundStyle(theme.look.accent)
+                                        }
+                                    }
+                                    .frame(height: 100)
+                                    .clipShape(RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous))
+                                    Text(col.title).font(FileRadarFont.body()).lineLimit(1)
+                                    Text("\(col.files.count) file\(col.files.count == 1 ? "" : "s")")
+                                        .font(FileRadarFont.caption())
+                                        .foregroundStyle(.secondary)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
                 }
             }
         }
@@ -167,10 +270,9 @@ struct ShowcaseHomeView: View {
         }
     }
 
-    /// Kind shelves always appear as album cards (SF Symbol cover when empty)
-    /// so Home matches the mockup structure before indexing finishes. Smart
-    /// collections and favorites join once they have files.
-    private var albumShelves: [ShelfAlbum] {
+    /// Kind shelves + favorites as album cards. Smart Collections use the
+    /// separate bento grid below.
+    private var kindShelves: [ShelfAlbum] {
         var albums: [ShelfAlbum] = []
         for (kind, files) in store.shelves {
             let count = store.files.filter { $0.kind == kind }.count
@@ -184,16 +286,6 @@ struct ShowcaseHomeView: View {
                 cover: cover,
                 systemImage: kind.systemImage,
                 destination: .kind(kind)
-            ))
-        }
-        for col in TagService.smartCollections(in: store.files) where !col.files.isEmpty {
-            albums.append(ShelfAlbum(
-                id: "smart-\(col.title)",
-                title: col.title,
-                subtitle: "\(col.files.count) file\(col.files.count == 1 ? "" : "s")",
-                cover: col.files.first(where: { $0.kind == .image && !$0.isICloudOnly }) ?? col.files.first,
-                systemImage: "sparkles.rectangle.stack",
-                destination: .smartFolder(col.title)
             ))
         }
         if !favorites.paths.isEmpty {

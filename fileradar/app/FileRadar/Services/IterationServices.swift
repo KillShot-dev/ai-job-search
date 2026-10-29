@@ -748,8 +748,9 @@ enum GitStatusService {
 
     private static func syncBadge(for file: URL) -> String? {
         guard let root = repoRoot(for: file) else { return nil }
+        let rootPath = (root.path as NSString).standardizingPath
         lock.lock()
-        let cached = cache[root.path]
+        let cached = cache[rootPath]
         lock.unlock()
         let map: [String: String]
         if let cached {
@@ -757,14 +758,14 @@ enum GitStatusService {
         } else {
             map = statusMap(forRoot: root)
             lock.lock()
-            cache[root.path] = map
+            cache[rootPath] = map
             lock.unlock()
         }
-        // Prefer path relative to repo root; fall back to last path component.
-        let relative = file.path.hasPrefix(root.path + "/")
-            ? String(file.path.dropFirst(root.path.count + 1))
-            : file.lastPathComponent
-        return map[relative] ?? map[file.lastPathComponent]
+        // Key by path relative to the standardized repo root (never basename-only).
+        let filePath = (file.path as NSString).standardizingPath
+        guard filePath.hasPrefix(rootPath + "/") else { return nil }
+        let relative = String(filePath.dropFirst(rootPath.count + 1))
+        return map[relative]
     }
 
     private static func repoRoot(for file: URL) -> URL? {
@@ -772,7 +773,7 @@ enum GitStatusService {
         for _ in 0..<12 {
             guard let current = dir else { break }
             if FileManager.default.fileExists(atPath: current.appendingPathComponent(".git").path) {
-                return current
+                return current.standardizedFileURL
             }
             let parent = current.deletingLastPathComponent()
             if parent == current { break }
@@ -800,9 +801,10 @@ enum GitStatusService {
             if name.hasPrefix("\""), name.hasSuffix("\""), name.count >= 2 {
                 name = String(name.dropFirst().dropLast())
             }
-            if !code.isEmpty, !name.isEmpty {
-                map[name] = code
-                map[URL(fileURLWithPath: name).lastPathComponent] = code
+            // Porcelain paths are repo-relative; standardize separators only.
+            let standardized = (name as NSString).standardizingPath
+            if !code.isEmpty, !standardized.isEmpty {
+                map[standardized] = code
             }
         }
         return map

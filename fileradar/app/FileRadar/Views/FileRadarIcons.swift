@@ -515,6 +515,7 @@ struct FRTransferIcon: View {
 struct FRToolbarGlyph: View {
     enum Kind {
         case appearance(AppearanceMode)
+        case look(AppLook)
         case dualPane(Bool)
         case chrome
         case viewMode(FileStore.ViewMode)
@@ -543,6 +544,7 @@ struct FRToolbarGlyph: View {
     private var symbol: String {
         switch kind {
         case .appearance(let mode): return mode.systemImage
+        case .look(let look): return look.systemImage
         case .dualPane(let on): return on ? "rectangle.split.2x1.fill" : "rectangle.split.2x1"
         case .chrome: return "rectangle.on.rectangle.angled"
         case .viewMode(let mode):
@@ -562,6 +564,8 @@ struct FRToolbarGlyph: View {
         switch kind {
         case .appearance:
             return (Color(red: 0.55, green: 0.65, blue: 0.95), Color(red: 0.25, green: 0.30, blue: 0.55))
+        case .look(let look):
+            return (look.accent.opacity(0.95), look.accent.opacity(0.55))
         case .dualPane:
             return (accent.opacity(0.95), accent.opacity(0.65))
         case .chrome:

@@ -23,8 +23,7 @@ Endpoints (all JSON except /webhook, which takes Stripe's raw body):
     -> activates on one Mac; 409 if already active on another Mac.
   POST /deactivate       {"serial": "FR-...", "machine_hash": "..."}
     -> deactivates the active activation (move-Macs flow). The serial
-       stays active. machine_hash optional: omit to deactivate
-       whatever Mac is currently active.
+       stays active. machine_hash is required (same as /activate).
   POST /deactivate-serial {"serial": "FR-..."}
     -> revokes the serial entirely. ADMIN ONLY: requires the
        LICENSING_ADMIN_TOKEN (see below). This is the only admin
@@ -392,13 +391,12 @@ class Handler(BaseHTTPRequestHandler):
                 return
 
             if path == "/deactivate":
-                serial_raw = body.get("serial") or ""
-                machine = body.get("machine_hash") or None
-                if not isinstance(serial_raw, str) or (machine is not None and not isinstance(machine, str)):
-                    self._send_json(400, {"error": "'serial' is required"})
+                serial_raw, machine = body.get("serial") or "", body.get("machine_hash") or ""
+                if not isinstance(serial_raw, str) or not isinstance(machine, str):
+                    self._send_json(400, {"error": "'serial' and 'machine_hash' are required"})
                     return
-                if not serial_raw:
-                    self._send_json(400, {"error": "'serial' is required"})
+                if not serial_raw or not machine or len(machine) > 512:
+                    self._send_json(400, {"error": "'serial' and 'machine_hash' are required"})
                     return
                 serial = serials.format_serial(serials.normalize_serial(serial_raw)) \
                     if serials.normalize_serial(serial_raw) else serial_raw
