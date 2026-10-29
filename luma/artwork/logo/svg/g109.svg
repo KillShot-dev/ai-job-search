@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="g109bg" x1="40" y1="18" x2="150" y2="176" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FBE8E4"/>
+      <stop offset="1" stop-color="#C45B4E"/>
+    </linearGradient>
+    <linearGradient id="g109glass" x1="96" y1="16" x2="96" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.7"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="g109clip"><rect x="18" y="18" width="156" height="156" rx="46"/></clipPath>
+  </defs>
+  <rect x="18" y="18" width="156" height="156" rx="46" fill="url(#g109bg)"/>
+  <g clip-path="url(#g109clip)">
+    <ellipse cx="78" cy="58" rx="58" ry="32" fill="#ffffff" fill-opacity="0.28"/>
+    <path d="M34 84C52 46 84 30 112 32c-26 4-56 26-72 58-6 12-10 24-10 32 0-14 2-28 4-38z" fill="url(#g109glass)"/>
+  </g>
+  <rect x="19" y="19" width="154" height="154" rx="45" fill="none" stroke="#ffffff" stroke-opacity="0.8" stroke-width="1.5"/>
+  <ellipse cx="84.0" cy="118.0" rx="13.0" ry="9.4" fill="#243044"/>
+<rect x="93.0" y="79.0" width="6.0" height="39.0" rx="2.0" fill="#243044"/>
+<rect x="92.0" y="112.0" width="16.0" height="5.0" rx="2.0" fill="#243044"/>
+</svg>

@@ -30,6 +30,8 @@ linkedin_Profile.pdf
 *.jpeg
 *.png
 !cover_letters/OpenFonts/fonts/**
+# Luma icon-pack exports are product assets, not personal photos
+!luma/**/*.png
 # metaPhasic website brand + product assets (required for static deploy)
 !metaphasic-website/public/**/*.png
 !metaphasic-website/public/**/*.jpg
@@ -72,3 +74,12 @@ upskill/*.md
 
 # Agent usage logs
 .agents/
+
+# Android build output and upload keys. The signed bundle is delivered outside git.
+luma/android/.gradle/
+luma/android/build/
+luma/android/app/build/
+luma/android/local.properties
+luma/android/keystore.properties
+*.jks
+*.keystore

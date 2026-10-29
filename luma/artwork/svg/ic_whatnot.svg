@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="icwhatnotbg" x1="36" y1="18" x2="160" y2="176" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F7F4EF"/>
+      <stop offset="1" stop-color="#E4D5C2"/>
+    </linearGradient>
+    <linearGradient id="icwhatnotglass" x1="96" y1="20" x2="96" y2="108" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.78"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="icwhatnotclip">
+      <rect x="14" y="14" width="164" height="164" rx="50"/>
+    </clipPath>
+  </defs>
+  <rect x="14" y="14" width="164" height="164" rx="50" fill="url(#icwhatnotbg)"/>
+  <g clip-path="url(#icwhatnotclip)">
+    <ellipse cx="74" cy="58" rx="62" ry="36" fill="#ffffff" fill-opacity="0.28"/>
+    <path d="M30 86C48 48 78 30 108 30c10 0 18 2 26 6-30 2-62 24-84 58-8 12-14 24-16 34-4-14-6-28-4-42z" fill="url(#icwhatnotglass)"/>
+  </g>
+  <rect x="15" y="15" width="162" height="162" rx="49" fill="none" stroke="#F8FBFF" stroke-opacity="0.9" stroke-width="1.6"/>
+  <rect x="17.2" y="17.2" width="157.6" height="157.6" rx="47.5" fill="none" stroke="#7E90A4" stroke-opacity="0.28" stroke-width="1"/>
+  <g>
+    <path d="M58 112 L96 74 L112 90 L74 128 Z" fill="#243044"/>
+    <rect x="108" y="96" width="28" height="10" rx="4" fill="#6E5A3A"/>
+    <path d="M124 100 L146 122 L136 132 L114 110 Z" fill="#6E5A3A"/>
+  </g>
+</svg>

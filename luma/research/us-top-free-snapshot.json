@@ -1,0 +1,3926 @@
+{
+  "coverageTarget": 300,
+  "coverageRecorded": 199,
+  "ranksNotInThisSnapshot": [
+    200,
+    201,
+    202,
+    203,
+    204,
+    205,
+    206,
+    207,
+    208,
+    209,
+    210,
+    211,
+    212,
+    213,
+    214,
+    215,
+    216,
+    217,
+    218,
+    219,
+    220,
+    221,
+    222,
+    223,
+    224,
+    225,
+    226,
+    227,
+    228,
+    229,
+    230,
+    231,
+    232,
+    233,
+    234,
+    235,
+    236,
+    237,
+    238,
+    239,
+    240,
+    241,
+    242,
+    243,
+    244,
+    245,
+    246,
+    247,
+    248,
+    249,
+    250,
+    251,
+    252,
+    253,
+    254,
+    255,
+    256,
+    257,
+    258,
+    259,
+    260,
+    261,
+    262,
+    263,
+    264,
+    265,
+    266,
+    267,
+    268,
+    269,
+    270,
+    271,
+    272,
+    273,
+    274,
+    275,
+    276,
+    277,
+    278,
+    279,
+    280,
+    281,
+    282,
+    283,
+    284,
+    285,
+    286,
+    287,
+    288,
+    289,
+    290,
+    291,
+    292,
+    293,
+    294,
+    295,
+    296,
+    297,
+    298,
+    299,
+    300
+  ],
+  "primary": {
+    "label": "U.S. Google Play Top Free, all categories",
+    "method": "google-play-scraper 10.1.4 list()",
+    "collection": "TOP_FREE",
+    "cluster": "topselling_free",
+    "country": "us",
+    "lang": "en",
+    "requestedCount": 300,
+    "returnedCount": 199,
+    "fetchedAt": "2026-10-26T01:00:44.724Z",
+    "sourceNote": "google-play-scraper list TOP_FREE country=us lang=en",
+    "limitation": "The Play topselling_free response used here returned 199 apps when 300 were requested. Ranks 200 through 300 are omitted, not estimated.",
+    "apps": [
+      {
+        "rank": 1,
+        "name": "Muse from Meta",
+        "packageId": "com.facebook.aura",
+        "developer": "Meta Platforms, Inc.",
+        "score": 4.7238154
+      },
+      {
+        "rank": 2,
+        "name": "ChatGPT",
+        "packageId": "com.openai.chatgpt",
+        "developer": "OpenAI",
+        "score": 4.780461
+      },
+      {
+        "rank": 3,
+        "name": "TikTok Pro - Events",
+        "packageId": "com.ss.android.ugc.tiktok.pro",
+        "developer": "TikTok Pte. Ltd.",
+        "score": 4.3809524
+      },
+      {
+        "rank": 4,
+        "name": "Capital One Mobile",
+        "packageId": "com.konylabs.capitalone",
+        "developer": "Capital One Services, LLC",
+        "score": 4.5280867
+      },
+      {
+        "rank": 5,
+        "name": "Settings Home",
+        "packageId": "com.eet.settings.launcher",
+        "developer": "Utility Apps Home",
+        "score": 4.2574625
+      },
+      {
+        "rank": 6,
+        "name": "Vinted: Shop & sell pre-loved",
+        "packageId": "fr.vinted",
+        "developer": "Vinted",
+        "score": 4.5019526
+      },
+      {
+        "rank": 7,
+        "name": "WhatsApp",
+        "packageId": "com.whatsapp",
+        "developer": "WhatsApp LLC",
+        "score": 4.6243005
+      },
+      {
+        "rank": 8,
+        "name": "McDonald's",
+        "packageId": "com.mcdonalds.app",
+        "developer": "McDonalds USA, LLC",
+        "score": 3.962151
+      },
+      {
+        "rank": 9,
+        "name": "TikTok - Videos, Shop & LIVE",
+        "packageId": "com.zhiliaoapp.musically",
+        "developer": "TikTok Pte. Ltd.",
+        "score": 3.9599676
+      },
+      {
+        "rank": 10,
+        "name": "FreeReels - Dramas & Reels",
+        "packageId": "com.freereels.app",
+        "developer": "SKYWORK AI PTE.LTD.",
+        "score": 4.7330985
+      },
+      {
+        "rank": 11,
+        "name": "FreeDrama: Short Drama & Reels",
+        "packageId": "com.drama.free",
+        "developer": "Kuku Technologies Limited",
+        "score": 4.596829
+      },
+      {
+        "rank": 12,
+        "name": "Instagram",
+        "packageId": "com.instagram.android",
+        "developer": "Instagram",
+        "score": 3.9890943
+      },
+      {
+        "rank": 13,
+        "name": "DealSeek: Coupons & Discounts",
+        "packageId": "com.dealseekorg.dealseek",
+        "developer": "DealSeek LLC",
+        "score": 4.8068485
+      },
+      {
+        "rank": 14,
+        "name": "PineDrama - Short Dramas",
+        "packageId": "com.ss.android.ttmd.video",
+        "developer": "TikTok Pte. Ltd.",
+        "score": 4.6022725
+      },
+      {
+        "rank": 15,
+        "name": "Cleanup: Phone Storage Cleaner",
+        "packageId": "com.storage.androidcleaner",
+        "developer": "Deep Flow Apps",
+        "score": 4.4132214
+      },
+      {
+        "rank": 16,
+        "name": "TikTok Lite - Faster TikTok",
+        "packageId": "com.tiktok.lite.go",
+        "developer": "TikTok Pte. Ltd.",
+        "score": 4.260732
+      },
+      {
+        "rank": 17,
+        "name": "Temu: Shop Like a Billionaire",
+        "packageId": "com.einnovation.temu",
+        "developer": "Temu",
+        "score": 4.448879
+      },
+      {
+        "rank": 18,
+        "name": "Kalshi: Trade Football & more",
+        "packageId": "com.kalshi.mobile",
+        "developer": "KalshiEX LLC",
+        "score": 4.7075047
+      },
+      {
+        "rank": 19,
+        "name": "Cash App",
+        "packageId": "com.squareup.cash",
+        "developer": "Block, Inc.",
+        "score": 4.7085466
+      },
+      {
+        "rank": 20,
+        "name": "Facebook",
+        "packageId": "com.facebook.katana",
+        "developer": "Meta Platforms, Inc.",
+        "score": 4.557777
+      },
+      {
+        "rank": 21,
+        "name": "X",
+        "packageId": "com.twitter.android",
+        "developer": "X Corp.",
+        "score": 4.8032517
+      },
+      {
+        "rank": 22,
+        "name": "Walmart: Shopping & Savings",
+        "packageId": "com.walmart.android",
+        "developer": "Walmart",
+        "score": 4.7033677
+      },
+      {
+        "rank": 23,
+        "name": "Snapchat",
+        "packageId": "com.snapchat.android",
+        "developer": "Snap Inc",
+        "score": 4.1797037
+      },
+      {
+        "rank": 24,
+        "name": "CapCut - Video Editor",
+        "packageId": "com.lemon.lvoverseas",
+        "developer": "Bytedance Pte. Ltd.",
+        "score": 3.5488496
+      },
+      {
+        "rank": 25,
+        "name": "BlinkDrama: Short Dramas & TV",
+        "packageId": "com.blink.drama.player",
+        "developer": "Atlas Ventures Culture & Technology Limited",
+        "score": 4.5337915
+      },
+      {
+        "rank": 26,
+        "name": "Telegram",
+        "packageId": "org.telegram.messenger",
+        "developer": "Telegram FZ-LLC",
+        "score": 3.8088157
+      },
+      {
+        "rank": 27,
+        "name": "Peacock TV: Stream TV & Movies",
+        "packageId": "com.peacocktv.peacockandroid",
+        "developer": "Peacock TV LLC",
+        "score": 4.5862274
+      },
+      {
+        "rank": 28,
+        "name": "DramaWave - Dramas & Reels",
+        "packageId": "com.dramawave.app",
+        "developer": "SKYWORK AI PTE.LTD.",
+        "score": 4.5456653
+      },
+      {
+        "rank": 29,
+        "name": "MapQuest: Get Directions",
+        "packageId": "com.mapquest.android.ace",
+        "developer": "MapQuest",
+        "score": 4.3541155
+      },
+      {
+        "rank": 30,
+        "name": "Freecash: Earn Money",
+        "packageId": "com.freecash.app2",
+        "developer": "Freecash",
+        "score": 4.5517983
+      },
+      {
+        "rank": 31,
+        "name": "Claude by Anthropic",
+        "packageId": "com.anthropic.claude",
+        "developer": "Anthropic PBC",
+        "score": 4.516022
+      },
+      {
+        "rank": 32,
+        "name": "Whatnot: Shop, Sell, Connect",
+        "packageId": "com.whatnot_mobile",
+        "developer": "Whatnot Inc.",
+        "score": 4.738441
+      },
+      {
+        "rank": 33,
+        "name": "DramaBox - Stream Drama Shorts",
+        "packageId": "com.storymatrix.drama",
+        "developer": "STORYMATRIX",
+        "score": 4.550928
+      },
+      {
+        "rank": 34,
+        "name": "TextNow: Call + Text Unlimited",
+        "packageId": "com.enflick.android.TextNow",
+        "developer": "TextNow, Inc.",
+        "score": 4.6069684
+      },
+      {
+        "rank": 35,
+        "name": "Life360: Family Safety & GPS",
+        "packageId": "com.life360.android.safetymapd",
+        "developer": "Life360",
+        "score": 4.7691197
+      },
+      {
+        "rank": 36,
+        "name": "Messenger",
+        "packageId": "com.facebook.orca",
+        "developer": "Meta Platforms, Inc.",
+        "score": 4.712598
+      },
+      {
+        "rank": 37,
+        "name": "ReelShort - Stream Drama & TV",
+        "packageId": "com.newleaf.app.android.victor",
+        "developer": "NewLeaf Publishing",
+        "score": 3.7799866
+      },
+      {
+        "rank": 38,
+        "name": "Discord - Talk, Play, Hang Out",
+        "packageId": "com.discord",
+        "developer": "Discord Inc.",
+        "score": 4.285427
+      },
+      {
+        "rank": 39,
+        "name": "WakeBox",
+        "packageId": "com.wake.box.ryan",
+        "developer": "BLYTHEWOOD NY LLC",
+        "score": 4.183521
+      },
+      {
+        "rank": 40,
+        "name": "NetShort - Popular Dramas & TV",
+        "packageId": "com.netshort.abroad",
+        "developer": "NETSTORY PTE. LTD.",
+        "score": 4.6583533
+      },
+      {
+        "rank": 41,
+        "name": "DoorDash: Food, Grocery, More",
+        "packageId": "com.dd.doordash",
+        "developer": "DoorDash",
+        "score": 4.6585774
+      },
+      {
+        "rank": 42,
+        "name": "zeta: AI Chat, Story, Play",
+        "packageId": "com.scatterlab.messenger",
+        "developer": "Scatter Lab, Inc.",
+        "score": 4.4456162
+      },
+      {
+        "rank": 43,
+        "name": "Easy Homescreen",
+        "packageId": "easy.launcher",
+        "developer": "Homescreen Apps",
+        "score": 3.9897547
+      },
+      {
+        "rank": 44,
+        "name": "Tubi: Free Movies & Live TV",
+        "packageId": "com.tubitv",
+        "developer": "Tubi TV",
+        "score": 4.8545904
+      },
+      {
+        "rank": 45,
+        "name": "PayPal - Pay, Send, Save",
+        "packageId": "com.paypal.android.p2pmobile",
+        "developer": "PayPal Mobile",
+        "score": 4.198431
+      },
+      {
+        "rank": 46,
+        "name": "Shop: Track, Pay, Discover",
+        "packageId": "com.shopify.arrive",
+        "developer": "Shopify Inc.",
+        "score": 4.4456263
+      },
+      {
+        "rank": 47,
+        "name": "Reddit",
+        "packageId": "com.reddit.frontpage",
+        "developer": "reddit Inc.",
+        "score": 4.5563726
+      },
+      {
+        "rank": 48,
+        "name": "PDF Reader: Documents Master",
+        "packageId": "com.pdfreader.master.utgerful",
+        "developer": "Praya",
+        "score": 3.7876105
+      },
+      {
+        "rank": 49,
+        "name": "Chime\u00ae \u2013 Fee-Free Banking",
+        "packageId": "com.onedebit.chime",
+        "developer": "Chime",
+        "score": 4.7307067
+      },
+      {
+        "rank": 50,
+        "name": "StoryReel: Drama Shorts & TV",
+        "packageId": "com.storyreel.tv.android",
+        "developer": "Equinox Enterprises\u200c Technology Limited",
+        "score": 4.392713
+      },
+      {
+        "rank": 51,
+        "name": "AliExpress - Shopping App",
+        "packageId": "com.alibaba.aliexpresshd",
+        "developer": "Alibaba Mobile",
+        "score": 4.251461
+      },
+      {
+        "rank": 52,
+        "name": "JustPlay: Earn Money or Donate",
+        "packageId": "com.justplay.app",
+        "developer": "JustPlay GmbH",
+        "score": 4.424283
+      },
+      {
+        "rank": 53,
+        "name": "Pinterest",
+        "packageId": "com.pinterest",
+        "developer": "Pinterest",
+        "score": 4.243766
+      },
+      {
+        "rank": 54,
+        "name": "SHEIN-Shopping Online",
+        "packageId": "com.zzkko",
+        "developer": "Roadget Business PTE. LTD.",
+        "score": 4.7553253
+      },
+      {
+        "rank": 55,
+        "name": "CrimeRadar: Dispatch Alerts",
+        "packageId": "com.newsbreak.crimeradar",
+        "developer": "Scoopz LLC",
+        "score": 4.8093834
+      },
+      {
+        "rank": 56,
+        "name": "Amazon Shopping",
+        "packageId": "com.amazon.mShop.android.shopping",
+        "developer": "Amazon Mobile LLC",
+        "score": 4.385827
+      },
+      {
+        "rank": 57,
+        "name": "PicFusion Lab",
+        "packageId": "com.xphotokit.picfusionlab",
+        "developer": "X PhotoKit",
+        "score": 4.529412
+      },
+      {
+        "rank": 58,
+        "name": "Venmo",
+        "packageId": "com.venmo",
+        "developer": "PayPal Mobile",
+        "score": 3.9922662
+      },
+      {
+        "rank": 59,
+        "name": "Deep Clean Elite",
+        "packageId": "com.deepcleanelit.dcle",
+        "developer": "PDI Turbo",
+        "score": 4.276029
+      },
+      {
+        "rank": 60,
+        "name": "Spotify: Music and Podcasts",
+        "packageId": "com.spotify.music",
+        "developer": "Spotify AB",
+        "score": 4.349206
+      },
+      {
+        "rank": 61,
+        "name": "Indeed Job Search",
+        "packageId": "com.indeed.android.jobsearch",
+        "developer": "Indeed Jobs",
+        "score": 4.6956453
+      },
+      {
+        "rank": 62,
+        "name": "Threads",
+        "packageId": "com.instagram.barcelona",
+        "developer": "Instagram",
+        "score": 3.999436
+      },
+      {
+        "rank": 63,
+        "name": "DoorDash - Dasher",
+        "packageId": "com.doordash.driverapp",
+        "developer": "DoorDash",
+        "score": 4.5518246
+      },
+      {
+        "rank": 64,
+        "name": "YouTube TV: Live TV & more",
+        "packageId": "com.google.android.apps.youtube.unplugged",
+        "developer": "Google LLC",
+        "score": 3.7810965
+      },
+      {
+        "rank": 65,
+        "name": "Netflix",
+        "packageId": "com.netflix.mediaclient",
+        "developer": "Netflix, Inc.",
+        "score": 4.771259
+      },
+      {
+        "rank": 66,
+        "name": "AI Photo Beauty Editor Studio",
+        "packageId": "com.aiphotoedior.photogenerator.photoretouch",
+        "developer": "ATQ - AI Lab",
+        "score": 4.669565
+      },
+      {
+        "rank": 67,
+        "name": "Fetch: Earn Rewards Every Day",
+        "packageId": "com.fetchrewards.fetchrewards.hop",
+        "developer": "Fetch Rewards",
+        "score": 4.7483377
+      },
+      {
+        "rank": 68,
+        "name": "Playout: Earn Money",
+        "packageId": "io.playout",
+        "developer": "Loyalty Gaming",
+        "score": 4.541958
+      },
+      {
+        "rank": 69,
+        "name": "Microsoft Authenticator",
+        "packageId": "com.azure.authenticator",
+        "developer": "Microsoft Corporation",
+        "score": 4.6353836
+      },
+      {
+        "rank": 70,
+        "name": "RushDrama Pro:MiniSeries",
+        "packageId": "com.rushdramapro.miniseries",
+        "developer": "X-tream",
+        "score": 4.869748
+      },
+      {
+        "rank": 71,
+        "name": "Rips by Triumph",
+        "packageId": "com.triumpharcade.tcg",
+        "developer": "Triumph Labs Inc.",
+        "score": 4.539797
+      },
+      {
+        "rank": 72,
+        "name": "TimeCue \u2013 Reminders & Alerts",
+        "packageId": "com.reminder.alert.timecue",
+        "developer": "Classified Prime LLc",
+        "score": 3.5688074
+      },
+      {
+        "rank": 73,
+        "name": "GPS Location Tracker Ultra",
+        "packageId": "com.locc.trak.ult",
+        "developer": "SUNCAP COMPAGNY",
+        "score": 3.8
+      },
+      {
+        "rank": 74,
+        "name": "Vidix-AI Photo Video Generator",
+        "packageId": "com.vidix.aivideogenerator.aiphotogenerator",
+        "developer": "Supercool Labs",
+        "score": 4.214076
+      },
+      {
+        "rank": 75,
+        "name": "T-Life",
+        "packageId": "com.tmobile.tuesdays",
+        "developer": "T-Mobile USA",
+        "score": 4.611067
+      },
+      {
+        "rank": 76,
+        "name": "Draw Music: Sketch to Sound",
+        "packageId": "com.banix.drawsound.drawmusic",
+        "developer": "Banix Studio",
+        "score": 4.6377954
+      },
+      {
+        "rank": 77,
+        "name": "Depop - Buy & Sell Clothes",
+        "packageId": "com.depop",
+        "developer": "Depop",
+        "score": 4.763413
+      },
+      {
+        "rank": 78,
+        "name": "Paramount+",
+        "packageId": "com.cbs.app",
+        "developer": "CBS Interactive, Inc.",
+        "score": 4.127721
+      },
+      {
+        "rank": 79,
+        "name": "Crunchyroll: Anime Streaming",
+        "packageId": "com.crunchyroll.crunchyroid",
+        "developer": "Crunchyroll, LLC",
+        "score": 4.6337914
+      },
+      {
+        "rank": 80,
+        "name": "Roku Remote (Official)",
+        "packageId": "com.roku.remote",
+        "developer": "Roku, Inc. & its affiliates",
+        "score": 4.714918
+      },
+      {
+        "rank": 81,
+        "name": "Google Gemini",
+        "packageId": "com.google.android.apps.bard",
+        "developer": "Google LLC",
+        "score": 4.536733
+      },
+      {
+        "rank": 82,
+        "name": "Uber: Rides, eats, hotels",
+        "packageId": "com.ubercab",
+        "developer": "Uber Technologies, Inc.",
+        "score": 4.7397914
+      },
+      {
+        "rank": 83,
+        "name": "Prime Video",
+        "packageId": "com.amazon.avod.thirdpartyclient",
+        "developer": "Amazon Mobile LLC",
+        "score": 4.6692686
+      },
+      {
+        "rank": 84,
+        "name": "Disney+",
+        "packageId": "com.disney.disneyplus",
+        "developer": "Disney",
+        "score": 4.305435
+      },
+      {
+        "rank": 85,
+        "name": "MiniReels",
+        "packageId": "com.minireels.app",
+        "developer": "PixzCity",
+        "score": 4.189189
+      },
+      {
+        "rank": 86,
+        "name": "Duolingo: Learn Languages",
+        "packageId": "com.duolingo",
+        "developer": "Duolingo",
+        "score": 4.745873
+      },
+      {
+        "rank": 87,
+        "name": "Grok AI",
+        "packageId": "ai.x.grok",
+        "developer": "SpaceX Super Intelligence",
+        "score": 4.873574
+      },
+      {
+        "rank": 88,
+        "name": "Microsoft Teams",
+        "packageId": "com.microsoft.teams",
+        "developer": "Microsoft Corporation",
+        "score": 4.648622
+      },
+      {
+        "rank": 89,
+        "name": "VIZIO",
+        "packageId": "com.vizio.vue.launcher",
+        "developer": "VIZIO",
+        "score": 4.1942964
+      },
+      {
+        "rank": 90,
+        "name": "Pocket FM: Audio Dramas",
+        "packageId": "com.radio.pocketfm",
+        "developer": "PocketFM",
+        "score": 4.3824334
+      },
+      {
+        "rank": 91,
+        "name": "Zoom Workplace",
+        "packageId": "us.zoom.videomeetings",
+        "developer": "zoom.com",
+        "score": 4.0970144
+      },
+      {
+        "rank": 92,
+        "name": "OnePay \u2013 Mobile Banking",
+        "packageId": "com.onefinance.one",
+        "developer": "ONE Finance, Inc.",
+        "score": 4.763017
+      },
+      {
+        "rank": 93,
+        "name": "CVS Health",
+        "packageId": "com.cvs.launchers.cvs",
+        "developer": "CVS Pharmacy",
+        "score": 4.5073333
+      },
+      {
+        "rank": 94,
+        "name": "GoWish - Your Digital Wishlist",
+        "packageId": "com.gowish.app",
+        "developer": "\u00d8nskeskyen ApS",
+        "score": 3.316891
+      },
+      {
+        "rank": 95,
+        "name": "Lyft",
+        "packageId": "me.lyft.android",
+        "developer": "Lyft, Inc.",
+        "score": 4.8228035
+      },
+      {
+        "rank": 96,
+        "name": "MyChart",
+        "packageId": "epic.mychart.android",
+        "developer": "Epic Systems Corporation",
+        "score": 4.44551
+      },
+      {
+        "rank": 97,
+        "name": "Grok Bot",
+        "packageId": "ai.x.grok.bot",
+        "developer": "SpaceX Super Intelligence",
+        "score": 4.8150806
+      },
+      {
+        "rank": 98,
+        "name": "Volume Control Home",
+        "packageId": "com.eet.volume.launcher",
+        "developer": "Utility Apps Home",
+        "score": 4.389011
+      },
+      {
+        "rank": 99,
+        "name": "Nexus - AI Video Generator",
+        "packageId": "ai.photogenerator.aivideo.aivideogenerator.aiart",
+        "developer": "DQL TechLab",
+        "score": 3.8823528
+      },
+      {
+        "rank": 100,
+        "name": "Versy Live: Sports Scores",
+        "packageId": "com.puzzle.escape.labg.save",
+        "developer": "ScorePulse",
+        "score": 4.506912
+      },
+      {
+        "rank": 101,
+        "name": "Pluto TV: Watch Free Movies/TV",
+        "packageId": "tv.pluto.android",
+        "developer": "Pluto, Inc.",
+        "score": 3.7545393
+      },
+      {
+        "rank": 102,
+        "name": "Document Reader & PDF Editor",
+        "packageId": "all.documentreader.filereader.office.viewer",
+        "developer": "QR Code Scanner.",
+        "score": 4.4979987
+      },
+      {
+        "rank": 103,
+        "name": "HBO Max: Stream TV & Movies",
+        "packageId": "com.wbd.stream",
+        "developer": "WarnerMedia Global Digital Services, LLC",
+        "score": 4.7814517
+      },
+      {
+        "rank": 104,
+        "name": "Artmate: Drawing Together",
+        "packageId": "com.trace.art.draw.drawing.paint",
+        "developer": "Braly JSC",
+        "score": 4.7222223
+      },
+      {
+        "rank": 105,
+        "name": "Volume Control Sound Launcher",
+        "packageId": "com.soundcontroller.loudspeaker.volume.manager.android",
+        "developer": "AtomApplications",
+        "score": 4.571976
+      },
+      {
+        "rank": 106,
+        "name": "Recovery Photo Ultra",
+        "packageId": "com.ultra.recovery.photo.video",
+        "developer": "hk3072072",
+        "score": 3.935484
+      },
+      {
+        "rank": 107,
+        "name": "Ge Browser - Safe & Smart",
+        "packageId": "com.web.tools.ge.browser",
+        "developer": "Av sign international",
+        "score": 4.8516746
+      },
+      {
+        "rank": 108,
+        "name": "Suno - AI Music & Songs Maker",
+        "packageId": "com.suno.android",
+        "developer": "Suno, Inc",
+        "score": 4.808716
+      },
+      {
+        "rank": 109,
+        "name": "Bible Chat - Holy Bible Study",
+        "packageId": "com.basmo.BibleChat",
+        "developer": "Book Vitals Inc.",
+        "score": 4.847731
+      },
+      {
+        "rank": 110,
+        "name": "Proton VPN: Secure & Fast VPN",
+        "packageId": "ch.protonvpn.android",
+        "developer": "Proton AG",
+        "score": 4.677171
+      },
+      {
+        "rank": 111,
+        "name": "Microsoft Word: Edit Documents",
+        "packageId": "com.microsoft.office.word",
+        "developer": "Microsoft Corporation",
+        "score": 4.793433
+      },
+      {
+        "rank": 112,
+        "name": "Costco Wholesale",
+        "packageId": "com.costco.app.android",
+        "developer": "Costco Wholesale",
+        "score": 4.7523785
+      },
+      {
+        "rank": 113,
+        "name": "Microsoft Edge",
+        "packageId": "com.microsoft.emmx",
+        "developer": "Microsoft Corporation",
+        "score": 4.688192
+      },
+      {
+        "rank": 114,
+        "name": "Waze Navigation & Live Traffic",
+        "packageId": "com.waze",
+        "developer": "Waze",
+        "score": 4.352435
+      },
+      {
+        "rank": 115,
+        "name": "VYBS: Play & Earn Rewards",
+        "packageId": "co.vybs.app",
+        "developer": "VYBS ENTERTAINMENT",
+        "score": 4.7282434
+      },
+      {
+        "rank": 116,
+        "name": "Emoji Battery & Shimeji Pet",
+        "packageId": "com.anime.shimeji.petonscreen",
+        "developer": "Tools for Everyday - AI Tasks",
+        "score": 4.2015657
+      },
+      {
+        "rank": 117,
+        "name": "Bible Offline-KJV Holy Bible",
+        "packageId": "com.offline.bible",
+        "developer": "B\u00edblia Offline",
+        "score": 4.868395
+      },
+      {
+        "rank": 118,
+        "name": "Koupon: Real Deals & Codes",
+        "packageId": "com.kouponai",
+        "developer": "Koupon",
+        "score": 4.783517
+      },
+      {
+        "rank": 119,
+        "name": "Apple TV: Shows, Movies & More",
+        "packageId": "com.apple.atve.androidtv.appletv",
+        "developer": "Apple",
+        "score": 4.1159124
+      },
+      {
+        "rank": 120,
+        "name": "Adobe Acrobat Reader: Edit PDF",
+        "packageId": "com.adobe.reader",
+        "developer": "Adobe",
+        "score": 4.508902
+      },
+      {
+        "rank": 121,
+        "name": "AntiVirus Clean Master-Cleaner",
+        "packageId": "com.anti.cleaner.phoener",
+        "developer": "Blooming Techno",
+        "score": 3.8431373
+      },
+      {
+        "rank": 122,
+        "name": "Signal Private Messenger",
+        "packageId": "org.thoughtcrime.securesms",
+        "developer": "Signal Foundation",
+        "score": 4.5045605
+      },
+      {
+        "rank": 123,
+        "name": "DuckDuckGo, optional Duck.ai",
+        "packageId": "com.duckduckgo.mobile.android",
+        "developer": "DuckDuckGo",
+        "score": 4.690553
+      },
+      {
+        "rank": 124,
+        "name": "Microsoft Excel: Spreadsheets",
+        "packageId": "com.microsoft.office.excel",
+        "developer": "Microsoft Corporation",
+        "score": 4.7870507
+      },
+      {
+        "rank": 125,
+        "name": "Max Cleaner",
+        "packageId": "com.bigtime.trash.cleaner",
+        "developer": "FWP Bigtime",
+        "score": 3.6634614
+      },
+      {
+        "rank": 126,
+        "name": "Taco Bell Fast Food & Delivery",
+        "packageId": "com.tacobell.ordering",
+        "developer": "Taco Bell Mobile",
+        "score": 4.7238717
+      },
+      {
+        "rank": 127,
+        "name": "VibeShort: AI Dramas & Reels",
+        "packageId": "com.vibeshort.visualnovel.android",
+        "developer": "AGILE QUADRANT MEDIA LIMITED",
+        "score": 4.5112667
+      },
+      {
+        "rank": 128,
+        "name": "Google Wallet",
+        "packageId": "com.google.android.apps.walletnfcrel",
+        "developer": "Google LLC",
+        "score": 4.3247094
+      },
+      {
+        "rank": 129,
+        "name": "Google Docs",
+        "packageId": "com.google.android.apps.docs.editors.docs",
+        "developer": "Google LLC",
+        "score": 4.719761
+      },
+      {
+        "rank": 130,
+        "name": "Uber Eats: Food and Grocery",
+        "packageId": "com.ubercab.eats",
+        "developer": "Uber Technologies, Inc.",
+        "score": 4.6431255
+      },
+      {
+        "rank": 131,
+        "name": "Firefox Fast & Private Browser",
+        "packageId": "org.mozilla.firefox",
+        "developer": "Mozilla",
+        "score": 4.614602
+      },
+      {
+        "rank": 132,
+        "name": "Bandana Job Search",
+        "packageId": "com.bandana.bandana",
+        "developer": "Bandana",
+        "score": 4.696875
+      },
+      {
+        "rank": 133,
+        "name": "Instacart: Get Food Delivery",
+        "packageId": "com.instacart.client",
+        "developer": "Instacart",
+        "score": 4.772389
+      },
+      {
+        "rank": 134,
+        "name": "Alibaba.com - B2B marketplace",
+        "packageId": "com.alibaba.intl.android.apps.poseidon",
+        "developer": "Alibaba Mobile",
+        "score": 4.3649874
+      },
+      {
+        "rank": 135,
+        "name": "Google Authenticator",
+        "packageId": "com.google.android.apps.authenticator2",
+        "developer": "Google LLC",
+        "score": 3.8524318
+      },
+      {
+        "rank": 136,
+        "name": "Chase Mobile",
+        "packageId": "com.chase.sig.android",
+        "developer": "JPMorgan Chase",
+        "score": 4.7612267
+      },
+      {
+        "rank": 137,
+        "name": "QR & Barcode Scanner",
+        "packageId": "com.gamma.scan",
+        "developer": "Gamma Play",
+        "score": 4.801448
+      },
+      {
+        "rank": 138,
+        "name": "Grant Cash Advance",
+        "packageId": "com.kikoff.theseus",
+        "developer": "Kikoff Inc.",
+        "score": 4.804926
+      },
+      {
+        "rank": 139,
+        "name": "YouTube",
+        "packageId": "com.google.android.youtube",
+        "developer": "Google LLC",
+        "score": 3.8272083
+      },
+      {
+        "rank": 140,
+        "name": "eBay online shopping & selling",
+        "packageId": "com.ebay.mobile",
+        "developer": "eBay Mobile",
+        "score": 4.5207844
+      },
+      {
+        "rank": 141,
+        "name": "Klarna: Smarter everyday money",
+        "packageId": "com.myklarnamobile",
+        "developer": "Klarna Bank AB (publ)",
+        "score": 4.8118634
+      },
+      {
+        "rank": 142,
+        "name": "Bible For Women-Holy Bible KJV",
+        "packageId": "com.bible.holy.bible.for.women",
+        "developer": "B\u00edblia Offline",
+        "score": 4.8627133
+      },
+      {
+        "rank": 143,
+        "name": "ESPN",
+        "packageId": "com.espn.score_center",
+        "developer": "Disney",
+        "score": 4.45364
+      },
+      {
+        "rank": 144,
+        "name": "Facebook Lite",
+        "packageId": "com.facebook.lite",
+        "developer": "Meta Platforms, Inc.",
+        "score": 4.5129128
+      },
+      {
+        "rank": 145,
+        "name": "Junk Cleaner",
+        "packageId": "com.cardaccount.ram.junkcleanner",
+        "developer": "CardAccount",
+        "score": 4.26
+      },
+      {
+        "rank": 146,
+        "name": "Learn English, Spanish: Learna",
+        "packageId": "com.codeway.aitutor",
+        "developer": "Deep Flow Apps",
+        "score": 4.6193147
+      },
+      {
+        "rank": 147,
+        "name": "Link Voice & Text Translator",
+        "packageId": "com.translator.lucky.shuai",
+        "developer": "Live Media-\ufeffdeveloper",
+        "score": 4.311111
+      },
+      {
+        "rank": 148,
+        "name": "OOC: The Playable Anime",
+        "packageId": "com.newai.ooc",
+        "developer": "OOC",
+        "score": 4.2904954
+      },
+      {
+        "rank": 149,
+        "name": "Emoji Battery & Shimeji Pets",
+        "packageId": "com.shimeji.petonscreen.battery.emoji",
+        "developer": "ZAppsolution",
+        "score": 4.695238
+      },
+      {
+        "rank": 150,
+        "name": "GPS Location Tracker Plus",
+        "packageId": "com.whfplus.location.ker",
+        "developer": "Anuoluwapo Product Limited",
+        "score": 3.83
+      },
+      {
+        "rank": 151,
+        "name": "Move to iOS",
+        "packageId": "com.apple.movetoios",
+        "developer": "Apple",
+        "score": 3.604512
+      },
+      {
+        "rank": 152,
+        "name": "Pandora - Music & Podcasts",
+        "packageId": "com.pandora.android",
+        "developer": "Pandora",
+        "score": 3.8955097
+      },
+      {
+        "rank": 153,
+        "name": "GoodShort - Short Dramas Hub",
+        "packageId": "com.newreading.goodreels",
+        "developer": "GoodNovel",
+        "score": 4.7031393
+      },
+      {
+        "rank": 154,
+        "name": "Zedge\u2122 Wallpapers & Ringtones",
+        "packageId": "net.zedge.android",
+        "developer": "Zedge",
+        "score": 4.6671867
+      },
+      {
+        "rank": 155,
+        "name": "Okta Verify",
+        "packageId": "com.okta.android.auth",
+        "developer": "Okta Inc.",
+        "score": 3.951613
+      },
+      {
+        "rank": 156,
+        "name": "CleanBoost - Junk Cleaner",
+        "packageId": "com.novabrain.tool.cleanboost",
+        "developer": "Fadilo Studio",
+        "score": 3.6122448
+      },
+      {
+        "rank": 157,
+        "name": "MusicTune-Offline Music Player",
+        "packageId": "com.stormlibs.musictune",
+        "developer": "Storm Libs Limited",
+        "score": 4.01
+      },
+      {
+        "rank": 158,
+        "name": "Twitch: Live Streaming",
+        "packageId": "tv.twitch.android.app",
+        "developer": "Twitch Interactive, Inc.",
+        "score": 4.280505
+      },
+      {
+        "rank": 159,
+        "name": "Best Buy: Shop tech deals",
+        "packageId": "com.bestbuy.android",
+        "developer": "Best Buy Co., Inc",
+        "score": 4.7222457
+      },
+      {
+        "rank": 160,
+        "name": "Google Translate",
+        "packageId": "com.google.android.apps.translate",
+        "developer": "Google LLC",
+        "score": 4.262759
+      },
+      {
+        "rank": 161,
+        "name": "Affirm: Buy now, pay over time",
+        "packageId": "com.affirm.central",
+        "developer": "Affirm, Inc",
+        "score": 4.791925
+      },
+      {
+        "rank": 162,
+        "name": "Domino's Pizza USA",
+        "packageId": "com.dominospizza",
+        "developer": "Domino's Pizza LLC",
+        "score": 4.5773644
+      },
+      {
+        "rank": 163,
+        "name": "YouTube Kids",
+        "packageId": "com.google.android.apps.youtube.kids",
+        "developer": "Google LLC",
+        "score": 4.214371
+      },
+      {
+        "rank": 164,
+        "name": "ShortNext: Mini Series",
+        "packageId": "com.dramareels.shorttv",
+        "developer": "Infinity Store",
+        "score": 4.47
+      },
+      {
+        "rank": 165,
+        "name": "Canva: AI Photo & Video Editor",
+        "packageId": "com.canva.editor",
+        "developer": "Canva",
+        "score": 4.779842
+      },
+      {
+        "rank": 166,
+        "name": "GPS Location Flow & Tracker",
+        "packageId": "com.gps.cati.flow",
+        "developer": "Karyaku Dev",
+        "score": 3.861386
+      },
+      {
+        "rank": 167,
+        "name": "Lucky Drama - Shorts & Rewards",
+        "packageId": "com.video.tv.ai.drama",
+        "developer": "Digitnesia",
+        "score": 4.718644
+      },
+      {
+        "rank": 168,
+        "name": "PolyBuzz: Chat with AI Friends",
+        "packageId": "ai.socialapps.speakmaster",
+        "developer": "CLOUD WHALE INTERACTIVE TECHNOLOGY LLC.",
+        "score": 4.0097604
+      },
+      {
+        "rank": 169,
+        "name": "CineTuck",
+        "packageId": "com.story.sip.mmecw",
+        "developer": "TRADE END",
+        "score": 4.6763005
+      },
+      {
+        "rank": 170,
+        "name": "Brave Private Web Browser, VPN",
+        "packageId": "com.brave.browser",
+        "developer": "Brave Software",
+        "score": 4.7604604
+      },
+      {
+        "rank": 171,
+        "name": "The Home Depot",
+        "packageId": "com.thehomedepot",
+        "developer": "The Home Depot, Inc",
+        "score": 4.4627175
+      },
+      {
+        "rank": 172,
+        "name": "ADP Mobile Solutions",
+        "packageId": "com.adpmobile.android",
+        "developer": "ADP, INC.",
+        "score": 4.576775
+      },
+      {
+        "rank": 173,
+        "name": "VPN - Super Unlimited Proxy",
+        "packageId": "com.free.vpn.super.hotspot.open",
+        "developer": "VPN Super Inc",
+        "score": 4.7206464
+      },
+      {
+        "rank": 174,
+        "name": "NewsBreak: Local News & Alerts",
+        "packageId": "com.particlenews.newsbreak",
+        "developer": "Particle Media Inc.",
+        "score": 4.616949
+      },
+      {
+        "rank": 175,
+        "name": "NaviCore",
+        "packageId": "com.nnnaaaccc.navicore",
+        "developer": "Zomoney",
+        "score": 4.3333335
+      },
+      {
+        "rank": 176,
+        "name": "WhatsApp Business",
+        "packageId": "com.whatsapp.w4b",
+        "developer": "WhatsApp LLC",
+        "score": 4.6114187
+      },
+      {
+        "rank": 177,
+        "name": "Samsung Smart Switch Mobile",
+        "packageId": "com.sec.android.easyMover",
+        "developer": "Samsung Electronics Co.,  Ltd.",
+        "score": 3.9360707
+      },
+      {
+        "rank": 178,
+        "name": "Etsy: Shop from Real People",
+        "packageId": "com.etsy.android",
+        "developer": "Etsy, Inc",
+        "score": 4.8498907
+      },
+      {
+        "rank": 179,
+        "name": "Yahoo Mail: Email & Planner",
+        "packageId": "com.yahoo.mobile.client.android.mail",
+        "developer": "Yahoo",
+        "score": 4.1673064
+      },
+      {
+        "rank": 180,
+        "name": "PDF Master",
+        "packageId": "com.pdf.tools.check.scanner",
+        "developer": "Bang Jorghy Dev",
+        "score": 4.138889
+      },
+      {
+        "rank": 181,
+        "name": "OurTalk AI: Soulful Chat",
+        "packageId": "ourtalk.ai",
+        "developer": "TRINEXIS LTD",
+        "score": 4.4952383
+      },
+      {
+        "rank": 182,
+        "name": "Wells Fargo Mobile\u00ae",
+        "packageId": "com.wf.wellsfargomobile",
+        "developer": "Wells Fargo Mobile",
+        "score": 4.8342543
+      },
+      {
+        "rank": 183,
+        "name": "Plex: Find Movies & TV Shows",
+        "packageId": "com.plexapp.android",
+        "developer": "Plex, Inc.",
+        "score": 3.4984603
+      },
+      {
+        "rank": 184,
+        "name": "Hulu: Stream TV shows & movies",
+        "packageId": "com.hulu.plus",
+        "developer": "Disney",
+        "score": 4.5181556
+      },
+      {
+        "rank": 185,
+        "name": "BestPlay: Play Games & Earn",
+        "packageId": "com.bestplay.app",
+        "developer": "Bestplay",
+        "score": 4.6188636
+      },
+      {
+        "rank": 186,
+        "name": "Health Care - Sound",
+        "packageId": "com.health.care.sleep.sound.pulse.heartbeat",
+        "developer": "HealthCare Fitness calorie mental for Android App",
+        "score": 4.7034883
+      },
+      {
+        "rank": 187,
+        "name": "Testerup: Test & Earn Rewards",
+        "packageId": "de.empfohlen",
+        "developer": "aestimium GmbH",
+        "score": 4.052228
+      },
+      {
+        "rank": 188,
+        "name": "YouVersion Bible App + Audio",
+        "packageId": "com.sirma.mobile.bible.android",
+        "developer": "Life.Church",
+        "score": 4.9209366
+      },
+      {
+        "rank": 189,
+        "name": "Bigo Live - Live Streaming App",
+        "packageId": "sg.bigo.live",
+        "developer": "Bigo Technology Pte. Ltd.",
+        "score": 4.539194
+      },
+      {
+        "rank": 190,
+        "name": "ShortMax - Short Dramas & TV",
+        "packageId": "live.shorttv.apps",
+        "developer": "SHORTMAX LIMITED",
+        "score": 4.449966
+      },
+      {
+        "rank": 191,
+        "name": "UKG Pro",
+        "packageId": "com.ukg.oneapp",
+        "developer": "UKG, Inc.",
+        "score": 4.087109
+      },
+      {
+        "rank": 192,
+        "name": "Google\u2019s Find Hub",
+        "packageId": "com.google.android.apps.adm",
+        "developer": "Google LLC",
+        "score": 4.2002892
+      },
+      {
+        "rank": 193,
+        "name": "Fubo: Watch Live TV & Sports",
+        "packageId": "tv.fubo.mobile",
+        "developer": "fuboTV",
+        "score": 3.0099437
+      },
+      {
+        "rank": 194,
+        "name": "PDF Reader \u2013 Reader & Editor",
+        "packageId": "pdf.reader.editor.office.ora",
+        "developer": "Ora Tools",
+        "score": 3.8988764
+      },
+      {
+        "rank": 195,
+        "name": "AI Hit Music Maker",
+        "packageId": "com.volumecontrol.volumebassbooster.android2023",
+        "developer": "Goldlab Pro",
+        "score": 3.94
+      },
+      {
+        "rank": 196,
+        "name": "Draw Music Maker: Doodle Pad",
+        "packageId": "com.bigsoft.sketchsound.drawmusic",
+        "developer": "BigSoft inc.",
+        "score": 3.892857
+      },
+      {
+        "rank": 197,
+        "name": "MistyPix: AI Image Generator",
+        "packageId": "com.aivideogenrator.phototovideo.videogen",
+        "developer": "Vit Corp.",
+        "score": 4.18
+      },
+      {
+        "rank": 198,
+        "name": "onX Hunt: Offline Hunting Maps",
+        "packageId": "onxmaps.hunt",
+        "developer": "onXmaps",
+        "score": 4.472772
+      },
+      {
+        "rank": 199,
+        "name": "Weather: Live Forecast & Radar",
+        "packageId": "com.sunny.weather.pinco",
+        "developer": "JuXin Ltd",
+        "score": 4.1782947
+      }
+    ]
+  },
+  "crosschecks": {
+    "appbrain": {
+      "url": "https://www.appbrain.com/stats/google-play-rankings/top_free/all/us",
+      "page2Url": "https://www.appbrain.com/stats/google-play-rankings/top_free/all/us/2",
+      "pageLabel": "Last updated: October 25, 2026",
+      "parsedRows": 196,
+      "missingRanks": [
+        29,
+        105,
+        134,
+        149
+      ],
+      "page3": "https://www.appbrain.com/stats/google-play-rankings/top_free/all/us/3 returned the first page again (paywall), so it was not used.",
+      "apps": [
+        {
+          "rank": 1,
+          "name": "Muse from Meta",
+          "packageId": "com.facebook.aura",
+          "developer": "Meta Platforms, Inc."
+        },
+        {
+          "rank": 2,
+          "name": "ChatGPT",
+          "packageId": "com.openai.chatgpt",
+          "developer": "OpenAI"
+        },
+        {
+          "rank": 3,
+          "name": "TikTok Pro - Events",
+          "packageId": "com.ss.android.ugc.tiktok.pro",
+          "developer": "TikTok Pte. Ltd."
+        },
+        {
+          "rank": 4,
+          "name": "Capital One Mobile",
+          "packageId": "com.konylabs.capitalone",
+          "developer": "Capital One Services, LLC"
+        },
+        {
+          "rank": 5,
+          "name": "TikTok - Videos, Shop & LIVE",
+          "packageId": "com.zhiliaoapp.musically",
+          "developer": "TikTok Pte. Ltd."
+        },
+        {
+          "rank": 6,
+          "name": "WhatsApp",
+          "packageId": "com.whatsapp",
+          "developer": "WhatsApp LLC"
+        },
+        {
+          "rank": 7,
+          "name": "DealSeek: Coupons & Discounts",
+          "packageId": "com.dealseekorg.dealseek",
+          "developer": "DealSeek LLC"
+        },
+        {
+          "rank": 8,
+          "name": "FreeDrama: Short Drama & Reels",
+          "packageId": "com.drama.free",
+          "developer": "Kuku Technologies Limited"
+        },
+        {
+          "rank": 9,
+          "name": "Settings Home",
+          "packageId": "com.eet.settings.launcher",
+          "developer": "Utility Apps Home"
+        },
+        {
+          "rank": 10,
+          "name": "McDonald's",
+          "packageId": "com.mcdonalds.app",
+          "developer": "McDonalds USA, LLC"
+        },
+        {
+          "rank": 11,
+          "name": "Instagram",
+          "packageId": "com.instagram.android",
+          "developer": "Instagram"
+        },
+        {
+          "rank": 12,
+          "name": "Vinted: Shop & sell pre-loved",
+          "packageId": "fr.vinted",
+          "developer": "Vinted"
+        },
+        {
+          "rank": 13,
+          "name": "PineDrama - Short Dramas",
+          "packageId": "com.ss.android.ttmd.video",
+          "developer": "TikTok Pte. Ltd."
+        },
+        {
+          "rank": 14,
+          "name": "FreeReels - Dramas & Reels",
+          "packageId": "com.freereels.app",
+          "developer": "SKYWORK AI PTE.LTD."
+        },
+        {
+          "rank": 15,
+          "name": "Facebook",
+          "packageId": "com.facebook.katana",
+          "developer": "Meta Platforms, Inc."
+        },
+        {
+          "rank": 16,
+          "name": "TikTok Lite - Faster TikTok",
+          "packageId": "com.tiktok.lite.go",
+          "developer": "TikTok Pte. Ltd."
+        },
+        {
+          "rank": 17,
+          "name": "Cash App",
+          "packageId": "com.squareup.cash",
+          "developer": "Block, Inc."
+        },
+        {
+          "rank": 18,
+          "name": "Snapchat",
+          "packageId": "com.snapchat.android",
+          "developer": "Snap Inc"
+        },
+        {
+          "rank": 19,
+          "name": "X",
+          "packageId": "com.twitter.android",
+          "developer": "X Corp."
+        },
+        {
+          "rank": 20,
+          "name": "Temu: Shop Like a Billionaire",
+          "packageId": "com.einnovation.temu",
+          "developer": "Temu"
+        },
+        {
+          "rank": 21,
+          "name": "CapCut - Video Editor",
+          "packageId": "com.lemon.lvoverseas",
+          "developer": "Bytedance Pte. Ltd."
+        },
+        {
+          "rank": 22,
+          "name": "Walmart: Shopping & Savings",
+          "packageId": "com.walmart.android",
+          "developer": "Walmart"
+        },
+        {
+          "rank": 23,
+          "name": "Kalshi: Trade Football & more",
+          "packageId": "com.kalshi.mobile",
+          "developer": "KalshiEX LLC"
+        },
+        {
+          "rank": 24,
+          "name": "Freecash: Earn Money",
+          "packageId": "com.freecash.app2",
+          "developer": "Freecash"
+        },
+        {
+          "rank": 25,
+          "name": "Messenger",
+          "packageId": "com.facebook.orca",
+          "developer": "Meta Platforms, Inc."
+        },
+        {
+          "rank": 26,
+          "name": "Claude by Anthropic",
+          "packageId": "com.anthropic.claude",
+          "developer": "Anthropic PBC"
+        },
+        {
+          "rank": 27,
+          "name": "BlinkDrama: Short Dramas & TV",
+          "packageId": "com.blink.drama.player",
+          "developer": "Atlas Ventures Culture & Technology Limited"
+        },
+        {
+          "rank": 28,
+          "name": "Telegram",
+          "packageId": "org.telegram.messenger",
+          "developer": "Telegram FZ-LLC"
+        },
+        {
+          "rank": 30,
+          "name": "Whatnot: Shop, Sell, Connect",
+          "packageId": "com.whatnot_mobile",
+          "developer": "Whatnot Inc."
+        },
+        {
+          "rank": 31,
+          "name": "ReelShort - Stream Drama & TV",
+          "packageId": "com.newleaf.app.android.victor",
+          "developer": "NewLeaf Publishing"
+        },
+        {
+          "rank": 32,
+          "name": "Tubi: Free Movies & Live TV",
+          "packageId": "com.tubitv",
+          "developer": "Tubi TV"
+        },
+        {
+          "rank": 33,
+          "name": "PDF Reader: Documents Master",
+          "packageId": "com.pdfreader.master.utgerful",
+          "developer": "Praya"
+        },
+        {
+          "rank": 34,
+          "name": "Koupon: Real Deals & Codes",
+          "packageId": "com.kouponai",
+          "developer": "Koupon"
+        },
+        {
+          "rank": 35,
+          "name": "Peacock TV: Stream TV & Movies",
+          "packageId": "com.peacocktv.peacockandroid",
+          "developer": "Peacock TV LLC"
+        },
+        {
+          "rank": 36,
+          "name": "Life360: Family Safety & GPS",
+          "packageId": "com.life360.android.safetymapd",
+          "developer": "Life360"
+        },
+        {
+          "rank": 37,
+          "name": "Discord - Talk, Play, Hang Out",
+          "packageId": "com.discord",
+          "developer": "Discord Inc."
+        },
+        {
+          "rank": 38,
+          "name": "Cleanup: Phone Storage Cleaner",
+          "packageId": "com.storage.androidcleaner",
+          "developer": "Deep Flow Apps"
+        },
+        {
+          "rank": 39,
+          "name": "FOX One: Live News, Sports, TV",
+          "packageId": "com.fox.foxone",
+          "developer": "Fox Digital Services, LLC"
+        },
+        {
+          "rank": 40,
+          "name": "Trump Accounts: Official App",
+          "packageId": "gov.trumpaccounts.goldeneagle",
+          "developer": "Department of the Treasury"
+        },
+        {
+          "rank": 41,
+          "name": "Playout: Earn Money",
+          "packageId": "io.playout",
+          "developer": "Loyalty Gaming"
+        },
+        {
+          "rank": 42,
+          "name": "Easy Homescreen",
+          "packageId": "easy.launcher",
+          "developer": "Homescreen Apps"
+        },
+        {
+          "rank": 43,
+          "name": "zeta: AI Chat, Story, Play",
+          "packageId": "com.scatterlab.messenger",
+          "developer": "Scatter Lab, Inc."
+        },
+        {
+          "rank": 44,
+          "name": "PayPal - Pay, Send, Save",
+          "packageId": "com.paypal.android.p2pmobile",
+          "developer": "PayPal Mobile"
+        },
+        {
+          "rank": 45,
+          "name": "DramaBox - Stream Drama Shorts",
+          "packageId": "com.storymatrix.drama",
+          "developer": "STORYMATRIX"
+        },
+        {
+          "rank": 46,
+          "name": "DoorDash: Food, Grocery, More",
+          "packageId": "com.dd.doordash",
+          "developer": "DoorDash"
+        },
+        {
+          "rank": 47,
+          "name": "Bible Chat - Holy Bible Study",
+          "packageId": "com.basmo.BibleChat",
+          "developer": "Book Vitals Inc."
+        },
+        {
+          "rank": 48,
+          "name": "Pinterest",
+          "packageId": "com.pinterest",
+          "developer": "Pinterest"
+        },
+        {
+          "rank": 49,
+          "name": "WakeBox",
+          "packageId": "com.wake.box.ryan",
+          "developer": "BLYTHEWOOD NY LLC"
+        },
+        {
+          "rank": 50,
+          "name": "Amazon Shopping",
+          "packageId": "com.amazon.mShop.android.shopping",
+          "developer": "Amazon Mobile LLC"
+        },
+        {
+          "rank": 51,
+          "name": "Prime Video",
+          "packageId": "com.amazon.avod.thirdpartyclient",
+          "developer": "Amazon Mobile LLC"
+        },
+        {
+          "rank": 52,
+          "name": "StoryReel: Drama Shorts & TV",
+          "packageId": "com.storyreel.tv.android",
+          "developer": "Equinox Enterprises\u200c Technology Limited"
+        },
+        {
+          "rank": 53,
+          "name": "Paramount+",
+          "packageId": "com.cbs.app",
+          "developer": "CBS Interactive, Inc."
+        },
+        {
+          "rank": 54,
+          "name": "Spotify: Music and Podcasts",
+          "packageId": "com.spotify.music",
+          "developer": "Spotify AB"
+        },
+        {
+          "rank": 55,
+          "name": "Shop: Track, Pay, Discover",
+          "packageId": "com.shopify.arrive",
+          "developer": "Shopify Inc."
+        },
+        {
+          "rank": 56,
+          "name": "Netflix",
+          "packageId": "com.netflix.mediaclient",
+          "developer": "Netflix, Inc."
+        },
+        {
+          "rank": 57,
+          "name": "Venmo",
+          "packageId": "com.venmo",
+          "developer": "PayPal Mobile"
+        },
+        {
+          "rank": 58,
+          "name": "Chime\u00ae \u2013 Fee-Free Banking",
+          "packageId": "com.onedebit.chime",
+          "developer": "Chime"
+        },
+        {
+          "rank": 59,
+          "name": "Reddit",
+          "packageId": "com.reddit.frontpage",
+          "developer": "reddit Inc."
+        },
+        {
+          "rank": 60,
+          "name": "T-Life",
+          "packageId": "com.tmobile.tuesdays",
+          "developer": "T-Mobile USA"
+        },
+        {
+          "rank": 61,
+          "name": "SHEIN-Shopping Online",
+          "packageId": "com.zzkko",
+          "developer": "Roadget Business PTE. LTD."
+        },
+        {
+          "rank": 62,
+          "name": "AI Photo Beauty Editor Studio",
+          "packageId": "com.aiphotoedior.photogenerator.photoretouch",
+          "developer": "ATQ - AI Lab"
+        },
+        {
+          "rank": 63,
+          "name": "DramaWave - Dramas & Reels",
+          "packageId": "com.dramawave.app",
+          "developer": "SKYWORK AI PTE.LTD."
+        },
+        {
+          "rank": 64,
+          "name": "Grok Bot",
+          "packageId": "ai.x.grok.bot",
+          "developer": "SpaceX Super Intelligence"
+        },
+        {
+          "rank": 65,
+          "name": "OnePay \u2013 Mobile Banking",
+          "packageId": "com.onefinance.one",
+          "developer": "ONE Finance, Inc."
+        },
+        {
+          "rank": 66,
+          "name": "AliExpress - Shopping App",
+          "packageId": "com.alibaba.aliexpresshd",
+          "developer": "Alibaba Mobile"
+        },
+        {
+          "rank": 67,
+          "name": "NetShort - Popular Dramas & TV",
+          "packageId": "com.netshort.abroad",
+          "developer": "NETSTORY PTE. LTD."
+        },
+        {
+          "rank": 68,
+          "name": "Uber: Rides, eats, hotels",
+          "packageId": "com.ubercab",
+          "developer": "Uber Technologies, Inc."
+        },
+        {
+          "rank": 69,
+          "name": "Indeed Job Search",
+          "packageId": "com.indeed.android.jobsearch",
+          "developer": "Indeed Jobs"
+        },
+        {
+          "rank": 70,
+          "name": "PicFusion Lab",
+          "packageId": "com.xphotokit.picfusionlab",
+          "developer": "X PhotoKit"
+        },
+        {
+          "rank": 71,
+          "name": "Grok AI",
+          "packageId": "ai.x.grok",
+          "developer": "SpaceX Super Intelligence"
+        },
+        {
+          "rank": 72,
+          "name": "Threads",
+          "packageId": "com.instagram.barcelona",
+          "developer": "Instagram"
+        },
+        {
+          "rank": 73,
+          "name": "Depop - Buy & Sell Clothes",
+          "packageId": "com.depop",
+          "developer": "Depop"
+        },
+        {
+          "rank": 74,
+          "name": "DoorDash - Dasher",
+          "packageId": "com.doordash.driverapp",
+          "developer": "DoorDash"
+        },
+        {
+          "rank": 75,
+          "name": "GoWish - Your Digital Wishlist",
+          "packageId": "com.gowish.app",
+          "developer": "\u00d8nskeskyen ApS"
+        },
+        {
+          "rank": 76,
+          "name": "Pluto TV: Watch Free Movies/TV",
+          "packageId": "tv.pluto.android",
+          "developer": "Pluto, Inc."
+        },
+        {
+          "rank": 77,
+          "name": "Bible Offline-KJV Holy Bible",
+          "packageId": "com.offline.bible",
+          "developer": "B\u00edblia Offline"
+        },
+        {
+          "rank": 78,
+          "name": "Lyft",
+          "packageId": "me.lyft.android",
+          "developer": "Lyft, Inc."
+        },
+        {
+          "rank": 79,
+          "name": "Sam's Club: Shopping & Savings",
+          "packageId": "com.rfi.sams.android",
+          "developer": "Sam's Club"
+        },
+        {
+          "rank": 80,
+          "name": "Rips by Triumph",
+          "packageId": "com.triumpharcade.tcg",
+          "developer": "Triumph Labs Inc."
+        },
+        {
+          "rank": 81,
+          "name": "VibeShort: AI Dramas & Reels",
+          "packageId": "com.vibeshort.visualnovel.android",
+          "developer": "AGILE QUADRANT MEDIA LIMITED"
+        },
+        {
+          "rank": 82,
+          "name": "Microsoft Authenticator",
+          "packageId": "com.azure.authenticator",
+          "developer": "Microsoft Corporation"
+        },
+        {
+          "rank": 83,
+          "name": "Google Gemini",
+          "packageId": "com.google.android.apps.bard",
+          "developer": "Google LLC"
+        },
+        {
+          "rank": 84,
+          "name": "Disney+",
+          "packageId": "com.disney.disneyplus",
+          "developer": "Disney"
+        },
+        {
+          "rank": 85,
+          "name": "GPS Location Tracker Plus",
+          "packageId": "com.whfplus.location.ker",
+          "developer": "Anuoluwapo Product Limited"
+        },
+        {
+          "rank": 86,
+          "name": "JustPlay: Earn Money or Donate",
+          "packageId": "com.justplay.app",
+          "developer": "JustPlay GmbH"
+        },
+        {
+          "rank": 87,
+          "name": "HBO Max: Stream TV & Movies",
+          "packageId": "com.wbd.stream",
+          "developer": "WarnerMedia Global Digital Services, LLC"
+        },
+        {
+          "rank": 88,
+          "name": "Microsoft Teams",
+          "packageId": "com.microsoft.teams",
+          "developer": "Microsoft Corporation"
+        },
+        {
+          "rank": 89,
+          "name": "CVS Health",
+          "packageId": "com.cvs.launchers.cvs",
+          "developer": "CVS Pharmacy"
+        },
+        {
+          "rank": 90,
+          "name": "Duolingo: Learn Languages",
+          "packageId": "com.duolingo",
+          "developer": "Duolingo"
+        },
+        {
+          "rank": 91,
+          "name": "Hark Pro",
+          "packageId": "com.hark.android",
+          "developer": "Hark Labs Inc."
+        },
+        {
+          "rank": 92,
+          "name": "Nexus - AI Video Generator",
+          "packageId": "ai.photogenerator.aivideo.aivideogenerator.aiart",
+          "developer": "DQL TechLab"
+        },
+        {
+          "rank": 93,
+          "name": "Suno - AI Music & Songs Maker",
+          "packageId": "com.suno.android",
+          "developer": "Suno, Inc"
+        },
+        {
+          "rank": 94,
+          "name": "Deep Clean Elite",
+          "packageId": "com.deepcleanelit.dcle",
+          "developer": "PDI Turbo"
+        },
+        {
+          "rank": 95,
+          "name": "Vidix-AI Photo Video Generator",
+          "packageId": "com.vidix.aivideogenerator.aiphotogenerator",
+          "developer": "Supercool Labs"
+        },
+        {
+          "rank": 96,
+          "name": "Pocket FM: Audio Dramas",
+          "packageId": "com.radio.pocketfm",
+          "developer": "PocketFM"
+        },
+        {
+          "rank": 97,
+          "name": "Zoom Workplace",
+          "packageId": "us.zoom.videomeetings",
+          "developer": "zoom.com"
+        },
+        {
+          "rank": 98,
+          "name": "Nora VPN \u2013 Fast & Secure VPN",
+          "packageId": "com.nora.vpn",
+          "developer": "Irma"
+        },
+        {
+          "rank": 99,
+          "name": "Ge Browser - Safe & Smart",
+          "packageId": "com.web.tools.ge.browser",
+          "developer": "Av sign international"
+        },
+        {
+          "rank": 100,
+          "name": "Fetch: Earn Rewards Every Day",
+          "packageId": "com.fetchrewards.fetchrewards.hop",
+          "developer": "Fetch Rewards"
+        },
+        {
+          "rank": 101,
+          "name": "Proton VPN: Secure & Fast VPN",
+          "packageId": "ch.protonvpn.android",
+          "developer": "Proton AG"
+        },
+        {
+          "rank": 102,
+          "name": "CrimeRadar: Dispatch Alerts",
+          "packageId": "com.newsbreak.crimeradar",
+          "developer": "Scoopz LLC"
+        },
+        {
+          "rank": 103,
+          "name": "Truecaller: Spam Call Blocker",
+          "packageId": "com.truecaller",
+          "developer": "Truecaller"
+        },
+        {
+          "rank": 104,
+          "name": "Dramix: Short Drama Series",
+          "packageId": "com.drama.short.video.story.series.pro",
+          "developer": "Astral Core"
+        },
+        {
+          "rank": 106,
+          "name": "Microsoft Word: Edit Documents",
+          "packageId": "com.microsoft.office.word",
+          "developer": "Microsoft Corporation"
+        },
+        {
+          "rank": 107,
+          "name": "VIZIO",
+          "packageId": "com.vizio.vue.launcher",
+          "developer": "VIZIO"
+        },
+        {
+          "rank": 108,
+          "name": "Move to iOS",
+          "packageId": "com.apple.movetoios",
+          "developer": "Apple"
+        },
+        {
+          "rank": 109,
+          "name": "Uber Eats: Food and Grocery",
+          "packageId": "com.ubercab.eats",
+          "developer": "Uber Technologies, Inc."
+        },
+        {
+          "rank": 110,
+          "name": "Signal Private Messenger",
+          "packageId": "org.thoughtcrime.securesms",
+          "developer": "Signal Foundation"
+        },
+        {
+          "rank": 111,
+          "name": "Pandora - Music & Podcasts",
+          "packageId": "com.pandora.android",
+          "developer": "Pandora"
+        },
+        {
+          "rank": 112,
+          "name": "Bandana Job Search",
+          "packageId": "com.bandana.bandana",
+          "developer": "Bandana"
+        },
+        {
+          "rank": 113,
+          "name": "Roku Remote (Official)",
+          "packageId": "com.roku.remote",
+          "developer": "Roku, Inc. & its affiliates"
+        },
+        {
+          "rank": 114,
+          "name": "Easy Mail - Email Launcher",
+          "packageId": "com.applabstudios.ai.mail.homescreen.inbox",
+          "developer": "App Lab Studios"
+        },
+        {
+          "rank": 115,
+          "name": "Waze Navigation & Live Traffic",
+          "packageId": "com.waze",
+          "developer": "Waze"
+        },
+        {
+          "rank": 116,
+          "name": "eBay online shopping & selling",
+          "packageId": "com.ebay.mobile",
+          "developer": "eBay Mobile"
+        },
+        {
+          "rank": 117,
+          "name": "GoodShort - Short Dramas Hub",
+          "packageId": "com.newreading.goodreels",
+          "developer": "GoodNovel"
+        },
+        {
+          "rank": 118,
+          "name": "Google Wallet",
+          "packageId": "com.google.android.apps.walletnfcrel",
+          "developer": "Google LLC"
+        },
+        {
+          "rank": 119,
+          "name": "WEBTOON: Manga, Comics, Manhwa",
+          "packageId": "com.naver.linewebtoon",
+          "developer": "NAVER WEBTOON"
+        },
+        {
+          "rank": 120,
+          "name": "Junk Cleaner",
+          "packageId": "com.cardaccount.ram.junkcleanner",
+          "developer": "CardAccount"
+        },
+        {
+          "rank": 121,
+          "name": "Recovery Photo Ultra",
+          "packageId": "com.ultra.recovery.photo.video",
+          "developer": "hk3072072"
+        },
+        {
+          "rank": 122,
+          "name": "TimeCue \u2013 Reminders & Alerts",
+          "packageId": "com.reminder.alert.timecue",
+          "developer": "Classified Prime LLc"
+        },
+        {
+          "rank": 123,
+          "name": "MiniReels",
+          "packageId": "com.minireels.app",
+          "developer": "PixzCity"
+        },
+        {
+          "rank": 124,
+          "name": "YouTube",
+          "packageId": "com.google.android.youtube",
+          "developer": "Google LLC"
+        },
+        {
+          "rank": 125,
+          "name": "QR & Barcode Scanner",
+          "packageId": "com.gamma.scan",
+          "developer": "Gamma Play"
+        },
+        {
+          "rank": 126,
+          "name": "Microsoft Edge",
+          "packageId": "com.microsoft.emmx",
+          "developer": "Microsoft Corporation"
+        },
+        {
+          "rank": 127,
+          "name": "YouTube Kids",
+          "packageId": "com.google.android.apps.youtube.kids",
+          "developer": "Google LLC"
+        },
+        {
+          "rank": 128,
+          "name": "MyChart",
+          "packageId": "epic.mychart.android",
+          "developer": "Epic Systems Corporation"
+        },
+        {
+          "rank": 129,
+          "name": "Twitch: Live Streaming",
+          "packageId": "tv.twitch.android.app",
+          "developer": "Twitch Interactive, Inc."
+        },
+        {
+          "rank": 130,
+          "name": "Google Authenticator",
+          "packageId": "com.google.android.apps.authenticator2",
+          "developer": "Google LLC"
+        },
+        {
+          "rank": 131,
+          "name": "Firefox Fast & Private Browser",
+          "packageId": "org.mozilla.firefox",
+          "developer": "Mozilla"
+        },
+        {
+          "rank": 132,
+          "name": "Google Translate",
+          "packageId": "com.google.android.apps.translate",
+          "developer": "Google LLC"
+        },
+        {
+          "rank": 133,
+          "name": "Brave Private Web Browser, VPN",
+          "packageId": "com.brave.browser",
+          "developer": "Brave Software"
+        },
+        {
+          "rank": 135,
+          "name": "Plex: Find Movies & TV Shows",
+          "packageId": "com.plexapp.android",
+          "developer": "Plex, Inc."
+        },
+        {
+          "rank": 136,
+          "name": "Grant Cash Advance",
+          "packageId": "com.kikoff.theseus",
+          "developer": "Kikoff Inc."
+        },
+        {
+          "rank": 137,
+          "name": "Alibaba.com - B2B marketplace",
+          "packageId": "com.alibaba.intl.android.apps.poseidon",
+          "developer": "Alibaba Mobile"
+        },
+        {
+          "rank": 138,
+          "name": "FlickReels - AI Story & Drama",
+          "packageId": "com.zyhwplatform.shortplay",
+          "developer": "FARSUNPTE.LTD."
+        },
+        {
+          "rank": 139,
+          "name": "Apple TV: Shows, Movies & More",
+          "packageId": "com.apple.atve.androidtv.appletv",
+          "developer": "Apple"
+        },
+        {
+          "rank": 140,
+          "name": "AntiVirus Clean Master-Cleaner",
+          "packageId": "com.anti.cleaner.phoener",
+          "developer": "Blooming Techno"
+        },
+        {
+          "rank": 141,
+          "name": "Domino's Pizza USA",
+          "packageId": "com.dominospizza",
+          "developer": "Domino's Pizza LLC"
+        },
+        {
+          "rank": 142,
+          "name": "Google Docs",
+          "packageId": "com.google.android.apps.docs.editors.docs",
+          "developer": "Google LLC"
+        },
+        {
+          "rank": 143,
+          "name": "Crunchyroll: Anime Streaming",
+          "packageId": "com.crunchyroll.crunchyroid",
+          "developer": "Crunchyroll, LLC"
+        },
+        {
+          "rank": 144,
+          "name": "MapQuest: Get Directions",
+          "packageId": "com.mapquest.android.ace",
+          "developer": "MapQuest"
+        },
+        {
+          "rank": 145,
+          "name": "Bible For Women-Holy Bible KJV",
+          "packageId": "com.bible.holy.bible.for.women",
+          "developer": "B\u00edblia Offline"
+        },
+        {
+          "rank": 146,
+          "name": "CleanBoost - Junk Cleaner",
+          "packageId": "com.novabrain.tool.cleanboost",
+          "developer": "Fadilo Studio"
+        },
+        {
+          "rank": 147,
+          "name": "Chase Mobile",
+          "packageId": "com.chase.sig.android",
+          "developer": "JPMorgan Chase"
+        },
+        {
+          "rank": 148,
+          "name": "BigFuture\u00ae School",
+          "packageId": "org.collegeboard.pivot",
+          "developer": "Collegeboard"
+        },
+        {
+          "rank": 150,
+          "name": "DuckDuckGo, optional Duck.ai",
+          "packageId": "com.duckduckgo.mobile.android",
+          "developer": "DuckDuckGo"
+        },
+        {
+          "rank": 151,
+          "name": "Emoji Battery & Shimeji Pets",
+          "packageId": "com.shimeji.petonscreen.battery.emoji",
+          "developer": "ZAppsolution"
+        },
+        {
+          "rank": 152,
+          "name": "ADP Mobile Solutions",
+          "packageId": "com.adpmobile.android",
+          "developer": "ADP, INC."
+        },
+        {
+          "rank": 153,
+          "name": "GovAuctions.com - Shop Surplus",
+          "packageId": "com.govauctions",
+          "developer": "Auctions LLC"
+        },
+        {
+          "rank": 154,
+          "name": "Microsoft Excel: Spreadsheets",
+          "packageId": "com.microsoft.office.excel",
+          "developer": "Microsoft Corporation"
+        },
+        {
+          "rank": 155,
+          "name": "Klarna: Smarter everyday money",
+          "packageId": "com.myklarnamobile",
+          "developer": "Klarna Bank AB (publ)"
+        },
+        {
+          "rank": 156,
+          "name": "MusicTune-Offline Music Player",
+          "packageId": "com.stormlibs.musictune",
+          "developer": "Storm Libs Limited"
+        },
+        {
+          "rank": 157,
+          "name": "Zedge\u2122 Wallpapers & Ringtones",
+          "packageId": "net.zedge.android",
+          "developer": "Zedge"
+        },
+        {
+          "rank": 158,
+          "name": "Taco Bell Fast Food & Delivery",
+          "packageId": "com.tacobell.ordering",
+          "developer": "Taco Bell Mobile"
+        },
+        {
+          "rank": 159,
+          "name": "BURGER KING\u00ae App",
+          "packageId": "com.emn8.mobilem8.nativeapp.bk",
+          "developer": "Burger King, Inc."
+        },
+        {
+          "rank": 160,
+          "name": "Artmate: Drawing Together",
+          "packageId": "com.trace.art.draw.drawing.paint",
+          "developer": "Braly JSC"
+        },
+        {
+          "rank": 161,
+          "name": "Progressive",
+          "packageId": "com.phonevalley.progressive",
+          "developer": "Progressive Insurance"
+        },
+        {
+          "rank": 162,
+          "name": "Costco Wholesale",
+          "packageId": "com.costco.app.android",
+          "developer": "Costco Wholesale"
+        },
+        {
+          "rank": 163,
+          "name": "NBA: Live Games & Scores",
+          "packageId": "com.nbaimd.gametime.nba2011",
+          "developer": "NBA Properties, Inc."
+        },
+        {
+          "rank": 164,
+          "name": "Affirm: Buy now, pay over time",
+          "packageId": "com.affirm.central",
+          "developer": "Affirm, Inc"
+        },
+        {
+          "rank": 165,
+          "name": "Bigo Live - Live Streaming App",
+          "packageId": "sg.bigo.live",
+          "developer": "Bigo Technology Pte. Ltd."
+        },
+        {
+          "rank": 166,
+          "name": "Smart Clean Pro",
+          "packageId": "com.jtrlabs.storage.smartclean",
+          "developer": "JTR Labs"
+        },
+        {
+          "rank": 167,
+          "name": "YouTube TV: Live TV & more",
+          "packageId": "com.google.android.apps.youtube.unplugged",
+          "developer": "Google LLC"
+        },
+        {
+          "rank": 168,
+          "name": "DramaBox\u00a0Lite - Mini\u00a0Drama\u00a0TV",
+          "packageId": "com.storymatrix.lite",
+          "developer": "STORYMATRIX"
+        },
+        {
+          "rank": 169,
+          "name": "Facebook Lite",
+          "packageId": "com.facebook.lite",
+          "developer": "Meta Platforms, Inc."
+        },
+        {
+          "rank": 170,
+          "name": "NewsBreak: Local News & Alerts",
+          "packageId": "com.particlenews.newsbreak",
+          "developer": "Particle Media Inc."
+        },
+        {
+          "rank": 171,
+          "name": "Etsy: Shop from Real People",
+          "packageId": "com.etsy.android",
+          "developer": "Etsy, Inc"
+        },
+        {
+          "rank": 172,
+          "name": "PrizePicks - Sports Picks",
+          "packageId": "com.myprizepicks.myprizepicks",
+          "developer": "PrizePicks"
+        },
+        {
+          "rank": 173,
+          "name": "onX Hunt: Offline Hunting Maps",
+          "packageId": "onxmaps.hunt",
+          "developer": "onXmaps"
+        },
+        {
+          "rank": 174,
+          "name": "WhatsApp Business",
+          "packageId": "com.whatsapp.w4b",
+          "developer": "WhatsApp LLC"
+        },
+        {
+          "rank": 175,
+          "name": "RushDrama Pro:MiniSeries",
+          "packageId": "com.rushdramapro.miniseries",
+          "developer": "X-tream"
+        },
+        {
+          "rank": 176,
+          "name": "Circle K",
+          "packageId": "com.circlek.gmap.na",
+          "developer": "Circle K North America"
+        },
+        {
+          "rank": 177,
+          "name": "DraftKings: Sports & Casino",
+          "packageId": "com.draftkings.sportsbook",
+          "developer": "DraftKings, Inc."
+        },
+        {
+          "rank": 178,
+          "name": "Document Reader & PDF Editor",
+          "packageId": "all.documentreader.filereader.office.viewer",
+          "developer": "QR Code Scanner."
+        },
+        {
+          "rank": 179,
+          "name": "VYBS: Play & Earn Rewards",
+          "packageId": "co.vybs.app",
+          "developer": "VYBS ENTERTAINMENT"
+        },
+        {
+          "rank": 180,
+          "name": "AHEALTH: Get Healthy Get Paid",
+          "packageId": "com.tracerofficial",
+          "developer": "Gravity Ltd"
+        },
+        {
+          "rank": 181,
+          "name": "Uber - Driver: Drive & Deliver",
+          "packageId": "com.ubercab.driver",
+          "developer": "Uber Technologies, Inc."
+        },
+        {
+          "rank": 182,
+          "name": "Hulu: Stream TV shows & movies",
+          "packageId": "com.hulu.plus",
+          "developer": "Disney"
+        },
+        {
+          "rank": 183,
+          "name": "Starbucks",
+          "packageId": "com.starbucks.mobilecard",
+          "developer": "Starbucks Coffee Company"
+        },
+        {
+          "rank": 184,
+          "name": "Samsung Smart Switch Mobile",
+          "packageId": "com.sec.android.easyMover",
+          "developer": "Samsung Electronics Co.,  Ltd."
+        },
+        {
+          "rank": 185,
+          "name": "Yahoo Mail: Email & Planner",
+          "packageId": "com.yahoo.mobile.client.android.mail",
+          "developer": "Yahoo"
+        },
+        {
+          "rank": 186,
+          "name": "Google\u2019s Find Hub",
+          "packageId": "com.google.android.apps.adm",
+          "developer": "Google LLC"
+        },
+        {
+          "rank": 187,
+          "name": "Wells Fargo Mobile\u00ae",
+          "packageId": "com.wf.wellsfargomobile",
+          "developer": "Wells Fargo Mobile"
+        },
+        {
+          "rank": 188,
+          "name": "PolyBuzz: Chat with AI Friends",
+          "packageId": "ai.socialapps.speakmaster",
+          "developer": "CLOUD WHALE INTERACTIVE TECHNOLOGY LLC."
+        },
+        {
+          "rank": 189,
+          "name": "DAZN - Watch Live Sports",
+          "packageId": "com.dazn",
+          "developer": "DAZN"
+        },
+        {
+          "rank": 190,
+          "name": "Testerup: Test & Earn Rewards",
+          "packageId": "de.empfohlen",
+          "developer": "aestimium GmbH"
+        },
+        {
+          "rank": 191,
+          "name": "Okta Verify",
+          "packageId": "com.okta.android.auth",
+          "developer": "Okta Inc."
+        },
+        {
+          "rank": 192,
+          "name": "Wishlist Maker - Listful",
+          "packageId": "com.happywishlist.app",
+          "developer": "Listful"
+        },
+        {
+          "rank": 193,
+          "name": "ReciMe: Recipes & Meal Planner",
+          "packageId": "com.recime.app",
+          "developer": "ReciMe"
+        },
+        {
+          "rank": 194,
+          "name": "AI Photo Editor: Art Studio",
+          "packageId": "com.ai.art.magic.image.generator",
+          "developer": "Leilani Rogers"
+        },
+        {
+          "rank": 195,
+          "name": "Pocket Saga - Short Dramas",
+          "packageId": "com.pocketfm.toons",
+          "developer": "PocketFM"
+        },
+        {
+          "rank": 196,
+          "name": "Lucky Drama - Shorts & Rewards",
+          "packageId": "com.video.tv.ai.drama",
+          "developer": "Digitnesia"
+        },
+        {
+          "rank": 197,
+          "name": "OOC: The Playable Anime",
+          "packageId": "com.newai.ooc",
+          "developer": "OOC"
+        },
+        {
+          "rank": 198,
+          "name": "Health Care - Sound",
+          "packageId": "com.health.care.sleep.sound.pulse.heartbeat",
+          "developer": "HealthCare Fitness calorie mental for Android App"
+        },
+        {
+          "rank": 199,
+          "name": "Meta AI",
+          "packageId": "com.facebook.stella",
+          "developer": "Meta Platforms, Inc."
+        },
+        {
+          "rank": 200,
+          "name": "Capital One Shopping",
+          "packageId": "com.wikibuy.prod.main",
+          "developer": "capitaloneshopping.com"
+        }
+      ]
+    },
+    "appinsider": {
+      "url": "https://appinsider.io/android/charts/us/all/free",
+      "updatedAt": "2026-10-25T17:57:59+00:00",
+      "nameCount": 200,
+      "packageIdsPublishedInJsonLd": 100,
+      "names": [
+        {
+          "rank": 1,
+          "name": "Muse from Meta"
+        },
+        {
+          "rank": 2,
+          "name": "ChatGPT"
+        },
+        {
+          "rank": 3,
+          "name": "TikTok Pro - Events"
+        },
+        {
+          "rank": 4,
+          "name": "Capital One Mobile"
+        },
+        {
+          "rank": 5,
+          "name": "DealSeek: Coupons & Discounts"
+        },
+        {
+          "rank": 6,
+          "name": "Settings Home"
+        },
+        {
+          "rank": 7,
+          "name": "FreeDrama: Short Drama & Reels"
+        },
+        {
+          "rank": 8,
+          "name": "McDonald's"
+        },
+        {
+          "rank": 9,
+          "name": "TikTok - Videos, Shop & LIVE"
+        },
+        {
+          "rank": 10,
+          "name": "WhatsApp"
+        },
+        {
+          "rank": 11,
+          "name": "Instagram"
+        },
+        {
+          "rank": 12,
+          "name": "Vinted: Shop & sell pre-loved"
+        },
+        {
+          "rank": 13,
+          "name": "Kalshi: Trade Football & more"
+        },
+        {
+          "rank": 14,
+          "name": "Cash App"
+        },
+        {
+          "rank": 15,
+          "name": "TikTok Lite - Faster TikTok"
+        },
+        {
+          "rank": 16,
+          "name": "Temu: Shop Like a Billionaire"
+        },
+        {
+          "rank": 17,
+          "name": "Walmart: Shopping & Savings"
+        },
+        {
+          "rank": 18,
+          "name": "FreeReels - Dramas & Reels"
+        },
+        {
+          "rank": 19,
+          "name": "Freecash: Earn Money"
+        },
+        {
+          "rank": 20,
+          "name": "CapCut - Video Editor"
+        },
+        {
+          "rank": 21,
+          "name": "PineDrama - Short Dramas"
+        },
+        {
+          "rank": 22,
+          "name": "Facebook"
+        },
+        {
+          "rank": 23,
+          "name": "Claude by Anthropic"
+        },
+        {
+          "rank": 24,
+          "name": "TextNow: Call + Text Unlimited"
+        },
+        {
+          "rank": 25,
+          "name": "Whatnot: Shop, Sell, Connect"
+        },
+        {
+          "rank": 26,
+          "name": "WakeBox"
+        },
+        {
+          "rank": 27,
+          "name": "Snapchat"
+        },
+        {
+          "rank": 28,
+          "name": "X"
+        },
+        {
+          "rank": 29,
+          "name": "Cleanup: Phone Storage Cleaner"
+        },
+        {
+          "rank": 30,
+          "name": "BlinkDrama: Short Dramas & TV"
+        },
+        {
+          "rank": 31,
+          "name": "Peacock TV: Stream TV & Movies"
+        },
+        {
+          "rank": 32,
+          "name": "Tubi: Free Movies & Live TV"
+        },
+        {
+          "rank": 33,
+          "name": "Easy Homescreen"
+        },
+        {
+          "rank": 34,
+          "name": "PayPal - Pay, Send, Save"
+        },
+        {
+          "rank": 35,
+          "name": "Messenger"
+        },
+        {
+          "rank": 36,
+          "name": "Life360: Family Safety & GPS"
+        },
+        {
+          "rank": 37,
+          "name": "Koupon: Real Deals & Codes"
+        },
+        {
+          "rank": 38,
+          "name": "Sam's Club: Shopping & Savings"
+        },
+        {
+          "rank": 39,
+          "name": "Telegram"
+        },
+        {
+          "rank": 40,
+          "name": "Indeed Job Search"
+        },
+        {
+          "rank": 41,
+          "name": "Chime\u00ae \u2013 Fee-Free Banking"
+        },
+        {
+          "rank": 42,
+          "name": "Venmo"
+        },
+        {
+          "rank": 43,
+          "name": "Playout: Earn Money"
+        },
+        {
+          "rank": 44,
+          "name": "DoorDash: Food, Grocery, More"
+        },
+        {
+          "rank": 45,
+          "name": "PDF Reader: Documents Master"
+        },
+        {
+          "rank": 46,
+          "name": "DramaWave - Dramas & Reels"
+        },
+        {
+          "rank": 47,
+          "name": "SHEIN-Shopping Online"
+        },
+        {
+          "rank": 48,
+          "name": "Paramount+"
+        },
+        {
+          "rank": 49,
+          "name": "ReelShort - Stream Drama & TV"
+        },
+        {
+          "rank": 50,
+          "name": "Trump Accounts: Official App"
+        },
+        {
+          "rank": 51,
+          "name": "NetShort - Popular Dramas & TV"
+        },
+        {
+          "rank": 52,
+          "name": "JustPlay: Earn Money or Donate"
+        },
+        {
+          "rank": 53,
+          "name": "Uber: Rides, eats, hotels"
+        },
+        {
+          "rank": 54,
+          "name": "Threads"
+        },
+        {
+          "rank": 55,
+          "name": "PicFusion Lab"
+        },
+        {
+          "rank": 56,
+          "name": "Discord - Talk, Play, Hang Out"
+        },
+        {
+          "rank": 57,
+          "name": "Depop - Buy & Sell Clothes"
+        },
+        {
+          "rank": 58,
+          "name": "DoorDash - Dasher"
+        },
+        {
+          "rank": 59,
+          "name": "Grok Bot"
+        },
+        {
+          "rank": 60,
+          "name": "FOX One: Live News, Sports, TV"
+        },
+        {
+          "rank": 61,
+          "name": "DramaBox - Stream Drama Shorts"
+        },
+        {
+          "rank": 62,
+          "name": "Junk Cleaner"
+        },
+        {
+          "rank": 63,
+          "name": "Prime Video"
+        },
+        {
+          "rank": 64,
+          "name": "CrimeRadar: Dispatch Alerts"
+        },
+        {
+          "rank": 65,
+          "name": "Bible Chat - Holy Bible Study"
+        },
+        {
+          "rank": 66,
+          "name": "Shop: Track, Pay, Discover"
+        },
+        {
+          "rank": 67,
+          "name": "Nexus - AI Video Generator"
+        },
+        {
+          "rank": 68,
+          "name": "Amazon Shopping"
+        },
+        {
+          "rank": 69,
+          "name": "zeta: AI Chat, Story, Play"
+        },
+        {
+          "rank": 70,
+          "name": "Rips by Triumph"
+        },
+        {
+          "rank": 71,
+          "name": "T-Life"
+        },
+        {
+          "rank": 72,
+          "name": "Pinterest"
+        },
+        {
+          "rank": 73,
+          "name": "Spotify: Music and Podcasts"
+        },
+        {
+          "rank": 74,
+          "name": "StoryReel: Drama Shorts & TV"
+        },
+        {
+          "rank": 75,
+          "name": "Lyft"
+        },
+        {
+          "rank": 76,
+          "name": "Reddit"
+        },
+        {
+          "rank": 77,
+          "name": "Netflix"
+        },
+        {
+          "rank": 78,
+          "name": "Deep Clean Elite"
+        },
+        {
+          "rank": 79,
+          "name": "MyChart"
+        },
+        {
+          "rank": 80,
+          "name": "OnePay \u2013 Mobile Banking"
+        },
+        {
+          "rank": 81,
+          "name": "AI Photo Beauty Editor Studio"
+        },
+        {
+          "rank": 82,
+          "name": "BigFuture\u00ae School"
+        },
+        {
+          "rank": 83,
+          "name": "AliExpress - Shopping App"
+        },
+        {
+          "rank": 84,
+          "name": "GoWish - Your Digital Wishlist"
+        },
+        {
+          "rank": 85,
+          "name": "Microsoft Teams"
+        },
+        {
+          "rank": 86,
+          "name": "Roku Remote (Official)"
+        },
+        {
+          "rank": 87,
+          "name": "Disney+"
+        },
+        {
+          "rank": 88,
+          "name": "Truecaller: Spam Call Blocker"
+        },
+        {
+          "rank": 89,
+          "name": "Grok AI"
+        },
+        {
+          "rank": 90,
+          "name": "Nora VPN \u2013 Fast & Secure VPN"
+        },
+        {
+          "rank": 91,
+          "name": "VibeShort: AI Dramas & Reels"
+        },
+        {
+          "rank": 92,
+          "name": "Zoom Workplace"
+        },
+        {
+          "rank": 93,
+          "name": "Ge Browser - Safe & Smart"
+        },
+        {
+          "rank": 94,
+          "name": "Microsoft Authenticator"
+        },
+        {
+          "rank": 95,
+          "name": "Pluto TV: Watch Free Movies/TV"
+        },
+        {
+          "rank": 96,
+          "name": "Signal Private Messenger"
+        },
+        {
+          "rank": 97,
+          "name": "Canva: AI Photo & Video Editor"
+        },
+        {
+          "rank": 98,
+          "name": "Bible Offline-KJV Holy Bible"
+        },
+        {
+          "rank": 99,
+          "name": "Bandana Job Search"
+        },
+        {
+          "rank": 100,
+          "name": "DuckDuckGo, optional Duck.ai"
+        },
+        {
+          "rank": 101,
+          "name": "Microsoft Word: Edit Documents"
+        },
+        {
+          "rank": 102,
+          "name": "Easy Mail - Email Launcher"
+        },
+        {
+          "rank": 103,
+          "name": "Move to iOS"
+        },
+        {
+          "rank": 104,
+          "name": "CVS Health"
+        },
+        {
+          "rank": 105,
+          "name": "Google Gemini"
+        },
+        {
+          "rank": 106,
+          "name": "MiniReels"
+        },
+        {
+          "rank": 107,
+          "name": "Recovery Photo Ultra"
+        },
+        {
+          "rank": 108,
+          "name": "Google Wallet"
+        },
+        {
+          "rank": 109,
+          "name": "eBay online shopping & selling"
+        },
+        {
+          "rank": 110,
+          "name": "Adobe Acrobat Reader: Edit PDF"
+        },
+        {
+          "rank": 111,
+          "name": "Taco Bell Fast Food & Delivery"
+        },
+        {
+          "rank": 112,
+          "name": "GoodShort - Short Dramas Hub"
+        },
+        {
+          "rank": 113,
+          "name": "Uber Eats: Food and Grocery"
+        },
+        {
+          "rank": 114,
+          "name": "Duolingo: Learn Languages"
+        },
+        {
+          "rank": 115,
+          "name": "Hark Pro"
+        },
+        {
+          "rank": 116,
+          "name": "Google Docs"
+        },
+        {
+          "rank": 117,
+          "name": "HBO Max: Stream TV & Movies"
+        },
+        {
+          "rank": 118,
+          "name": "AntiVirus Clean Master-Cleaner"
+        },
+        {
+          "rank": 119,
+          "name": "Microsoft Excel: Spreadsheets"
+        },
+        {
+          "rank": 120,
+          "name": "VIZIO"
+        },
+        {
+          "rank": 121,
+          "name": "Vidix-AI Photo Video Generator"
+        },
+        {
+          "rank": 122,
+          "name": "VYBS: Play & Earn Rewards"
+        },
+        {
+          "rank": 123,
+          "name": "Suno - AI Music & Songs Maker"
+        },
+        {
+          "rank": 124,
+          "name": "Firefox Fast & Private Browser"
+        },
+        {
+          "rank": 125,
+          "name": "Fetch: Earn Rewards Every Day"
+        },
+        {
+          "rank": 126,
+          "name": "Twitch: Live Streaming"
+        },
+        {
+          "rank": 127,
+          "name": "Alibaba.com - B2B marketplace"
+        },
+        {
+          "rank": 128,
+          "name": "Costco Wholesale"
+        },
+        {
+          "rank": 129,
+          "name": "Google Authenticator"
+        },
+        {
+          "rank": 130,
+          "name": "Best Buy: Shop tech deals"
+        },
+        {
+          "rank": 131,
+          "name": "Brave Private Web Browser, VPN"
+        },
+        {
+          "rank": 132,
+          "name": "Proton VPN: Secure & Fast VPN"
+        },
+        {
+          "rank": 133,
+          "name": "Pocket FM: Audio Dramas"
+        },
+        {
+          "rank": 134,
+          "name": "YouTube Kids"
+        },
+        {
+          "rank": 135,
+          "name": "Testerup: Test & Earn Rewards"
+        },
+        {
+          "rank": 136,
+          "name": "Bible For Women-Holy Bible KJV"
+        },
+        {
+          "rank": 137,
+          "name": "RushDrama Pro:MiniSeries"
+        },
+        {
+          "rank": 138,
+          "name": "Grant Cash Advance"
+        },
+        {
+          "rank": 139,
+          "name": "GPS Location Tracker Plus"
+        },
+        {
+          "rank": 140,
+          "name": "BURGER KING\u00ae App"
+        },
+        {
+          "rank": 141,
+          "name": "YouTube TV: Live TV & more"
+        },
+        {
+          "rank": 142,
+          "name": "MapQuest: Get Directions"
+        },
+        {
+          "rank": 143,
+          "name": "Dramix: Short Drama Series"
+        },
+        {
+          "rank": 144,
+          "name": "Okta Verify"
+        },
+        {
+          "rank": 145,
+          "name": "Pandora - Music & Podcasts"
+        },
+        {
+          "rank": 146,
+          "name": "Waze Navigation & Live Traffic"
+        },
+        {
+          "rank": 147,
+          "name": "MusicTune-Offline Music Player"
+        },
+        {
+          "rank": 148,
+          "name": "Plex: Find Movies & TV Shows"
+        },
+        {
+          "rank": 149,
+          "name": "TimeCue \u2013 Reminders & Alerts"
+        },
+        {
+          "rank": 150,
+          "name": "Document Reader & PDF Editor"
+        },
+        {
+          "rank": 151,
+          "name": "Affirm: Buy now, pay over time"
+        },
+        {
+          "rank": 152,
+          "name": "Emoji Battery & Shimeji Pets"
+        },
+        {
+          "rank": 153,
+          "name": "Zedge\u2122 Wallpapers & Ringtones"
+        },
+        {
+          "rank": 154,
+          "name": "QR & Barcode Scanner"
+        },
+        {
+          "rank": 155,
+          "name": "Domino's Pizza USA"
+        },
+        {
+          "rank": 156,
+          "name": "Microsoft Edge"
+        },
+        {
+          "rank": 157,
+          "name": "NewsBreak: Local News & Alerts"
+        },
+        {
+          "rank": 158,
+          "name": "Facebook Lite"
+        },
+        {
+          "rank": 159,
+          "name": "YouTube"
+        },
+        {
+          "rank": 160,
+          "name": "GovAuctions.com - Shop Surplus"
+        },
+        {
+          "rank": 161,
+          "name": "Smart Clean Pro"
+        },
+        {
+          "rank": 162,
+          "name": "Circle K"
+        },
+        {
+          "rank": 163,
+          "name": "Wells Fargo Mobile\u00ae"
+        },
+        {
+          "rank": 164,
+          "name": "Workday"
+        },
+        {
+          "rank": 165,
+          "name": "Yahoo Mail: Email & Planner"
+        },
+        {
+          "rank": 166,
+          "name": "WEBTOON: Manga, Comics, Manhwa"
+        },
+        {
+          "rank": 167,
+          "name": "PrizePicks - Sports Picks"
+        },
+        {
+          "rank": 168,
+          "name": "Artmate: Drawing Together"
+        },
+        {
+          "rank": 169,
+          "name": "onX Hunt: Offline Hunting Maps"
+        },
+        {
+          "rank": 170,
+          "name": "Uber - Driver: Drive & Deliver"
+        },
+        {
+          "rank": 171,
+          "name": "Emoji Battery & Shimeji Pet"
+        },
+        {
+          "rank": 172,
+          "name": "The Home Depot"
+        },
+        {
+          "rank": 173,
+          "name": "Volume Control Sound Launcher"
+        },
+        {
+          "rank": 174,
+          "name": "Starbucks"
+        },
+        {
+          "rank": 175,
+          "name": "Google Translate"
+        },
+        {
+          "rank": 176,
+          "name": "Samsung Smart Switch Mobile"
+        },
+        {
+          "rank": 177,
+          "name": "PDF Reader & Editor - Easy PDF"
+        },
+        {
+          "rank": 178,
+          "name": "Google\u2019s Find Hub"
+        },
+        {
+          "rank": 179,
+          "name": "Amazon Flex"
+        },
+        {
+          "rank": 180,
+          "name": "ebtEDGE NEW!"
+        },
+        {
+          "rank": 181,
+          "name": "ADP Mobile Solutions"
+        },
+        {
+          "rank": 182,
+          "name": "Spark Driver"
+        },
+        {
+          "rank": 183,
+          "name": "Chase Mobile"
+        },
+        {
+          "rank": 184,
+          "name": "Volume Control Home"
+        },
+        {
+          "rank": 185,
+          "name": "AHEALTH: Get Healthy Get Paid"
+        },
+        {
+          "rank": 186,
+          "name": "Lucky Drama - Shorts & Rewards"
+        },
+        {
+          "rank": 187,
+          "name": "DramaBox\u00a0Lite - Mini\u00a0Drama\u00a0TV"
+        },
+        {
+          "rank": 188,
+          "name": "Hulu: Stream TV shows & movies"
+        },
+        {
+          "rank": 189,
+          "name": "Instacart: Get Food Delivery"
+        },
+        {
+          "rank": 190,
+          "name": "Health Care - Sound"
+        },
+        {
+          "rank": 191,
+          "name": "TV Remote Control for Smart TV"
+        },
+        {
+          "rank": 192,
+          "name": "Capital One Shopping"
+        },
+        {
+          "rank": 193,
+          "name": "DAZN - Watch Live Sports"
+        },
+        {
+          "rank": 194,
+          "name": "Crunchyroll: Anime Streaming"
+        },
+        {
+          "rank": 195,
+          "name": "FlickReels - AI Story & Drama"
+        },
+        {
+          "rank": 196,
+          "name": "CleanBoost - Junk Cleaner"
+        },
+        {
+          "rank": 197,
+          "name": "Apple TV: Shows, Movies & More"
+        },
+        {
+          "rank": 198,
+          "name": "AI Photo Editor: Art Studio"
+        },
+        {
+          "rank": 199,
+          "name": "Atlas - Rewards Credit Card"
+        },
+        {
+          "rank": 200,
+          "name": "Dave: Credit, Cash & Money App"
+        }
+      ],
+      "packageIdsFirst100": [
+        {
+          "rank": 1,
+          "packageId": "com.facebook.aura"
+        },
+        {
+          "rank": 2,
+          "packageId": "com.openai.chatgpt"
+        },
+        {
+          "rank": 3,
+          "packageId": "com.ss.android.ugc.tiktok.pro"
+        },
+        {
+          "rank": 4,
+          "packageId": "com.konylabs.capitalone"
+        },
+        {
+          "rank": 5,
+          "packageId": "com.dealseekorg.dealseek"
+        },
+        {
+          "rank": 6,
+          "packageId": "com.eet.settings.launcher"
+        },
+        {
+          "rank": 7,
+          "packageId": "com.drama.free"
+        },
+        {
+          "rank": 8,
+          "packageId": "com.mcdonalds.app"
+        },
+        {
+          "rank": 9,
+          "packageId": "com.zhiliaoapp.musically"
+        },
+        {
+          "rank": 10,
+          "packageId": "com.whatsapp"
+        },
+        {
+          "rank": 11,
+          "packageId": "com.instagram.android"
+        },
+        {
+          "rank": 12,
+          "packageId": "fr.vinted"
+        },
+        {
+          "rank": 13,
+          "packageId": "com.kalshi.mobile"
+        },
+        {
+          "rank": 14,
+          "packageId": "com.squareup.cash"
+        },
+        {
+          "rank": 15,
+          "packageId": "com.tiktok.lite.go"
+        },
+        {
+          "rank": 16,
+          "packageId": "com.einnovation.temu"
+        },
+        {
+          "rank": 17,
+          "packageId": "com.walmart.android"
+        },
+        {
+          "rank": 18,
+          "packageId": "com.freereels.app"
+        },
+        {
+          "rank": 19,
+          "packageId": "com.freecash.app2"
+        },
+        {
+          "rank": 20,
+          "packageId": "com.lemon.lvoverseas"
+        },
+        {
+          "rank": 21,
+          "packageId": "com.ss.android.ttmd.video"
+        },
+        {
+          "rank": 22,
+          "packageId": "com.facebook.katana"
+        },
+        {
+          "rank": 23,
+          "packageId": "com.anthropic.claude"
+        },
+        {
+          "rank": 24,
+          "packageId": "com.enflick.android.TextNow"
+        },
+        {
+          "rank": 25,
+          "packageId": "com.whatnot_mobile"
+        },
+        {
+          "rank": 26,
+          "packageId": "com.wake.box.ryan"
+        },
+        {
+          "rank": 27,
+          "packageId": "com.snapchat.android"
+        },
+        {
+          "rank": 28,
+          "packageId": "com.twitter.android"
+        },
+        {
+          "rank": 29,
+          "packageId": "com.storage.androidcleaner"
+        },
+        {
+          "rank": 30,
+          "packageId": "com.blink.drama.player"
+        },
+        {
+          "rank": 31,
+          "packageId": "com.peacocktv.peacockandroid"
+        },
+        {
+          "rank": 32,
+          "packageId": "com.tubitv"
+        },
+        {
+          "rank": 33,
+          "packageId": "easy.launcher"
+        },
+        {
+          "rank": 34,
+          "packageId": "com.paypal.android.p2pmobile"
+        },
+        {
+          "rank": 35,
+          "packageId": "com.facebook.orca"
+        },
+        {
+          "rank": 36,
+          "packageId": "com.life360.android.safetymapd"
+        },
+        {
+          "rank": 37,
+          "packageId": "com.kouponai"
+        },
+        {
+          "rank": 38,
+          "packageId": "com.rfi.sams.android"
+        },
+        {
+          "rank": 39,
+          "packageId": "org.telegram.messenger"
+        },
+        {
+          "rank": 40,
+          "packageId": "com.indeed.android.jobsearch"
+        },
+        {
+          "rank": 41,
+          "packageId": "com.onedebit.chime"
+        },
+        {
+          "rank": 42,
+          "packageId": "com.venmo"
+        },
+        {
+          "rank": 43,
+          "packageId": "io.playout"
+        },
+        {
+          "rank": 44,
+          "packageId": "com.dd.doordash"
+        },
+        {
+          "rank": 45,
+          "packageId": "com.pdfreader.master.utgerful"
+        },
+        {
+          "rank": 46,
+          "packageId": "com.dramawave.app"
+        },
+        {
+          "rank": 47,
+          "packageId": "com.zzkko"
+        },
+        {
+          "rank": 48,
+          "packageId": "com.cbs.app"
+        },
+        {
+          "rank": 49,
+          "packageId": "com.newleaf.app.android.victor"
+        },
+        {
+          "rank": 50,
+          "packageId": "gov.trumpaccounts.goldeneagle"
+        },
+        {
+          "rank": 51,
+          "packageId": "com.netshort.abroad"
+        },
+        {
+          "rank": 52,
+          "packageId": "com.justplay.app"
+        },
+        {
+          "rank": 53,
+          "packageId": "com.ubercab"
+        },
+        {
+          "rank": 54,
+          "packageId": "com.instagram.barcelona"
+        },
+        {
+          "rank": 55,
+          "packageId": "com.xphotokit.picfusionlab"
+        },
+        {
+          "rank": 56,
+          "packageId": "com.discord"
+        },
+        {
+          "rank": 57,
+          "packageId": "com.depop"
+        },
+        {
+          "rank": 58,
+          "packageId": "com.doordash.driverapp"
+        },
+        {
+          "rank": 59,
+          "packageId": "ai.x.grok.bot"
+        },
+        {
+          "rank": 60,
+          "packageId": "com.fox.foxone"
+        },
+        {
+          "rank": 61,
+          "packageId": "com.storymatrix.drama"
+        },
+        {
+          "rank": 62,
+          "packageId": "com.cardaccount.ram.junkcleanner"
+        },
+        {
+          "rank": 63,
+          "packageId": "com.amazon.avod.thirdpartyclient"
+        },
+        {
+          "rank": 64,
+          "packageId": "com.newsbreak.crimeradar"
+        },
+        {
+          "rank": 65,
+          "packageId": "com.basmo.BibleChat"
+        },
+        {
+          "rank": 66,
+          "packageId": "com.shopify.arrive"
+        },
+        {
+          "rank": 67,
+          "packageId": "ai.photogenerator.aivideo.aivideogenerator.aiart"
+        },
+        {
+          "rank": 68,
+          "packageId": "com.amazon.mShop.android.shopping"
+        },
+        {
+          "rank": 69,
+          "packageId": "com.scatterlab.messenger"
+        },
+        {
+          "rank": 70,
+          "packageId": "com.triumpharcade.tcg"
+        },
+        {
+          "rank": 71,
+          "packageId": "com.tmobile.tuesdays"
+        },
+        {
+          "rank": 72,
+          "packageId": "com.pinterest"
+        },
+        {
+          "rank": 73,
+          "packageId": "com.spotify.music"
+        },
+        {
+          "rank": 74,
+          "packageId": "com.storyreel.tv.android"
+        },
+        {
+          "rank": 75,
+          "packageId": "me.lyft.android"
+        },
+        {
+          "rank": 76,
+          "packageId": "com.reddit.frontpage"
+        },
+        {
+          "rank": 77,
+          "packageId": "com.netflix.mediaclient"
+        },
+        {
+          "rank": 78,
+          "packageId": "com.deepcleanelit.dcle"
+        },
+        {
+          "rank": 79,
+          "packageId": "epic.mychart.android"
+        },
+        {
+          "rank": 80,
+          "packageId": "com.onefinance.one"
+        },
+        {
+          "rank": 81,
+          "packageId": "com.aiphotoedior.photogenerator.photoretouch"
+        },
+        {
+          "rank": 82,
+          "packageId": "org.collegeboard.pivot"
+        },
+        {
+          "rank": 83,
+          "packageId": "com.alibaba.aliexpresshd"
+        },
+        {
+          "rank": 84,
+          "packageId": "com.gowish.app"
+        },
+        {
+          "rank": 85,
+          "packageId": "com.microsoft.teams"
+        },
+        {
+          "rank": 86,
+          "packageId": "com.roku.remote"
+        },
+        {
+          "rank": 87,
+          "packageId": "com.disney.disneyplus"
+        },
+        {
+          "rank": 88,
+          "packageId": "com.truecaller"
+        },
+        {
+          "rank": 89,
+          "packageId": "ai.x.grok"
+        },
+        {
+          "rank": 90,
+          "packageId": "com.nora.vpn"
+        },
+        {
+          "rank": 91,
+          "packageId": "com.vibeshort.visualnovel.android"
+        },
+        {
+          "rank": 92,
+          "packageId": "us.zoom.videomeetings"
+        },
+        {
+          "rank": 93,
+          "packageId": "com.web.tools.ge.browser"
+        },
+        {
+          "rank": 94,
+          "packageId": "com.azure.authenticator"
+        },
+        {
+          "rank": 95,
+          "packageId": "tv.pluto.android"
+        },
+        {
+          "rank": 96,
+          "packageId": "org.thoughtcrime.securesms"
+        },
+        {
+          "rank": 97,
+          "packageId": "com.canva.editor"
+        },
+        {
+          "rank": 98,
+          "packageId": "com.offline.bible"
+        },
+        {
+          "rank": 99,
+          "packageId": "com.bandana.bandana"
+        },
+        {
+          "rank": 100,
+          "packageId": "com.duckduckgo.mobile.android"
+        }
+      ]
+    }
+  },
+  "agreement": {
+    "playPackagesAlsoOnAppbrain": 166,
+    "sameRankAndPackage": 9,
+    "samePackageDifferentRank": 157,
+    "playPackagesMissingOnParsedAppbrain": 33,
+    "appinsiderNamesAlsoInPlayList": 169,
+    "appinsiderNameCount": 200
+  }
+}

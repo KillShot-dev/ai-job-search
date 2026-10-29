@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- PROTOTYPE. Unverified activities. -->
+<appmap>
+    <item class="com.whatsapp.Main" name="g007"/>
+    <item class="com.instagram.android.activity.MainTabActivity" name="g012"/>
+    <item class="com.facebook.katana.LoginActivity" name="g020"/>
+    <item class="com.facebook.orca.auth.StartScreenActivity" name="g036"/>
+    <item class="org.telegram.ui.LaunchActivity" name="g026"/>
+    <item class="com.ss.android.ugc.aweme.splash.SplashActivity" name="g008"/>
+    <item class="com.twitter.android.StartActivity" name="g021"/>
+    <item class="com.snapchat.android.LandingPageActivity" name="g023"/>
+</appmap>

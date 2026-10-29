@@ -1,0 +1,3040 @@
+{
+  "target": 300,
+  "count": 300,
+  "fetchedAt": "2026-10-26T01:34:42.442Z",
+  "fetchedAtPacific": "2026-10-25 06:34 PM PT",
+  "overall": {
+    "source": "google-play-scraper list TOP_FREE category=APPLICATION country=us lang=en",
+    "returned": 199,
+    "note": "The Play topselling_free response returned 199 apps when more were requested. Ranks 1-199 are that order."
+  },
+  "extension": {
+    "note": "Ranks 200-300 are additional apps from US category Top Free charts fetched in the same session, after removing every package already in the overall 199. Order is best category rank, then category name. They are charting free apps. They are not an official overall rank, because this Play response does not publish ranks 200-300.",
+    "categoriesFetched": [
+      "BUSINESS",
+      "COMMUNICATION",
+      "EDUCATION",
+      "ENTERTAINMENT",
+      "FINANCE",
+      "FOOD_AND_DRINK",
+      "GAME",
+      "HEALTH_AND_FITNESS",
+      "LIFESTYLE",
+      "MAPS_AND_NAVIGATION",
+      "MUSIC_AND_AUDIO",
+      "NEWS_AND_MAGAZINES",
+      "PERSONALIZATION",
+      "PHOTOGRAPHY",
+      "PRODUCTIVITY",
+      "SHOPPING",
+      "SOCIAL",
+      "SPORTS",
+      "TOOLS",
+      "TRAVEL_AND_LOCAL",
+      "VIDEO_PLAYERS",
+      "WEATHER"
+    ]
+  },
+  "apps": [
+    {
+      "rank": 1,
+      "name": "Muse from Meta",
+      "packageId": "com.facebook.aura",
+      "developer": "Meta Platforms, Inc.",
+      "score": 4.723199,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 2,
+      "name": "ChatGPT",
+      "packageId": "com.openai.chatgpt",
+      "developer": "OpenAI",
+      "score": 4.7803884,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 3,
+      "name": "TikTok Pro - Events",
+      "packageId": "com.ss.android.ugc.tiktok.pro",
+      "developer": "TikTok Pte. Ltd.",
+      "score": 4.3815837,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 4,
+      "name": "Capital One Mobile",
+      "packageId": "com.konylabs.capitalone",
+      "developer": "Capital One Services, LLC",
+      "score": 4.5280724,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 5,
+      "name": "Settings Home",
+      "packageId": "com.eet.settings.launcher",
+      "developer": "Utility Apps Home",
+      "score": 4.2546124,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 6,
+      "name": "Vinted: Shop & sell pre-loved",
+      "packageId": "fr.vinted",
+      "developer": "Vinted",
+      "score": 4.5010457,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 7,
+      "name": "WhatsApp",
+      "packageId": "com.whatsapp",
+      "developer": "WhatsApp LLC",
+      "score": 4.624305,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 8,
+      "name": "TikTok - Videos, Shop & LIVE",
+      "packageId": "com.zhiliaoapp.musically",
+      "developer": "TikTok Pte. Ltd.",
+      "score": 3.9599824,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 9,
+      "name": "McDonald's",
+      "packageId": "com.mcdonalds.app",
+      "developer": "McDonalds USA, LLC",
+      "score": 3.9621427,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 10,
+      "name": "FreeReels - Dramas & Reels",
+      "packageId": "com.freereels.app",
+      "developer": "SKYWORK AI PTE.LTD.",
+      "score": 4.7333646,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 11,
+      "name": "FreeDrama: Short Drama & Reels",
+      "packageId": "com.drama.free",
+      "developer": "Kuku Technologies Limited",
+      "score": 4.594382,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 12,
+      "name": "Instagram",
+      "packageId": "com.instagram.android",
+      "developer": "Instagram",
+      "score": 3.9890904,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 13,
+      "name": "DealSeek: Coupons & Discounts",
+      "packageId": "com.dealseekorg.dealseek",
+      "developer": "DealSeek LLC",
+      "score": 4.8077536,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 14,
+      "name": "PineDrama - Short Dramas",
+      "packageId": "com.ss.android.ttmd.video",
+      "developer": "TikTok Pte. Ltd.",
+      "score": 4.596895,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 15,
+      "name": "Cleanup: Phone Storage Cleaner",
+      "packageId": "com.storage.androidcleaner",
+      "developer": "Deep Flow Apps",
+      "score": 4.412961,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 16,
+      "name": "TikTok Lite - Faster TikTok",
+      "packageId": "com.tiktok.lite.go",
+      "developer": "TikTok Pte. Ltd.",
+      "score": 4.260248,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 17,
+      "name": "Temu: Shop Like a Billionaire",
+      "packageId": "com.einnovation.temu",
+      "developer": "Temu",
+      "score": 4.4489317,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 18,
+      "name": "Kalshi: Trade Football & more",
+      "packageId": "com.kalshi.mobile",
+      "developer": "KalshiEX LLC",
+      "score": 4.7082653,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 19,
+      "name": "Cash App",
+      "packageId": "com.squareup.cash",
+      "developer": "Block, Inc.",
+      "score": 4.7085404,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 20,
+      "name": "Facebook",
+      "packageId": "com.facebook.katana",
+      "developer": "Meta Platforms, Inc.",
+      "score": 4.557777,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 21,
+      "name": "X",
+      "packageId": "com.twitter.android",
+      "developer": "X Corp.",
+      "score": 4.8032517,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 22,
+      "name": "Walmart: Shopping & Savings",
+      "packageId": "com.walmart.android",
+      "developer": "Walmart",
+      "score": 4.7033725,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 23,
+      "name": "Snapchat",
+      "packageId": "com.snapchat.android",
+      "developer": "Snap Inc",
+      "score": 4.179717,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 24,
+      "name": "CapCut - Video Editor",
+      "packageId": "com.lemon.lvoverseas",
+      "developer": "Bytedance Pte. Ltd.",
+      "score": 3.548722,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 25,
+      "name": "BlinkDrama: Short Dramas & TV",
+      "packageId": "com.blink.drama.player",
+      "developer": "Atlas Ventures Culture & Technology Limited",
+      "score": 4.5309143,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 26,
+      "name": "Telegram",
+      "packageId": "org.telegram.messenger",
+      "developer": "Telegram FZ-LLC",
+      "score": 3.8088045,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 27,
+      "name": "Peacock TV: Stream TV & Movies",
+      "packageId": "com.peacocktv.peacockandroid",
+      "developer": "Peacock TV LLC",
+      "score": 4.586211,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 28,
+      "name": "DramaWave - Dramas & Reels",
+      "packageId": "com.dramawave.app",
+      "developer": "SKYWORK AI PTE.LTD.",
+      "score": 4.5456653,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 29,
+      "name": "MapQuest: Get Directions",
+      "packageId": "com.mapquest.android.ace",
+      "developer": "MapQuest",
+      "score": 4.3545456,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 30,
+      "name": "Freecash: Earn Money",
+      "packageId": "com.freecash.app2",
+      "developer": "Freecash",
+      "score": 4.551458,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 31,
+      "name": "Claude by Anthropic",
+      "packageId": "com.anthropic.claude",
+      "developer": "Anthropic PBC",
+      "score": 4.5166717,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 32,
+      "name": "Whatnot: Shop, Sell, Connect",
+      "packageId": "com.whatnot_mobile",
+      "developer": "Whatnot Inc.",
+      "score": 4.7384915,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 33,
+      "name": "DramaBox - Stream Drama Shorts",
+      "packageId": "com.storymatrix.drama",
+      "developer": "STORYMATRIX",
+      "score": 4.550928,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 34,
+      "name": "TextNow: Call + Text Unlimited",
+      "packageId": "com.enflick.android.TextNow",
+      "developer": "TextNow, Inc.",
+      "score": 4.606972,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 35,
+      "name": "Life360: Family Safety & GPS",
+      "packageId": "com.life360.android.safetymapd",
+      "developer": "Life360",
+      "score": 4.7691216,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 36,
+      "name": "Messenger",
+      "packageId": "com.facebook.orca",
+      "developer": "Meta Platforms, Inc.",
+      "score": 4.7125897,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 37,
+      "name": "ReelShort - Stream Drama & TV",
+      "packageId": "com.newleaf.app.android.victor",
+      "developer": "NewLeaf Publishing",
+      "score": 3.7799866,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 38,
+      "name": "Discord - Talk, Play, Hang Out",
+      "packageId": "com.discord",
+      "developer": "Discord Inc.",
+      "score": 4.284879,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 39,
+      "name": "WakeBox",
+      "packageId": "com.wake.box.ryan",
+      "developer": "BLYTHEWOOD NY LLC",
+      "score": 4.1865673,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 40,
+      "name": "NetShort - Popular Dramas & TV",
+      "packageId": "com.netshort.abroad",
+      "developer": "NETSTORY PTE. LTD.",
+      "score": 4.658972,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 41,
+      "name": "DoorDash: Food, Grocery, More",
+      "packageId": "com.dd.doordash",
+      "developer": "DoorDash",
+      "score": 4.658526,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 42,
+      "name": "Easy Homescreen",
+      "packageId": "easy.launcher",
+      "developer": "Homescreen Apps",
+      "score": 3.989402,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 43,
+      "name": "Tubi: Free Movies & Live TV",
+      "packageId": "com.tubitv",
+      "developer": "Tubi TV",
+      "score": 4.8546185,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 44,
+      "name": "PayPal - Pay, Send, Save",
+      "packageId": "com.paypal.android.p2pmobile",
+      "developer": "PayPal Mobile",
+      "score": 4.1984634,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 45,
+      "name": "Shop: Track, Pay, Discover",
+      "packageId": "com.shopify.arrive",
+      "developer": "Shopify Inc.",
+      "score": 4.4457703,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 46,
+      "name": "Reddit",
+      "packageId": "com.reddit.frontpage",
+      "developer": "reddit Inc.",
+      "score": 4.5563865,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 47,
+      "name": "zeta: AI Chat, Story, Play",
+      "packageId": "com.scatterlab.messenger",
+      "developer": "Scatter Lab, Inc.",
+      "score": 4.4460754,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 48,
+      "name": "PDF Reader: Documents Master",
+      "packageId": "com.pdfreader.master.utgerful",
+      "developer": "Praya",
+      "score": 3.761062,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 49,
+      "name": "Chime\u00ae \u2013 Fee-Free Banking",
+      "packageId": "com.onedebit.chime",
+      "developer": "Chime",
+      "score": 4.7306595,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 50,
+      "name": "StoryReel: Drama Shorts & TV",
+      "packageId": "com.storyreel.tv.android",
+      "developer": "Equinox Enterprises\u200c Technology Limited",
+      "score": 4.3897815,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 51,
+      "name": "AliExpress - Shopping App",
+      "packageId": "com.alibaba.aliexpresshd",
+      "developer": "Alibaba Mobile",
+      "score": 4.251513,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 52,
+      "name": "JustPlay: Earn Money or Donate",
+      "packageId": "com.justplay.app",
+      "developer": "JustPlay GmbH",
+      "score": 4.4242883,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 53,
+      "name": "Pinterest",
+      "packageId": "com.pinterest",
+      "developer": "Pinterest",
+      "score": 4.243748,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 54,
+      "name": "SHEIN-Shopping Online",
+      "packageId": "com.zzkko",
+      "developer": "Roadget Business PTE. LTD.",
+      "score": 4.755346,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 55,
+      "name": "CrimeRadar: Dispatch Alerts",
+      "packageId": "com.newsbreak.crimeradar",
+      "developer": "Scoopz LLC",
+      "score": 4.8074584,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 56,
+      "name": "Amazon Shopping",
+      "packageId": "com.amazon.mShop.android.shopping",
+      "developer": "Amazon Mobile LLC",
+      "score": 4.385839,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 57,
+      "name": "PicFusion Lab",
+      "packageId": "com.xphotokit.picfusionlab",
+      "developer": "X PhotoKit",
+      "score": 4.529412,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 58,
+      "name": "Venmo",
+      "packageId": "com.venmo",
+      "developer": "PayPal Mobile",
+      "score": 3.9922667,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 59,
+      "name": "Deep Clean Elite",
+      "packageId": "com.deepcleanelit.dcle",
+      "developer": "PDI Turbo",
+      "score": 4.272506,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 60,
+      "name": "Spotify: Music and Podcasts",
+      "packageId": "com.spotify.music",
+      "developer": "Spotify AB",
+      "score": 4.349221,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 61,
+      "name": "Indeed Job Search",
+      "packageId": "com.indeed.android.jobsearch",
+      "developer": "Indeed Jobs",
+      "score": 4.695643,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 62,
+      "name": "Threads",
+      "packageId": "com.instagram.barcelona",
+      "developer": "Instagram",
+      "score": 3.9993734,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 63,
+      "name": "DoorDash - Dasher",
+      "packageId": "com.doordash.driverapp",
+      "developer": "DoorDash",
+      "score": 4.551827,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 64,
+      "name": "YouTube TV: Live TV & more",
+      "packageId": "com.google.android.apps.youtube.unplugged",
+      "developer": "Google LLC",
+      "score": 3.7809389,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 65,
+      "name": "Netflix",
+      "packageId": "com.netflix.mediaclient",
+      "developer": "Netflix, Inc.",
+      "score": 4.771721,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 66,
+      "name": "AI Photo Beauty Editor Studio",
+      "packageId": "com.aiphotoedior.photogenerator.photoretouch",
+      "developer": "ATQ - AI Lab",
+      "score": 4.647059,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 67,
+      "name": "Fetch: Earn Rewards Every Day",
+      "packageId": "com.fetchrewards.fetchrewards.hop",
+      "developer": "Fetch Rewards",
+      "score": 4.7483516,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 68,
+      "name": "Playout: Earn Money",
+      "packageId": "io.playout",
+      "developer": "Loyalty Gaming",
+      "score": 4.5388317,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 69,
+      "name": "Microsoft Authenticator",
+      "packageId": "com.azure.authenticator",
+      "developer": "Microsoft Corporation",
+      "score": 4.635374,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 70,
+      "name": "RushDrama Pro:MiniSeries",
+      "packageId": "com.rushdramapro.miniseries",
+      "developer": "X-tream",
+      "score": 4.8713694,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 71,
+      "name": "Rips by Triumph",
+      "packageId": "com.triumpharcade.tcg",
+      "developer": "Triumph Labs Inc.",
+      "score": 4.540053,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 72,
+      "name": "TimeCue \u2013 Reminders & Alerts",
+      "packageId": "com.reminder.alert.timecue",
+      "developer": "Classified Prime LLc",
+      "score": 3.5688074,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 73,
+      "name": "GPS Location Tracker Ultra",
+      "packageId": "com.locc.trak.ult",
+      "developer": "SUNCAP COMPAGNY",
+      "score": 3.8,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 74,
+      "name": "Vidix-AI Photo Video Generator",
+      "packageId": "com.vidix.aivideogenerator.aiphotogenerator",
+      "developer": "Supercool Labs",
+      "score": 4.211594,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 75,
+      "name": "T-Life",
+      "packageId": "com.tmobile.tuesdays",
+      "developer": "T-Mobile USA",
+      "score": 4.6110735,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 76,
+      "name": "Draw Music: Sketch to Sound",
+      "packageId": "com.banix.drawsound.drawmusic",
+      "developer": "Banix Studio",
+      "score": 4.646154,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 77,
+      "name": "Depop - Buy & Sell Clothes",
+      "packageId": "com.depop",
+      "developer": "Depop",
+      "score": 4.763413,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 78,
+      "name": "Bible Offline-KJV Holy Bible",
+      "packageId": "com.offline.bible",
+      "developer": "B\u00edblia Offline",
+      "score": 4.868399,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 79,
+      "name": "Paramount+",
+      "packageId": "com.cbs.app",
+      "developer": "CBS Interactive, Inc.",
+      "score": 4.1275935,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 80,
+      "name": "Crunchyroll: Anime Streaming",
+      "packageId": "com.crunchyroll.crunchyroid",
+      "developer": "Crunchyroll, LLC",
+      "score": 4.6337914,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 81,
+      "name": "Roku Remote (Official)",
+      "packageId": "com.roku.remote",
+      "developer": "Roku, Inc. & its affiliates",
+      "score": 4.7149167,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 82,
+      "name": "Google Gemini",
+      "packageId": "com.google.android.apps.bard",
+      "developer": "Google LLC",
+      "score": 4.536728,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 83,
+      "name": "Uber: Rides, eats, hotels",
+      "packageId": "com.ubercab",
+      "developer": "Uber Technologies, Inc.",
+      "score": 4.739849,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 84,
+      "name": "Prime Video",
+      "packageId": "com.amazon.avod.thirdpartyclient",
+      "developer": "Amazon Mobile LLC",
+      "score": 4.669258,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 85,
+      "name": "MiniReels",
+      "packageId": "com.minireels.app",
+      "developer": "PixzCity",
+      "score": 4.160714,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 86,
+      "name": "Duolingo: Learn Languages",
+      "packageId": "com.duolingo",
+      "developer": "Duolingo",
+      "score": 4.7458777,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 87,
+      "name": "Grok AI",
+      "packageId": "ai.x.grok",
+      "developer": "SpaceX Super Intelligence",
+      "score": 4.873745,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 88,
+      "name": "Microsoft Teams",
+      "packageId": "com.microsoft.teams",
+      "developer": "Microsoft Corporation",
+      "score": 4.648622,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 89,
+      "name": "VIZIO",
+      "packageId": "com.vizio.vue.launcher",
+      "developer": "VIZIO",
+      "score": 4.1939187,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 90,
+      "name": "Pocket FM: Audio Dramas",
+      "packageId": "com.radio.pocketfm",
+      "developer": "PocketFM",
+      "score": 4.3822784,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 91,
+      "name": "Zoom Workplace",
+      "packageId": "us.zoom.videomeetings",
+      "developer": "zoom.com",
+      "score": 4.096967,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 92,
+      "name": "OnePay \u2013 Mobile Banking",
+      "packageId": "com.onefinance.one",
+      "developer": "ONE Finance, Inc.",
+      "score": 4.763085,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 93,
+      "name": "CVS Health",
+      "packageId": "com.cvs.launchers.cvs",
+      "developer": "CVS Pharmacy",
+      "score": 4.507453,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 94,
+      "name": "GoWish - Your Digital Wishlist",
+      "packageId": "com.gowish.app",
+      "developer": "\u00d8nskeskyen ApS",
+      "score": 3.319403,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 95,
+      "name": "Lyft",
+      "packageId": "me.lyft.android",
+      "developer": "Lyft, Inc.",
+      "score": 4.823191,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 96,
+      "name": "MyChart",
+      "packageId": "epic.mychart.android",
+      "developer": "Epic Systems Corporation",
+      "score": 4.4453807,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 97,
+      "name": "Grok Bot",
+      "packageId": "ai.x.grok.bot",
+      "developer": "SpaceX Super Intelligence",
+      "score": 4.8031917,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 98,
+      "name": "Volume Control Home",
+      "packageId": "com.eet.volume.launcher",
+      "developer": "Utility Apps Home",
+      "score": 4.3943357,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 99,
+      "name": "Nexus - AI Video Generator",
+      "packageId": "ai.photogenerator.aivideo.aivideogenerator.aiart",
+      "developer": "DQL TechLab",
+      "score": 3.854369,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 100,
+      "name": "Disney+",
+      "packageId": "com.disney.disneyplus",
+      "developer": "Disney",
+      "score": 4.3054924,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 101,
+      "name": "Versy Live: Sports Scores",
+      "packageId": "com.puzzle.escape.labg.save",
+      "developer": "ScorePulse",
+      "score": 4.5180182,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 102,
+      "name": "Pluto TV: Watch Free Movies/TV",
+      "packageId": "tv.pluto.android",
+      "developer": "Pluto, Inc.",
+      "score": 3.7545228,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 103,
+      "name": "Document Reader & PDF Editor",
+      "packageId": "all.documentreader.filereader.office.viewer",
+      "developer": "QR Code Scanner.",
+      "score": 4.4979987,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 104,
+      "name": "HBO Max: Stream TV & Movies",
+      "packageId": "com.wbd.stream",
+      "developer": "WarnerMedia Global Digital Services, LLC",
+      "score": 4.7813954,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 105,
+      "name": "Artmate: Drawing Together",
+      "packageId": "com.trace.art.draw.drawing.paint",
+      "developer": "Braly JSC",
+      "score": 4.7157536,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 106,
+      "name": "Volume Control Sound Launcher",
+      "packageId": "com.soundcontroller.loudspeaker.volume.manager.android",
+      "developer": "AtomApplications",
+      "score": 4.5724807,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 107,
+      "name": "Recovery Photo Ultra",
+      "packageId": "com.ultra.recovery.photo.video",
+      "developer": "hk3072072",
+      "score": 3.903226,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 108,
+      "name": "Ge Browser - Safe & Smart",
+      "packageId": "com.web.tools.ge.browser",
+      "developer": "Av sign international",
+      "score": 4.8516746,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 109,
+      "name": "Suno - AI Music & Songs Maker",
+      "packageId": "com.suno.android",
+      "developer": "Suno, Inc",
+      "score": 4.808559,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 110,
+      "name": "Bible Chat - Holy Bible Study",
+      "packageId": "com.basmo.BibleChat",
+      "developer": "Book Vitals Inc.",
+      "score": 4.848292,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 111,
+      "name": "Proton VPN: Secure & Fast VPN",
+      "packageId": "ch.protonvpn.android",
+      "developer": "Proton AG",
+      "score": 4.6771965,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 112,
+      "name": "Microsoft Word: Edit Documents",
+      "packageId": "com.microsoft.office.word",
+      "developer": "Microsoft Corporation",
+      "score": 4.7933626,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 113,
+      "name": "Costco Wholesale",
+      "packageId": "com.costco.app.android",
+      "developer": "Costco Wholesale",
+      "score": 4.7524195,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 114,
+      "name": "Microsoft Edge",
+      "packageId": "com.microsoft.emmx",
+      "developer": "Microsoft Corporation",
+      "score": 4.688269,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 115,
+      "name": "Waze Navigation & Live Traffic",
+      "packageId": "com.waze",
+      "developer": "Waze",
+      "score": 4.352435,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 116,
+      "name": "GoodShort - Short Dramas Hub",
+      "packageId": "com.newreading.goodreels",
+      "developer": "GoodNovel",
+      "score": 4.7031035,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 117,
+      "name": "VYBS: Play & Earn Rewards",
+      "packageId": "co.vybs.app",
+      "developer": "VYBS ENTERTAINMENT",
+      "score": 4.727978,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 118,
+      "name": "Emoji Battery & Shimeji Pet",
+      "packageId": "com.anime.shimeji.petonscreen",
+      "developer": "Tools for Everyday - AI Tasks",
+      "score": 4.161017,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 119,
+      "name": "Koupon: Real Deals & Codes",
+      "packageId": "com.kouponai",
+      "developer": "Koupon",
+      "score": 4.783815,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 120,
+      "name": "Apple TV: Shows, Movies & More",
+      "packageId": "com.apple.atve.androidtv.appletv",
+      "developer": "Apple",
+      "score": 4.116232,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 121,
+      "name": "Adobe Acrobat Reader: Edit PDF",
+      "packageId": "com.adobe.reader",
+      "developer": "Adobe",
+      "score": 4.508902,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 122,
+      "name": "AntiVirus Clean Master-Cleaner",
+      "packageId": "com.anti.cleaner.phoener",
+      "developer": "Blooming Techno",
+      "score": 3.84,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 123,
+      "name": "Signal Private Messenger",
+      "packageId": "org.thoughtcrime.securesms",
+      "developer": "Signal Foundation",
+      "score": 4.5046005,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 124,
+      "name": "DuckDuckGo, optional Duck.ai",
+      "packageId": "com.duckduckgo.mobile.android",
+      "developer": "DuckDuckGo",
+      "score": 4.6905556,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 125,
+      "name": "Microsoft Excel: Spreadsheets",
+      "packageId": "com.microsoft.office.excel",
+      "developer": "Microsoft Corporation",
+      "score": 4.787075,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 126,
+      "name": "Max Cleaner",
+      "packageId": "com.bigtime.trash.cleaner",
+      "developer": "FWP Bigtime",
+      "score": 3.6504855,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 127,
+      "name": "Alibaba.com - B2B marketplace",
+      "packageId": "com.alibaba.intl.android.apps.poseidon",
+      "developer": "Alibaba Mobile",
+      "score": 4.3649874,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 128,
+      "name": "Taco Bell Fast Food & Delivery",
+      "packageId": "com.tacobell.ordering",
+      "developer": "Taco Bell Mobile",
+      "score": 4.7238884,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 129,
+      "name": "VibeShort: AI Dramas & Reels",
+      "packageId": "com.vibeshort.visualnovel.android",
+      "developer": "AGILE QUADRANT MEDIA LIMITED",
+      "score": 4.511297,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 130,
+      "name": "Google Wallet",
+      "packageId": "com.google.android.apps.walletnfcrel",
+      "developer": "Google LLC",
+      "score": 4.3247094,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 131,
+      "name": "Google Docs",
+      "packageId": "com.google.android.apps.docs.editors.docs",
+      "developer": "Google LLC",
+      "score": 4.7197638,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 132,
+      "name": "Uber Eats: Food and Grocery",
+      "packageId": "com.ubercab.eats",
+      "developer": "Uber Technologies, Inc.",
+      "score": 4.643102,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 133,
+      "name": "Firefox Fast & Private Browser",
+      "packageId": "org.mozilla.firefox",
+      "developer": "Mozilla",
+      "score": 4.614636,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 134,
+      "name": "Bandana Job Search",
+      "packageId": "com.bandana.bandana",
+      "developer": "Bandana",
+      "score": 4.6953845,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 135,
+      "name": "Instacart: Get Food Delivery",
+      "packageId": "com.instacart.client",
+      "developer": "Instacart",
+      "score": 4.7722845,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 136,
+      "name": "Google Authenticator",
+      "packageId": "com.google.android.apps.authenticator2",
+      "developer": "Google LLC",
+      "score": 3.8524318,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 137,
+      "name": "Chase Mobile",
+      "packageId": "com.chase.sig.android",
+      "developer": "JPMorgan Chase",
+      "score": 4.7612233,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 138,
+      "name": "QR & Barcode Scanner",
+      "packageId": "com.gamma.scan",
+      "developer": "Gamma Play",
+      "score": 4.8013253,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 139,
+      "name": "Grant Cash Advance",
+      "packageId": "com.kikoff.theseus",
+      "developer": "Kikoff Inc.",
+      "score": 4.804926,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 140,
+      "name": "YouTube",
+      "packageId": "com.google.android.youtube",
+      "developer": "Google LLC",
+      "score": 3.8272011,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 141,
+      "name": "eBay online shopping & selling",
+      "packageId": "com.ebay.mobile",
+      "developer": "eBay Mobile",
+      "score": 4.5207567,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 142,
+      "name": "Klarna: Smarter everyday money",
+      "packageId": "com.myklarnamobile",
+      "developer": "Klarna Bank AB (publ)",
+      "score": 4.811922,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 143,
+      "name": "Bible For Women-Holy Bible KJV",
+      "packageId": "com.bible.holy.bible.for.women",
+      "developer": "B\u00edblia Offline",
+      "score": 4.8626885,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 144,
+      "name": "ESPN",
+      "packageId": "com.espn.score_center",
+      "developer": "Disney",
+      "score": 4.453829,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 145,
+      "name": "Facebook Lite",
+      "packageId": "com.facebook.lite",
+      "developer": "Meta Platforms, Inc.",
+      "score": 4.5129194,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 146,
+      "name": "Junk Cleaner",
+      "packageId": "com.cardaccount.ram.junkcleanner",
+      "developer": "CardAccount",
+      "score": 4.287037,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 147,
+      "name": "Learn English, Spanish: Learna",
+      "packageId": "com.codeway.aitutor",
+      "developer": "Deep Flow Apps",
+      "score": 4.619059,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 148,
+      "name": "Link Voice & Text Translator",
+      "packageId": "com.translator.lucky.shuai",
+      "developer": "Live Media-\ufeffdeveloper",
+      "score": 4.311111,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 149,
+      "name": "OOC: The Playable Anime",
+      "packageId": "com.newai.ooc",
+      "developer": "OOC",
+      "score": 4.2904954,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 150,
+      "name": "Emoji Battery & Shimeji Pets",
+      "packageId": "com.shimeji.petonscreen.battery.emoji",
+      "developer": "ZAppsolution",
+      "score": 4.6981134,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 151,
+      "name": "GPS Location Tracker Plus",
+      "packageId": "com.whfplus.location.ker",
+      "developer": "Anuoluwapo Product Limited",
+      "score": 3.8,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 152,
+      "name": "Move to iOS",
+      "packageId": "com.apple.movetoios",
+      "developer": "Apple",
+      "score": 3.6051543,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 153,
+      "name": "Pandora - Music & Podcasts",
+      "packageId": "com.pandora.android",
+      "developer": "Pandora",
+      "score": 3.8954823,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 154,
+      "name": "The Home Depot",
+      "packageId": "com.thehomedepot",
+      "developer": "The Home Depot, Inc",
+      "score": 4.46275,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 155,
+      "name": "Zedge\u2122 Wallpapers & Ringtones",
+      "packageId": "net.zedge.android",
+      "developer": "Zedge",
+      "score": 4.6671867,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 156,
+      "name": "Okta Verify",
+      "packageId": "com.okta.android.auth",
+      "developer": "Okta Inc.",
+      "score": 3.951613,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 157,
+      "name": "CleanBoost - Junk Cleaner",
+      "packageId": "com.novabrain.tool.cleanboost",
+      "developer": "Fadilo Studio",
+      "score": 3.6122448,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 158,
+      "name": "MusicTune-Offline Music Player",
+      "packageId": "com.stormlibs.musictune",
+      "developer": "Storm Libs Limited",
+      "score": 4.01,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 159,
+      "name": "Twitch: Live Streaming",
+      "packageId": "tv.twitch.android.app",
+      "developer": "Twitch Interactive, Inc.",
+      "score": 4.280538,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 160,
+      "name": "Best Buy: Shop tech deals",
+      "packageId": "com.bestbuy.android",
+      "developer": "Best Buy Co., Inc",
+      "score": 4.7222376,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 161,
+      "name": "Google Translate",
+      "packageId": "com.google.android.apps.translate",
+      "developer": "Google LLC",
+      "score": 4.2627907,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 162,
+      "name": "XTranslate - Photo, Voice, PDF",
+      "packageId": "com.fapp.translate.language.translator.fasttranslation",
+      "developer": "FALCON GAME",
+      "score": 4.729842,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 163,
+      "name": "Affirm: Buy now, pay over time",
+      "packageId": "com.affirm.central",
+      "developer": "Affirm, Inc",
+      "score": 4.7918878,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 164,
+      "name": "Domino's Pizza USA",
+      "packageId": "com.dominospizza",
+      "developer": "Domino's Pizza LLC",
+      "score": 4.5773516,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 165,
+      "name": "YouTube Kids",
+      "packageId": "com.google.android.apps.youtube.kids",
+      "developer": "Google LLC",
+      "score": 4.2143283,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 166,
+      "name": "ShortNext: Mini Series",
+      "packageId": "com.dramareels.shorttv",
+      "developer": "Infinity Store",
+      "score": 4.47,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 167,
+      "name": "Canva: AI Photo & Video Editor",
+      "packageId": "com.canva.editor",
+      "developer": "Canva",
+      "score": 4.7798257,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 168,
+      "name": "GPS Location Flow & Tracker",
+      "packageId": "com.gps.cati.flow",
+      "developer": "Karyaku Dev",
+      "score": 3.861386,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 169,
+      "name": "Lucky Drama - Shorts & Rewards",
+      "packageId": "com.video.tv.ai.drama",
+      "developer": "Digitnesia",
+      "score": 4.71991,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 170,
+      "name": "PolyBuzz: Chat with AI Friends",
+      "packageId": "ai.socialapps.speakmaster",
+      "developer": "CLOUD WHALE INTERACTIVE TECHNOLOGY LLC.",
+      "score": 4.0095882,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 171,
+      "name": "CineTuck",
+      "packageId": "com.story.sip.mmecw",
+      "developer": "TRADE END",
+      "score": 4.672222,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 172,
+      "name": "Brave Private Web Browser, VPN",
+      "packageId": "com.brave.browser",
+      "developer": "Brave Software",
+      "score": 4.76057,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 173,
+      "name": "ADP Mobile Solutions",
+      "packageId": "com.adpmobile.android",
+      "developer": "ADP, INC.",
+      "score": 4.5767374,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 174,
+      "name": "VPN - Super Unlimited Proxy",
+      "packageId": "com.free.vpn.super.hotspot.open",
+      "developer": "VPN Super Inc",
+      "score": 4.7206306,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 175,
+      "name": "NewsBreak: Local News & Alerts",
+      "packageId": "com.particlenews.newsbreak",
+      "developer": "Particle Media Inc.",
+      "score": 4.6167912,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 176,
+      "name": "NaviCore",
+      "packageId": "com.nnnaaaccc.navicore",
+      "developer": "Zomoney",
+      "score": 4.3168316,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 177,
+      "name": "WhatsApp Business",
+      "packageId": "com.whatsapp.w4b",
+      "developer": "WhatsApp LLC",
+      "score": 4.61122,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 178,
+      "name": "Samsung Smart Switch Mobile",
+      "packageId": "com.sec.android.easyMover",
+      "developer": "Samsung Electronics Co.,  Ltd.",
+      "score": 3.9377928,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 179,
+      "name": "Etsy: Shop from Real People",
+      "packageId": "com.etsy.android",
+      "developer": "Etsy, Inc",
+      "score": 4.849888,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 180,
+      "name": "Yahoo Mail: Email & Planner",
+      "packageId": "com.yahoo.mobile.client.android.mail",
+      "developer": "Yahoo",
+      "score": 4.167346,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 181,
+      "name": "PDF Master",
+      "packageId": "com.pdf.tools.check.scanner",
+      "developer": "Bang Jorghy Dev",
+      "score": 4.2352943,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 182,
+      "name": "OurTalk AI: Soulful Chat",
+      "packageId": "ourtalk.ai",
+      "developer": "TRINEXIS LTD",
+      "score": 4.4931507,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 183,
+      "name": "Wells Fargo Mobile\u00ae",
+      "packageId": "com.wf.wellsfargomobile",
+      "developer": "Wells Fargo Mobile",
+      "score": 4.834253,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 184,
+      "name": "Plex: Find Movies & TV Shows",
+      "packageId": "com.plexapp.android",
+      "developer": "Plex, Inc.",
+      "score": 3.4984603,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 185,
+      "name": "Hulu: Stream TV shows & movies",
+      "packageId": "com.hulu.plus",
+      "developer": "Disney",
+      "score": 4.51806,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 186,
+      "name": "BestPlay: Play Games & Earn",
+      "packageId": "com.bestplay.app",
+      "developer": "Bestplay",
+      "score": 4.6187105,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 187,
+      "name": "Health Care - Sound",
+      "packageId": "com.health.care.sleep.sound.pulse.heartbeat",
+      "developer": "HealthCare Fitness calorie mental for Android App",
+      "score": 4.7017546,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 188,
+      "name": "Testerup: Test & Earn Rewards",
+      "packageId": "de.empfohlen",
+      "developer": "aestimium GmbH",
+      "score": 4.052586,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 189,
+      "name": "YouVersion Bible App + Audio",
+      "packageId": "com.sirma.mobile.bible.android",
+      "developer": "Life.Church",
+      "score": 4.920933,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 190,
+      "name": "Bigo Live - Live Streaming App",
+      "packageId": "sg.bigo.live",
+      "developer": "Bigo Technology Pte. Ltd.",
+      "score": 4.539238,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 191,
+      "name": "ShortMax - Short Dramas & TV",
+      "packageId": "live.shorttv.apps",
+      "developer": "SHORTMAX LIMITED",
+      "score": 4.44936,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 192,
+      "name": "UKG Pro",
+      "packageId": "com.ukg.oneapp",
+      "developer": "UKG, Inc.",
+      "score": 4.086708,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 193,
+      "name": "Google\u2019s Find Hub",
+      "packageId": "com.google.android.apps.adm",
+      "developer": "Google LLC",
+      "score": 4.2002892,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 194,
+      "name": "Fubo: Watch Live TV & Sports",
+      "packageId": "tv.fubo.mobile",
+      "developer": "fuboTV",
+      "score": 3.0108037,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 195,
+      "name": "PDF Reader \u2013 Reader & Editor",
+      "packageId": "pdf.reader.editor.office.ora",
+      "developer": "Ora Tools",
+      "score": 3.888476,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 196,
+      "name": "AI Hit Music Maker",
+      "packageId": "com.volumecontrol.volumebassbooster.android2023",
+      "developer": "Goldlab Pro",
+      "score": 3.94,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 197,
+      "name": "Draw Music Maker: Doodle Pad",
+      "packageId": "com.bigsoft.sketchsound.drawmusic",
+      "developer": "BigSoft inc.",
+      "score": 3.8965516,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 198,
+      "name": "MistyPix: AI Image Generator",
+      "packageId": "com.aivideogenrator.phototovideo.videogen",
+      "developer": "Vit Corp.",
+      "score": 4.18,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 199,
+      "name": "onX Hunt: Offline Hunting Maps",
+      "packageId": "onxmaps.hunt",
+      "developer": "onXmaps",
+      "score": 4.4724565,
+      "list": "overall",
+      "category": "",
+      "categoryRank": ""
+    },
+    {
+      "rank": 200,
+      "name": "Gossip Harbor: Merge & Story",
+      "packageId": "com.mergegames.gossipharbor",
+      "developer": "Microfun Limited",
+      "score": 4.3950577,
+      "list": "category",
+      "category": "GAME",
+      "categoryRank": 1
+    },
+    {
+      "rank": 201,
+      "name": "Airbnb",
+      "packageId": "com.airbnb.android",
+      "developer": "Airbnb",
+      "score": 4.550308,
+      "list": "category",
+      "category": "TRAVEL_AND_LOCAL",
+      "categoryRank": 1
+    },
+    {
+      "rank": 202,
+      "name": "Weather: Live Forecast & Radar",
+      "packageId": "com.sunny.weather.pinco",
+      "developer": "JuXin Ltd",
+      "score": 4.1782947,
+      "list": "category",
+      "category": "WEATHER",
+      "categoryRank": 1
+    },
+    {
+      "rank": 203,
+      "name": "Meowdoku: Brain Puzzle Games",
+      "packageId": "com.oakever.meowdoku",
+      "developer": "Oakever Games",
+      "score": 4.693471,
+      "list": "category",
+      "category": "GAME",
+      "categoryRank": 2
+    },
+    {
+      "rank": 204,
+      "name": "AHEALTH: Get Healthy Get Paid",
+      "packageId": "com.tracerofficial",
+      "developer": "Gravity Ltd",
+      "score": 4.659847,
+      "list": "category",
+      "category": "HEALTH_AND_FITNESS",
+      "categoryRank": 2
+    },
+    {
+      "rank": 205,
+      "name": "Google Earth",
+      "packageId": "com.google.earth",
+      "developer": "Google LLC",
+      "score": 3.767874,
+      "list": "category",
+      "category": "TRAVEL_AND_LOCAL",
+      "categoryRank": 2
+    },
+    {
+      "rank": 206,
+      "name": "Weather Forecast & Live Radar",
+      "packageId": "weather.forecast.channel.live",
+      "developer": "Weather 365 Days",
+      "score": 4.6785884,
+      "list": "category",
+      "category": "WEATHER",
+      "categoryRank": 2
+    },
+    {
+      "rank": 207,
+      "name": "Gauth: AI Study Companion",
+      "packageId": "com.education.android.h.intelligence",
+      "developer": "GauthTech Pte. Ltd.",
+      "score": 4.7931943,
+      "list": "category",
+      "category": "EDUCATION",
+      "categoryRank": 3
+    },
+    {
+      "rank": 208,
+      "name": "Rotate Rings",
+      "packageId": "com.nebula.rotaterings",
+      "developer": "Nebula  Studio",
+      "score": 4.7935934,
+      "list": "category",
+      "category": "GAME",
+      "categoryRank": 3
+    },
+    {
+      "rank": 209,
+      "name": "BP Health Log",
+      "packageId": "com.andwhisperer.bp.healthlog",
+      "developer": "Admin Whisperer",
+      "score": 4.080808,
+      "list": "category",
+      "category": "HEALTH_AND_FITNESS",
+      "categoryRank": 3
+    },
+    {
+      "rank": 210,
+      "name": "Booking.com: Hotels & Travel",
+      "packageId": "com.booking",
+      "developer": "Booking.com Hotels & Vacation Rentals",
+      "score": 4.7950783,
+      "list": "category",
+      "category": "TRAVEL_AND_LOCAL",
+      "categoryRank": 3
+    },
+    {
+      "rank": 211,
+      "name": "Live Weather Radar Launcher",
+      "packageId": "com.weatherradarhome.weather.forecast.live.radar.aqi.android",
+      "developer": "AtomApplications",
+      "score": 4.1849713,
+      "list": "category",
+      "category": "WEATHER",
+      "categoryRank": 3
+    },
+    {
+      "rank": 212,
+      "name": "ABCmouse: Kids Learning Games",
+      "packageId": "com.aofl.abcmouse",
+      "developer": "Age of Learning, Inc.",
+      "score": 4.5540323,
+      "list": "category",
+      "category": "EDUCATION",
+      "categoryRank": 4
+    },
+    {
+      "rank": 213,
+      "name": "Royal Smash! - Physics Puzzle",
+      "packageId": "com.cyphergames.royalsmash",
+      "developer": "Cypher Games",
+      "score": 4.614568,
+      "list": "category",
+      "category": "GAME",
+      "categoryRank": 4
+    },
+    {
+      "rank": 214,
+      "name": "Health Tracker: BP Monitor App",
+      "packageId": "com.bloodpressure.health.healthtracker",
+      "developer": "HealthTracker Apps",
+      "score": 4.3112583,
+      "list": "category",
+      "category": "HEALTH_AND_FITNESS",
+      "categoryRank": 4
+    },
+    {
+      "rank": 215,
+      "name": "Local Weather News - Radar",
+      "packageId": "com.weather.forecast.news",
+      "developer": "EASE Group",
+      "score": 4.331719,
+      "list": "category",
+      "category": "NEWS_AND_MAGAZINES",
+      "categoryRank": 4
+    },
+    {
+      "rank": 216,
+      "name": "Easy Mail - Email Launcher",
+      "packageId": "com.applabstudios.ai.mail.homescreen.inbox",
+      "developer": "App Lab Studios",
+      "score": 4.1899476,
+      "list": "category",
+      "category": "PERSONALIZATION",
+      "categoryRank": 4
+    },
+    {
+      "rank": 217,
+      "name": "Hailuo AI: Image&Video Maker",
+      "packageId": "ai.hailuo.video",
+      "developer": "MiniMax AI",
+      "score": 3.4321504,
+      "list": "category",
+      "category": "PHOTOGRAPHY",
+      "categoryRank": 4
+    },
+    {
+      "rank": 218,
+      "name": "DraftKings: Sports & Casino",
+      "packageId": "com.draftkings.sportsbook",
+      "developer": "DraftKings, Inc.",
+      "score": 4.752288,
+      "list": "category",
+      "category": "SPORTS",
+      "categoryRank": 4
+    },
+    {
+      "rank": 219,
+      "name": "Upside: Gas & Food Cash Back",
+      "packageId": "com.upside.consumer.android",
+      "developer": "Upside Inc.",
+      "score": 4.5644426,
+      "list": "category",
+      "category": "TRAVEL_AND_LOCAL",
+      "categoryRank": 4
+    },
+    {
+      "rank": 220,
+      "name": "YouTube Studio",
+      "packageId": "com.google.android.apps.youtube.creator",
+      "developer": "Google LLC",
+      "score": 4.304788,
+      "list": "category",
+      "category": "VIDEO_PLAYERS",
+      "categoryRank": 4
+    },
+    {
+      "rank": 221,
+      "name": "The Weather Channel - Radar",
+      "packageId": "com.weather.Weather",
+      "developer": "The Weather Channel",
+      "score": 4.5941453,
+      "list": "category",
+      "category": "WEATHER",
+      "categoryRank": 4
+    },
+    {
+      "rank": 222,
+      "name": "Deepstash: Smarter Every Day!",
+      "packageId": "com.deepstash",
+      "developer": "Smartheads",
+      "score": 4.599589,
+      "list": "category",
+      "category": "EDUCATION",
+      "categoryRank": 5
+    },
+    {
+      "rank": 223,
+      "name": "Roblox",
+      "packageId": "com.roblox.client",
+      "developer": "Roblox Corporation",
+      "score": 4.2275295,
+      "list": "category",
+      "category": "GAME",
+      "categoryRank": 5
+    },
+    {
+      "rank": 224,
+      "name": "Planet Fitness",
+      "packageId": "com.planetfitness",
+      "developer": "Planet Fitness",
+      "score": 4.5378046,
+      "list": "category",
+      "category": "HEALTH_AND_FITNESS",
+      "categoryRank": 5
+    },
+    {
+      "rank": 225,
+      "name": "Substack",
+      "packageId": "com.substack.app",
+      "developer": "Substack Inc.",
+      "score": 4.8215575,
+      "list": "category",
+      "category": "NEWS_AND_MAGAZINES",
+      "categoryRank": 5
+    },
+    {
+      "rank": 226,
+      "name": "Android Ringtone Songs",
+      "packageId": "com.bestapp.entertainment.ringsfree",
+      "developer": "Ringtone Phone App",
+      "score": 4.699757,
+      "list": "category",
+      "category": "PERSONALIZATION",
+      "categoryRank": 5
+    },
+    {
+      "rank": 227,
+      "name": "AI Photo Restore With Music",
+      "packageId": "com.aiphoto.photoenhance.photomusic.photoeditor",
+      "developer": "ATQ - AI Lab",
+      "score": 4.287129,
+      "list": "category",
+      "category": "PHOTOGRAPHY",
+      "categoryRank": 5
+    },
+    {
+      "rank": 228,
+      "name": "FanDuel Sportsbook & Casino",
+      "packageId": "com.fanduel.sportsbook",
+      "developer": "FanDuel",
+      "score": 4.4282613,
+      "list": "category",
+      "category": "SPORTS",
+      "categoryRank": 5
+    },
+    {
+      "rank": 229,
+      "name": "American Airlines",
+      "packageId": "com.aa.android",
+      "developer": "American Airlines, Inc.",
+      "score": 4.8013678,
+      "list": "category",
+      "category": "TRAVEL_AND_LOCAL",
+      "categoryRank": 5
+    },
+    {
+      "rank": 230,
+      "name": "Edits: Video Editor",
+      "packageId": "com.instagram.basel",
+      "developer": "Instagram",
+      "score": 4.6969075,
+      "list": "category",
+      "category": "VIDEO_PLAYERS",
+      "categoryRank": 5
+    },
+    {
+      "rank": 231,
+      "name": "Weather Radar Home",
+      "packageId": "com.omni.weather.launcher",
+      "developer": "OmniHome Apps",
+      "score": 4.266667,
+      "list": "category",
+      "category": "WEATHER",
+      "categoryRank": 5
+    },
+    {
+      "rank": 232,
+      "name": "PBS KIDS Video",
+      "packageId": "org.pbskids.video",
+      "developer": "PBS KIDS",
+      "score": 4.3450217,
+      "list": "category",
+      "category": "EDUCATION",
+      "categoryRank": 6
+    },
+    {
+      "rank": 233,
+      "name": "Amaze GO!\u2122",
+      "packageId": "com.oakever.arrows",
+      "developer": "Oakever Games",
+      "score": 4.8349624,
+      "list": "category",
+      "category": "GAME",
+      "categoryRank": 6
+    },
+    {
+      "rank": 234,
+      "name": "AllTrails: Hike, Bike & Run",
+      "packageId": "com.alltrails.alltrails",
+      "developer": "AllTrails, LLC",
+      "score": 4.545481,
+      "list": "category",
+      "category": "HEALTH_AND_FITNESS",
+      "categoryRank": 6
+    },
+    {
+      "rank": 235,
+      "name": "KashKick: Get paid to have fun",
+      "packageId": "com.kashkick.kashkickapp",
+      "developer": "Besitos Corporation LLC",
+      "score": 4.5184145,
+      "list": "category",
+      "category": "LIFESTYLE",
+      "categoryRank": 6
+    },
+    {
+      "rank": 236,
+      "name": "Police Scanner - Live Radio",
+      "packageId": "police.scanner.radio.broadcastify.citizen",
+      "developer": "Police Scanner, Scanner Live Radio App",
+      "score": 4.772224,
+      "list": "category",
+      "category": "NEWS_AND_MAGAZINES",
+      "categoryRank": 6
+    },
+    {
+      "rank": 237,
+      "name": "Candy Race Launcher",
+      "packageId": "com.Gamnest.CandyRace",
+      "developer": "Gamnest",
+      "score": 4.5635147,
+      "list": "category",
+      "category": "PERSONALIZATION",
+      "categoryRank": 6
+    },
+    {
+      "rank": 238,
+      "name": "AI Photo - AI Video Generator",
+      "packageId": "com.tomo.photo.editor.video.maker",
+      "developer": "ZAppsolution",
+      "score": 4.21,
+      "list": "category",
+      "category": "PHOTOGRAPHY",
+      "categoryRank": 6
+    },
+    {
+      "rank": 239,
+      "name": "Fanatics: Shop NFL, NBA & MLB",
+      "packageId": "com.fanatics",
+      "developer": "Fanatics, Inc",
+      "score": 4.6925964,
+      "list": "category",
+      "category": "SPORTS",
+      "categoryRank": 6
+    },
+    {
+      "rank": 240,
+      "name": "Expedia: Hotels, Flights, Cars",
+      "packageId": "com.expedia.bookings",
+      "developer": "Expedia",
+      "score": 4.813714,
+      "list": "category",
+      "category": "TRAVEL_AND_LOCAL",
+      "categoryRank": 6
+    },
+    {
+      "rank": 241,
+      "name": "VLC for Android",
+      "packageId": "org.videolan.vlc",
+      "developer": "Videolabs",
+      "score": 4.045008,
+      "list": "category",
+      "category": "VIDEO_PLAYERS",
+      "categoryRank": 6
+    },
+    {
+      "rank": 242,
+      "name": "Daily Weather Alarm - Radar",
+      "packageId": "com.dailyweather.alarm.radarwea",
+      "developer": "X5 Network Area",
+      "score": 3.0784314,
+      "list": "category",
+      "category": "WEATHER",
+      "categoryRank": 6
+    },
+    {
+      "rank": 243,
+      "name": "Lurnia: AI Language Tutor",
+      "packageId": "com.ailanguageassistant.languagetutor.learnlanguages",
+      "developer": "Astronex",
+      "score": 4.47,
+      "list": "category",
+      "category": "EDUCATION",
+      "categoryRank": 7
+    },
+    {
+      "rank": 244,
+      "name": "Starbucks",
+      "packageId": "com.starbucks.mobilecard",
+      "developer": "Starbucks Coffee Company",
+      "score": 4.841779,
+      "list": "category",
+      "category": "FOOD_AND_DRINK",
+      "categoryRank": 7
+    },
+    {
+      "rank": 245,
+      "name": "Word Tiles - Relaxing Puzzle",
+      "packageId": "com.agavegames.wordtiles",
+      "developer": "Agave Games",
+      "score": 4.880716,
+      "list": "category",
+      "category": "GAME",
+      "categoryRank": 7
+    },
+    {
+      "rank": 246,
+      "name": "HerBody - Home Workout",
+      "packageId": "com.womenfitness.xbodybuilding.workoutspro",
+      "developer": "AnlinYu",
+      "score": 3.125,
+      "list": "category",
+      "category": "HEALTH_AND_FITNESS",
+      "categoryRank": 7
+    },
+    {
+      "rank": 247,
+      "name": "Ring - Always Home",
+      "packageId": "com.ringapp",
+      "developer": "Ring.com",
+      "score": 4.651411,
+      "list": "category",
+      "category": "LIFESTYLE",
+      "categoryRank": 7
+    },
+    {
+      "rank": 248,
+      "name": "NYTimes: US and Global News",
+      "packageId": "com.nytimes.android",
+      "developer": "The New York Times Company",
+      "score": 4.7042184,
+      "list": "category",
+      "category": "NEWS_AND_MAGAZINES",
+      "categoryRank": 7
+    },
+    {
+      "rank": 249,
+      "name": "Themepack - App Icons, Widgets",
+      "packageId": "com.iconchanger.widget.theme.shortcut",
+      "developer": "YoloTech",
+      "score": 4.6326303,
+      "list": "category",
+      "category": "PERSONALIZATION",
+      "categoryRank": 7
+    },
+    {
+      "rank": 250,
+      "name": "AI Face Aging - Photo Editor",
+      "packageId": "com.faceaging.camera.oldify.ageeditor",
+      "developer": "Willson Studio",
+      "score": 4.0784316,
+      "list": "category",
+      "category": "PHOTOGRAPHY",
+      "categoryRank": 7
+    },
+    {
+      "rank": 251,
+      "name": "CBS Sports: Live Scores & News",
+      "packageId": "com.handmark.sportcaster",
+      "developer": "CBS Interactive, Inc.",
+      "score": 4.5061603,
+      "list": "category",
+      "category": "SPORTS",
+      "categoryRank": 7
+    },
+    {
+      "rank": 252,
+      "name": "Fly Delta",
+      "packageId": "com.delta.mobile.android",
+      "developer": "Delta Air Lines, Inc.",
+      "score": 4.778547,
+      "list": "category",
+      "category": "TRAVEL_AND_LOCAL",
+      "categoryRank": 7
+    },
+    {
+      "rank": 253,
+      "name": "Photo Video Maker with Music",
+      "packageId": "com.photovideomaker.videomakerwithmusic",
+      "developer": "Think It Tech",
+      "score": 3.14,
+      "list": "category",
+      "category": "VIDEO_PLAYERS",
+      "categoryRank": 7
+    },
+    {
+      "rank": 254,
+      "name": "Great Weather Alarm - Radar",
+      "packageId": "com.greatweather.weathergreat.alarm",
+      "developer": "GoFish Apps",
+      "score": 3.4390244,
+      "list": "category",
+      "category": "WEATHER",
+      "categoryRank": 7
+    },
+    {
+      "rank": 255,
+      "name": "ClassDojo",
+      "packageId": "com.classdojo.android",
+      "developer": "ClassDojo",
+      "score": 4.827366,
+      "list": "category",
+      "category": "EDUCATION",
+      "categoryRank": 8
+    },
+    {
+      "rank": 256,
+      "name": "Too Good To Go: End Food Waste",
+      "packageId": "com.app.tgtg",
+      "developer": "Too Good To Go Aps",
+      "score": 4.853278,
+      "list": "category",
+      "category": "FOOD_AND_DRINK",
+      "categoryRank": 8
+    },
+    {
+      "rank": 257,
+      "name": "Magic Sort!",
+      "packageId": "com.grandgames.magicsort",
+      "developer": "Grand Games A.\u015e.",
+      "score": 4.564433,
+      "list": "category",
+      "category": "GAME",
+      "categoryRank": 8
+    },
+    {
+      "rank": 258,
+      "name": "Flo Ovulation & Period Tracker",
+      "packageId": "org.iggymedia.periodtracker",
+      "developer": "Flo Health Inc.",
+      "score": 4.727036,
+      "list": "category",
+      "category": "HEALTH_AND_FITNESS",
+      "categoryRank": 8
+    },
+    {
+      "rank": 259,
+      "name": "Amazon Alexa",
+      "packageId": "com.amazon.dee.app",
+      "developer": "Amazon Mobile LLC",
+      "score": 4.0565386,
+      "list": "category",
+      "category": "LIFESTYLE",
+      "categoryRank": 8
+    },
+    {
+      "rank": 260,
+      "name": "Waymo",
+      "packageId": "com.waymo.carapp",
+      "developer": "Waymo LLC",
+      "score": 4.9284906,
+      "list": "category",
+      "category": "MAPS_AND_NAVIGATION",
+      "categoryRank": 8
+    },
+    {
+      "rank": 261,
+      "name": "SoundCloud: Discover Music",
+      "packageId": "com.soundcloud.android",
+      "developer": "SoundCloud",
+      "score": 4.6743217,
+      "list": "category",
+      "category": "MUSIC_AND_AUDIO",
+      "categoryRank": 8
+    },
+    {
+      "rank": 262,
+      "name": "Scanner Radio - Police Scanner",
+      "packageId": "com.scannerradio",
+      "developer": "GordonEdwards.net LLC",
+      "score": 4.7523155,
+      "list": "category",
+      "category": "NEWS_AND_MAGAZINES",
+      "categoryRank": 8
+    },
+    {
+      "rank": 263,
+      "name": "All Weather Mode: Weather Home",
+      "packageId": "com.weathermode.weatherlauncherandroidapp",
+      "developer": "Clarity App Crafting",
+      "score": 3.83,
+      "list": "category",
+      "category": "PERSONALIZATION",
+      "categoryRank": 8
+    },
+    {
+      "rank": 264,
+      "name": "PixVerse: AI Video Generator",
+      "packageId": "com.pixverseai.pixverse",
+      "developer": "PixVerse",
+      "score": 4.4535017,
+      "list": "category",
+      "category": "PHOTOGRAPHY",
+      "categoryRank": 8
+    },
+    {
+      "rank": 265,
+      "name": "PrizePicks - Sports Picks",
+      "packageId": "com.myprizepicks.myprizepicks",
+      "developer": "PrizePicks",
+      "score": 4.412402,
+      "list": "category",
+      "category": "SPORTS",
+      "categoryRank": 8
+    },
+    {
+      "rank": 266,
+      "name": "Southwest Airlines: Travel App",
+      "packageId": "com.southwestairlines.mobile",
+      "developer": "Southwest Airlines",
+      "score": 4.402006,
+      "list": "category",
+      "category": "TRAVEL_AND_LOCAL",
+      "categoryRank": 8
+    },
+    {
+      "rank": 267,
+      "name": "Movirea",
+      "packageId": "com.vee.drama.cisoz",
+      "developer": "Nexus Tech Apps",
+      "score": 4.7637796,
+      "list": "category",
+      "category": "VIDEO_PLAYERS",
+      "categoryRank": 8
+    },
+    {
+      "rank": 268,
+      "name": "Nice Weather",
+      "packageId": "com.weather.realinfo.really",
+      "developer": "Znd Digital",
+      "score": 4.061611,
+      "list": "category",
+      "category": "WEATHER",
+      "categoryRank": 8
+    },
+    {
+      "rank": 269,
+      "name": "Spark Driver",
+      "packageId": "com.walmart.sparkdriver",
+      "developer": "Walmart",
+      "score": 4.080775,
+      "list": "category",
+      "category": "BUSINESS",
+      "categoryRank": 9
+    },
+    {
+      "rank": 270,
+      "name": "Langla: AI Language Tutor",
+      "packageId": "aitutor.ailanguagelearn.ailearning",
+      "developer": "Aquaworld Infotech",
+      "score": 4.4563107,
+      "list": "category",
+      "category": "EDUCATION",
+      "categoryRank": 9
+    },
+    {
+      "rank": 271,
+      "name": "NeatEat: Meal & Recipe Planner",
+      "packageId": "com.forkcast890.app",
+      "developer": "Neat Builds",
+      "score": 4.708215,
+      "list": "category",
+      "category": "FOOD_AND_DRINK",
+      "categoryRank": 9
+    },
+    {
+      "rank": 272,
+      "name": "Vita Mahjong",
+      "packageId": "com.vitastudio.mahjong",
+      "developer": "Vita Studio.",
+      "score": 4.853623,
+      "list": "category",
+      "category": "GAME",
+      "categoryRank": 9
+    },
+    {
+      "rank": 273,
+      "name": "Yuka - Food & Cosmetic Scanner",
+      "packageId": "io.yuka.android",
+      "developer": "Yuka App",
+      "score": 4.7259307,
+      "list": "category",
+      "category": "HEALTH_AND_FITNESS",
+      "categoryRank": 9
+    },
+    {
+      "rank": 274,
+      "name": "DailyGift: Earn Reward",
+      "packageId": "com.habit.record.reward.tracker",
+      "developer": "DailyGift Team",
+      "score": 4.458131,
+      "list": "category",
+      "category": "LIFESTYLE",
+      "categoryRank": 9
+    },
+    {
+      "rank": 275,
+      "name": "Transit - Subway & Bus Times",
+      "packageId": "com.thetransitapp.droid",
+      "developer": "Transit, Inc.",
+      "score": 4.603619,
+      "list": "category",
+      "category": "MAPS_AND_NAVIGATION",
+      "categoryRank": 9
+    },
+    {
+      "rank": 276,
+      "name": "JBL Headphones",
+      "packageId": "jbl.stc.com",
+      "developer": "Harman Consumer, Inc.",
+      "score": 4.603339,
+      "list": "category",
+      "category": "MUSIC_AND_AUDIO",
+      "categoryRank": 9
+    },
+    {
+      "rank": 277,
+      "name": "SmartNews: Local Breaking News",
+      "packageId": "jp.gocro.smartnews.android",
+      "developer": "SmartNews, Inc.",
+      "score": 3.748423,
+      "list": "category",
+      "category": "NEWS_AND_MAGAZINES",
+      "categoryRank": 9
+    },
+    {
+      "rank": 278,
+      "name": "Emoji Battery Icon Customize",
+      "packageId": "com.tstudio.emojibatteryicon",
+      "developer": "ZAppsolution",
+      "score": 4.4861975,
+      "list": "category",
+      "category": "PERSONALIZATION",
+      "categoryRank": 9
+    },
+    {
+      "rank": 279,
+      "name": "Video Editor & Maker - InShot",
+      "packageId": "com.camerasideas.instashot",
+      "developer": "InShot Video Editor",
+      "score": 4.8385587,
+      "list": "category",
+      "category": "PHOTOGRAPHY",
+      "categoryRank": 9
+    },
+    {
+      "rank": 280,
+      "name": "Reco Social",
+      "packageId": "com.reco.app",
+      "developer": "Reco Social",
+      "score": 4.568487,
+      "list": "category",
+      "category": "SOCIAL",
+      "categoryRank": 9
+    },
+    {
+      "rank": 281,
+      "name": "Betr - Fantasy Sports",
+      "packageId": "app.instabet.betr",
+      "developer": "betr app",
+      "score": 4.046008,
+      "list": "category",
+      "category": "SPORTS",
+      "categoryRank": 9
+    },
+    {
+      "rank": 282,
+      "name": "Frontier Airlines",
+      "packageId": "com.flyfrontier.android",
+      "developer": "Frontier Airlines",
+      "score": 4.7293324,
+      "list": "category",
+      "category": "TRAVEL_AND_LOCAL",
+      "categoryRank": 9
+    },
+    {
+      "rank": 283,
+      "name": "Adobe Premiere: Video Editor",
+      "packageId": "com.adobe.premiere",
+      "developer": "Adobe",
+      "score": 4.548077,
+      "list": "category",
+      "category": "VIDEO_PLAYERS",
+      "categoryRank": 9
+    },
+    {
+      "rank": 284,
+      "name": "Live Weather: Forecast & Radar",
+      "packageId": "com.opop.live.weather",
+      "developer": "Chavazoem Potenutme",
+      "score": 3.627451,
+      "list": "category",
+      "category": "WEATHER",
+      "categoryRank": 9
+    },
+    {
+      "rank": 285,
+      "name": "Amazon Flex",
+      "packageId": "com.amazon.flex.rabbit",
+      "developer": "Amazon Mobile LLC",
+      "score": 4.508859,
+      "list": "category",
+      "category": "BUSINESS",
+      "categoryRank": 10
+    },
+    {
+      "rank": 286,
+      "name": "Lingokids: Games & Shows",
+      "packageId": "es.monkimun.lingokids",
+      "developer": "Lingokids - Games, Shows & Songs for Kids",
+      "score": 4.327389,
+      "list": "category",
+      "category": "EDUCATION",
+      "categoryRank": 10
+    },
+    {
+      "rank": 287,
+      "name": "BURGER KING\u00ae App",
+      "packageId": "com.emn8.mobilem8.nativeapp.bk",
+      "developer": "Burger King, Inc.",
+      "score": 4.4919543,
+      "list": "category",
+      "category": "FOOD_AND_DRINK",
+      "categoryRank": 10
+    },
+    {
+      "rank": 288,
+      "name": "Block Blast!",
+      "packageId": "com.block.juggle",
+      "developer": "HungryStudio",
+      "score": 4.846284,
+      "list": "category",
+      "category": "GAME",
+      "categoryRank": 10
+    },
+    {
+      "rank": 289,
+      "name": "healow",
+      "packageId": "com.ecw.healow",
+      "developer": "eClinicalWorks LLC",
+      "score": 4.576695,
+      "list": "category",
+      "category": "HEALTH_AND_FITNESS",
+      "categoryRank": 10
+    },
+    {
+      "rank": 290,
+      "name": "Nextdoor: Neighborhood Network",
+      "packageId": "com.nextdoor",
+      "developer": "Nextdoor, Inc.",
+      "score": 4.5336723,
+      "list": "category",
+      "category": "LIFESTYLE",
+      "categoryRank": 10
+    },
+    {
+      "rank": 291,
+      "name": "GPS Tracker & Location Tracker",
+      "packageId": "com.location.gps.tracker",
+      "developer": "NAICOO PTE. LTD.",
+      "score": 4.2,
+      "list": "category",
+      "category": "MAPS_AND_NAVIGATION",
+      "categoryRank": 10
+    },
+    {
+      "rank": 292,
+      "name": "Amazon Music: Songs & Podcasts",
+      "packageId": "com.amazon.mp3",
+      "developer": "Amazon Mobile LLC",
+      "score": 4.030641,
+      "list": "category",
+      "category": "MUSIC_AND_AUDIO",
+      "categoryRank": 10
+    },
+    {
+      "rank": 293,
+      "name": "Citizen: Protect The World",
+      "packageId": "sp0n.citizen",
+      "developer": "Sp0n Inc.",
+      "score": 4.527367,
+      "list": "category",
+      "category": "NEWS_AND_MAGAZINES",
+      "categoryRank": 10
+    },
+    {
+      "rank": 294,
+      "name": "Big Keyboard: Easy Homescreen",
+      "packageId": "com.bigkeyboardeasylauncher.biggerkeybuttonandroidlauncherapp",
+      "developer": "SwipeTap Apps",
+      "score": 4.4897814,
+      "list": "category",
+      "category": "PERSONALIZATION",
+      "categoryRank": 10
+    },
+    {
+      "rank": 295,
+      "name": "Google Photos",
+      "packageId": "com.google.android.apps.photos",
+      "developer": "Google LLC",
+      "score": 4.391753,
+      "list": "category",
+      "category": "PHOTOGRAPHY",
+      "categoryRank": 10
+    },
+    {
+      "rank": 296,
+      "name": "BAND - App for all groups",
+      "packageId": "com.nhn.android.band",
+      "developer": "NAVER Corp.",
+      "score": 4.8382263,
+      "list": "category",
+      "category": "SOCIAL",
+      "categoryRank": 10
+    },
+    {
+      "rank": 297,
+      "name": "DAZN - Watch Live Sports",
+      "packageId": "com.dazn",
+      "developer": "DAZN",
+      "score": 4.4317255,
+      "list": "category",
+      "category": "SPORTS",
+      "categoryRank": 10
+    },
+    {
+      "rank": 298,
+      "name": "earnify",
+      "packageId": "com.bp.app.bpme.global.ros",
+      "developer": "BP Products North America Inc",
+      "score": 4.703512,
+      "list": "category",
+      "category": "TRAVEL_AND_LOCAL",
+      "categoryRank": 10
+    },
+    {
+      "rank": 299,
+      "name": "DramaVibe - Dramas & Reels",
+      "packageId": "com.dramavibe.stream",
+      "developer": "Level Prestige",
+      "score": 3.9223301,
+      "list": "category",
+      "category": "VIDEO_PLAYERS",
+      "categoryRank": 10
+    },
+    {
+      "rank": 300,
+      "name": "Weather Forecast - Live Alerts",
+      "packageId": "com.weather.daily.local.live",
+      "developer": "RODRIGUEZCASTILLO FABIOLA",
+      "score": 4.5636363,
+      "list": "category",
+      "category": "WEATHER",
+      "categoryRank": 10
+    }
+  ]
+}
