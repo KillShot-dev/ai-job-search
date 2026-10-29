@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- MuseConfig SAMPLE — placeholders only. NEVER ship this file as-is
+	     and NEVER put a real key, secret, or token in it.
+	     SETUP (developer, before shipping):
+	       1. Copy this file to MuseConfig.plist (same folder) and add the
+	          COPY to the app target (target > Build Phases > Copy Bundle
+	          Resources). The sample itself must not be bundled: the app
+	          loads only MuseConfig.plist, and MuseConfig.load() rejects
+	          every placeholder value below, so an unedited copy fails
+	          closed with a "not configured" error instead of connecting.
+	       2. Replace every PLACEHOLDER value with real values from YOUR
+	          Meta developer dashboard, and VERIFY each one there before
+	          shipping: the Model API base URL, the OAuth client ID, the
+	          redirect URI, the scopes, and the model ID.
+	       3. Do NOT commit a filled-in MuseConfig.plist with real values
+	          to any shared repository: the client ID is not a password,
+	          but the configuration still belongs to your developer
+	          account. Tokens are never stored here — they live only in
+	          the macOS Keychain (see Services/MuseAuthService.swift).
+	     HONEST-DESIGN NOTE: the following are ONLY third-party-reported
+	     defaults, noted so you have a starting point to check — verify in
+	     your Meta developer dashboard before shipping; they are NOT
+	     Meta-confirmed facts and they are NOT active defaults anywhere
+	     in code (the active values below are placeholders that fail
+	     closed):
+	       third-party-reported base URL: https://api.meta.ai/v1
+	       third-party-reported model: muse-spark-1.3
+	     The authorize/token paths are derived from the base URL with
+	     conventional OAuth2 paths (see MuseConfig.swift); verify those
+	     paths in your Meta developer dashboard too. FileRadar is not
+	     affiliated with or endorsed by Meta. -->
+	<key>MuseBaseURL</key>
+	<string>YOUR_MODEL_API_BASE_URL</string>
+	<key>MuseClientID</key>
+	<string>YOUR_OAUTH_CLIENT_ID</string>
+	<key>MuseRedirectURI</key>
+	<string>fileradar://muse-callback</string>
+	<key>MuseScopes</key>
+	<array>
+		<string>YOUR_SCOPE_1</string>
+	</array>
+	<key>MuseModel</key>
+	<string>YOUR_MODEL_ID</string>
+</dict>
+</plist>

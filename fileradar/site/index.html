@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en" data-look="colourful" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FileRadar — A Finder alternative for Mac that organises your files</title>
+<meta name="description" content="FileRadar is a Finder alternative for Mac that organises downloads and files into shelves, finds things in plain language, and cleans up duplicates — all on your Mac, with nothing uploaded.">
+<!-- TODO: set the canonical URL once the real domain is registered (see config.js). No made-up live URL is used here. -->
+<link rel="stylesheet" href="styles.css">
+<script src="config.js" defer></script>
+<script src="script.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="wrap">
+  <header class="site">
+    <a class="logo" href="#" aria-label="FileRadar home">
+      <svg width="28" height="28" viewBox="0 0 28 28" role="img" aria-label="FileRadar logo: a radar sweep over a folder"><circle cx="14" cy="14" r="12" fill="none" stroke="#0a6cff" stroke-width="2"/><path d="M14 14 L22 8" stroke="#0a6cff" stroke-width="2" stroke-linecap="round"/><rect x="8" y="13" width="12" height="9" rx="2" fill="#0a6cff" opacity="0.85"/></svg>
+      FileRadar
+    </a>
+    <nav class="main" aria-label="Main">
+      <a href="#compare">Compared with Finder</a>
+      <a href="#features">Features</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div class="theme-controls" role="group" aria-label="Appearance">
+      <button type="button" data-look-btn="colourful" aria-pressed="true">Colourful</button>
+      <button type="button" data-look-btn="minimal" aria-pressed="false">Minimal</button>
+      <button type="button" data-mode-btn="light" aria-pressed="true">Light</button>
+      <button type="button" data-mode-btn="dark" aria-pressed="false">Dark</button>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- HERO: one job — say what FileRadar is, and what it does for you. -->
+    <section aria-labelledby="hero-heading">
+      <div class="hero-grid">
+        <div>
+          <p class="eyebrow">A Finder alternative for Mac</p>
+          <h1 id="hero-heading">Your downloads, finally in order.</h1>
+          <p class="lede">FileRadar organises your downloads and files into clear shelves by kind, so you can find what you saved — and clear what you no longer need — without digging through folders.</p>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="../demo/">Try the demo</a>
+            <button class="btn" id="buy-btn" type="button">Buy FileRadar</button>
+          </div>
+          <p class="note">One-time purchase, 1 Mac, USD. macOS 14 or later, Apple silicon and Intel.</p>
+          <div class="notice" id="buy-notice" hidden tabindex="-1">
+            <strong>Purchases are not open yet.</strong> There is no download binary and no live checkout on this page yet — buying will open at launch through Stripe Checkout, which is in test mode only during development. No payment is taken from this page, and no card details are collected here. Questions? Contact <a href="mailto:support@metaphasic.net">support@metaphasic.net</a>.
+          </div>
+        </div>
+        <div class="window" role="img" aria-label="Illustration of the FileRadar window: a search field, filter chips, and shelves for images, documents, and videos">
+          <div class="window-bar" aria-hidden="true"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+          <div class="window-body">
+            <div class="search-mock">Search in plain words, for example: “invoices from last month”</div>
+            <div class="chips" aria-hidden="true"><span class="chip">Documents</span><span class="chip">from last month</span><span class="chip">over 1 MB</span></div>
+            <div class="shelves" aria-hidden="true">
+              <div class="shelf"><span>🖼️</span>Images</div>
+              <div class="shelf"><span>📄</span>Documents</div>
+              <div class="shelf"><span>🎬</span>Videos</div>
+              <div class="shelf"><span>📦</span>Archives</div>
+              <div class="shelf"><span>🎵</span>Audio</div>
+              <div class="shelf"><span>📁</span>Everything else</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPARISON: honest, no unverifiable claims about Finder. -->
+    <section id="compare" aria-labelledby="compare-heading">
+      <h2 id="compare-heading">FileRadar and Finder, side by side</h2>
+      <p class="section-intro">Finder is the file browser built into every Mac, and FileRadar is designed to sit alongside that habit — not replace your files. This table describes what FileRadar adds as its own views; Finder remains available for everything else you already do with it.</p>
+      <div class="table-wrap">
+        <table>
+          <caption class="note" style="caption-side: bottom; text-align: left; padding-top: .75rem;">“In FileRadar” means a dedicated view in the app. “Not a built-in Finder view” means Finder does not present that same dedicated view; it does not mean the task is impossible in Finder by other means.</caption>
+          <thead><tr><th scope="col">What you want to do</th><th scope="col">FileRadar</th><th scope="col">Finder</th></tr></thead>
+          <tbody>
+            <tr><td>See downloads grouped by kind</td><td>Shelves by kind</td><td>Not a built-in Finder view</td></tr>
+            <tr><td>Search in plain words with filter chips</td><td>Natural-language search with chips</td><td>Search with its own filters</td></tr>
+            <tr><td>Find text inside images and scans</td><td>On-device OCR</td><td>Not a built-in Finder view</td></tr>
+            <tr><td>See where a download came from</td><td>Downloaded From grouping</td><td>Not a built-in Finder view</td></tr>
+            <tr><td>Find duplicate files</td><td>Duplicates view</td><td>Not a built-in Finder view</td></tr>
+            <tr><td>Review and clear unneeded files</td><td>Clean Up view</td><td>Manual, file by file</td></tr>
+            <tr><td>Search from anywhere on your Mac</td><td>Quick Search + menu bar</td><td>Spotlight search</td></tr>
+            <tr><td>Browse files by when you got them</td><td>Timeline</td><td>Sort by date added</td></tr>
+            <tr><td>See what is taking up space</td><td>Disk map</td><td>Storage overview in System Settings</td></tr>
+            <tr><td>Keep versions of a file together</td><td>Version stacks</td><td>Not a built-in Finder view</td></tr>
+            <tr><td>Rename many files at once</td><td>Batch rename</td><td>Built-in rename options</td></tr>
+            <tr><td>Let files sort themselves</td><td>Auto-tags</td><td>Tags you apply yourself</td></tr>
+            <tr><td>Know when space will run out</td><td>Storage forecast</td><td>Not a built-in Finder view</td></tr>
+            <tr><td>Check files for problems</td><td>File-health checks</td><td>Not a built-in Finder view</td></tr>
+            <tr><td>Share a set of files as one package</td><td>Parcel export</td><td>Compress into an archive</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features" aria-labelledby="features-heading">
+      <p class="eyebrow">What it does</p>
+      <h2 id="features-heading">One job per view. Nothing hidden in menus.</h2>
+      <p class="section-intro">Each view below does one thing well. Your files stay where they are — FileRadar organises how you see them, and cleanup sends things to the Trash, never straight to permanent deletion, so you can undo.</p>
+      <div class="grid">
+        <article class="card"><div class="icon" aria-hidden="true">🗂️</div><h3>Shelves by kind</h3><p>Images, documents, videos, audio, archives and the rest, each on its own shelf — so a download has a visible home the moment it lands.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">🔎</div><h3>Natural-language search</h3><p>Type like you talk — “invoices from last month” — and watch filter chips form from your words. Edit a chip to narrow the results.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">📝</div><h3>On-device OCR</h3><p>Text inside images and scans becomes searchable, processed entirely on your Mac. Nothing is sent anywhere to make it work.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">⬇️</div><h3>Downloaded From grouping</h3><p>See downloads grouped by where they came from, so you can retrace a file to its source instead of guessing.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">👯</div><h3>Duplicates</h3><p>Find copies of the same file, compare them side by side, and choose what to keep. You confirm before anything moves to the Trash.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">🧹</div><h3>Clean Up</h3><p>A calm review of large, old, or unneeded files, with a clear summary of what will go to the Trash — and an undo for mistakes.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">⚡</div><h3>Quick Search</h3><p>Find a file from anywhere with a keyboard shortcut, without opening a window first.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">▾</div><h3>Menu bar</h3><p>Recent files and Quick Search live in the menu bar, a click away, and you can drag files straight out of it.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">🕰️</div><h3>Timeline</h3><p>Browse your files by when they arrived. Scrolling back through time is often faster than remembering a filename.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">🗺️</div><h3>Disk map</h3><p>A visual map of what is using your disk space, so the biggest folders are obvious at a glance.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">📚</div><h3>Version stacks</h3><p>Revisions of the same file stay stacked together, with the latest on top and earlier versions one click away.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">✏️</div><h3>Batch rename</h3><p>Rename many files in one pass with a live preview of every new name before anything changes.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">🏷️</div><h3>Auto-tags</h3><p>Tags suggested in plain words, with an explanation of why each one was suggested. You keep the final say.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">📈</div><h3>Storage forecast</h3><p>A plain estimate of when your disk will fill up at your current pace, so a full disk does not surprise you.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">🩺</div><h3>File-health checks</h3><p>Flags files that look incomplete, empty, or damaged, so problems surface before you need the file.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">📦</div><h3>Parcel export</h3><p>Bundle a set of files into one tidy package to share or archive, with its contents listed plainly.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">▦</div><h3>Dual-pane mode</h3><p>Optional, and off by default: turn on a second pane when you need it, and drag files between panes. The shelves view stays the default.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">🗃️</div><h3>Drop Stack</h3><p>A temporary holding tray in the sidebar: drop files onto it while you gather them, then drop the whole stack where it belongs.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">⏳</div><h3>Transfer queue</h3><p>In the app, every copy and move goes through one queue with progress, pause, and cancel — so bulk work never blocks the window.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">🗂️</div><h3>Tabs</h3><p>Open several locations in tabs in one window. In the app, your tabs come back when you relaunch; in the demo, they last for the session.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">💾</div><h3>Saved workspaces</h3><p>Named layouts that restore your sidebar, panes, and tabs in one click. A full-version feature — locked in the demo.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">📏</div><h3>Folder sizes, on demand</h3><p>Sizes are worked out in the background and shown in place, with more ways to sort — never a blocking scan.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">🔍</div><h3>Modular inspector</h3><p>Preview, Info, Tags, and Permissions as collapsible modules in one inspector. In the demo, Permissions are illustrative only.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">🗜️</div><h3>Archive browsing</h3><p>Open an archive as if it were a folder, read-only, and extract only what you need, on demand. A full-version feature — locked in the demo.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">⌘</div><h3>Command palette</h3><p>Press Cmd-K for every action, with full keyboard navigation — no need to hunt through menus.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">⇄</div><h3>Folder sync and compare</h3><p>Preview what differs before anything happens; the only destructive step is moving previewed files to the Trash, after you confirm. A full-version feature — locked in the demo.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">🌿</div><h3>Git status badges</h3><p>In the app, read-only Git status badges, opt-in and off by default — see a file's Git status at a glance without changing anything.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">💬</div><h3>Muse chat in FileRadar</h3><p>Ask about your files in plain words and act on them from inside FileRadar, with your approval before anything moves. Chat is powered by Muse Spark through Meta's Model API and requires a Meta developer configuration. Your personal Muse app history and memory do not carry over into FileRadar, and FileRadar is not affiliated with or endorsed by Meta.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">🔐</div><h3>Extremely secure login</h3><p>Sign in to Muse chat through a secure authorisation flow that exchanges a one-time code for access, and keep the resulting credentials in your Mac's Keychain — not in a plain file. Nothing about your sign-in is shared beyond what the login itself needs.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">🎙️</div><h3>Voice</h3><p>Speak your request instead of typing it, and hear a spoken reply back, so you can ask about your files hands-free. Voice input and replies are part of the Muse chat experience in the app; the web demo does not include a live voice session.</p></article>
+      </div>
+      <p class="note">About Muse chat: it is powered by Muse Spark through Meta's Model API and requires a Meta developer configuration. Your personal Muse app history and memory do not carry over into FileRadar. FileRadar is not affiliated with or endorsed by Meta.</p>
+    </section>
+
+    <!-- PRIVACY + REQUIREMENTS -->
+    <section aria-labelledby="privacy-heading">
+      <div class="two-col">
+        <div>
+          <h2 id="privacy-heading">Private by design</h2>
+          <p class="section-intro">No account. Nothing uploaded. FileRadar works entirely on your Mac: indexing, search, and OCR all happen on-device, and your files never leave your computer to use it.</p>
+        </div>
+        <div>
+          <h2 id="requirements-heading">System requirements</h2>
+          <p class="section-intro">macOS 14 or later. Works on Apple silicon and Intel Macs. FileRadar is a native Mac app with full keyboard navigation and VoiceOver support.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRICING -->
+    <section id="pricing" aria-labelledby="pricing-heading">
+      <p class="eyebrow">Pricing</p>
+      <h2 id="pricing-heading">One price. Yours to keep.</h2>
+      <div class="price-box">
+        <p class="price" id="current-price">$8 at launch</p>
+        <p><strong>One-time purchase, 1 Mac, USD.</strong> No subscription, no account required.</p>
+        <p id="price-status">Launch date not yet announced. The launch price window has not started.</p>
+        <p class="note" id="price-window">Launch window: first 60 days after the launch date (to be announced).</p>
+        <p class="note">How this works: the launch price of $8 applies for the first 60 days after launch, then the price becomes $19. The launch date is set in the site configuration — it is not fixed to today — so the window above is calculated from that date once it is announced. Buying is not open yet; see the note under the Buy button above.</p>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" aria-labelledby="faq-heading">
+      <h2 id="faq-heading">Questions, answered plainly</h2>
+      <details><summary>What is FileRadar?</summary><p>A Finder alternative for Mac that organises your downloads and files into shelves by kind, helps you search in plain language, and helps you clean up duplicates and unneeded files.</p></details>
+      <details><summary>Does FileRadar replace Finder?</summary><p>No. Your files stay where they are, and Finder stays available. FileRadar gives you additional views — shelves, Timeline, disk map, Clean Up — for finding and tidying files.</p></details>
+      <details><summary>Does FileRadar upload my files anywhere?</summary><p>No. There is no account, and indexing, search, and OCR all run on your Mac. Nothing is uploaded.</p></details>
+      <details><summary>What does FileRadar cost?</summary><p>A one-time purchase of $8 for the first 60 days after launch, then $19 — for 1 Mac, in USD. There is no subscription. The launch date has not been announced yet, so the launch window has not started.</p></details>
+      <details><summary>Can I try it before buying?</summary><p>Yes — try the demo linked at the top of this page. A downloadable app is not available yet; it will be offered at launch.</p></details>
+      <details><summary>What Macs does it run on?</summary><p>macOS 14 or later, on both Apple silicon and Intel Macs.</p></details>
+      <details><summary>What happens to files I clean up?</summary><p>They go to the Trash, not to permanent deletion, so you can recover them. Bulk actions ask you to confirm first, and you can undo.</p></details>
+      <details><summary>What is the refund policy?</summary><p>Contact <a href="mailto:support@metaphasic.net">support@metaphasic.net</a> about refunds.</p></details>
+      <details><summary>Who makes FileRadar?</summary><p>FileRadar is made by metaPhasic Group. For support, contact <a href="mailto:support@metaphasic.net">support@metaphasic.net</a>.</p></details>
+    </section>
+  </main>
+
+  <footer class="site">
+    <p>FileRadar by metaPhasic Group · Support: <a href="mailto:support@metaphasic.net">support@metaphasic.net</a></p>
+    <p class="note">This page describes a product under development. No download binary, live checkout, or launch date exists yet, and nothing on this page takes a payment. © <span id="year">2026</span> metaPhasic Group.</p>
+  </footer>
+</div>
+</body>
+</html>
