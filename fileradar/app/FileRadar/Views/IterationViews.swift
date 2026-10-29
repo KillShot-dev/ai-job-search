@@ -71,10 +71,13 @@ struct DropStackView: View {
     }
 
     private func placeStack() {
-        // Persist grant so Place Stack destinations stay accessible after relaunch.
-        guard let folder = SecurityBookmarkStore.pickAndStoreFolder() else { return }
-        queue.enqueueMove(stack.urls, to: folder)
-        stack.clear()
+        // Defer NSOpenPanel out of the SwiftUI action turn (modal + layout crash).
+        DispatchQueue.main.async {
+            guard let folder = SecurityBookmarkStore.pickAndStoreFolder() else { return }
+            let canonical = folder.resolvingSymlinksInPath().standardizedFileURL
+            queue.enqueueMove(stack.urls, to: canonical)
+            stack.clear()
+        }
     }
 }
 
@@ -557,10 +560,18 @@ struct DualPaneView: View {
 
 /// Immediate children of a folder for dual-pane browsing (index + disk fallback).
 enum FolderBrowser {
+    /// Sandbox `homeDirectory/Downloads` is a symlink into the real Downloads
+    /// tree. `standardizedFileURL` does not resolve it, so container tabs never
+    /// matched indexed children under `/Users/…/Downloads` — empty dual panes
+    /// with live chrome that looked dead.
+    static func canonicalPath(_ url: URL) -> String {
+        url.resolvingSymlinksInPath().standardizedFileURL.path
+    }
+
     static func children(of folder: URL, indexed: [FileItem]) -> [FileItem] {
-        let standardized = folder.standardizedFileURL
+        let folderPath = canonicalPath(folder)
         let fromIndex = indexed.filter {
-            $0.url.deletingLastPathComponent().standardizedFileURL.path == standardized.path
+            canonicalPath($0.url.deletingLastPathComponent()) == folderPath
         }
         // Index only. A contentsOfDirectory fallback here ran on the main actor
         // during every body eval and blocked in open() on Files-and-Folders TCC

@@ -67,7 +67,10 @@ final class FileStore: ObservableObject {
         indexingTask?.cancel()
         enrichmentTask?.cancel()
         isIndexing = true
-        let scoped = SecurityBookmarkStore.startAccessing(folders)
+        // Canonicalize before walk so FileItem URLs match dual-pane folder tabs
+        // (sandbox Downloads symlink → real ~/Downloads).
+        let canonical = folders.map { $0.resolvingSymlinksInPath().standardizedFileURL }
+        let scoped = SecurityBookmarkStore.startAccessing(canonical)
         folderWatcher?.stop()
         folderWatcher = FolderWatcher(folders: scoped) { [weak self] in
             Task { @MainActor in self?.requestRefresh() }
@@ -130,12 +133,21 @@ final class FileStore: ObservableObject {
     }
 
     /// Add a user-picked folder via security-scoped bookmark and re-index.
+    /// NSOpenPanel must not run synchronously inside a SwiftUI button / AXPress
+    /// action — that nested `runModal` during layout throws
+    /// `_postWindowNeedsUpdateConstraints` and kills the window (EXC_BREAKPOINT).
     func addFolderInteractive() {
-        guard let folder = SecurityBookmarkStore.pickAndStoreFolder() else { return }
-        if !pinnedFolderURLs.contains(folder) {
-            pinnedFolderURLs.append(folder)
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            guard let folder = SecurityBookmarkStore.pickAndStoreFolder() else { return }
+            let canonical = folder.resolvingSymlinksInPath().standardizedFileURL
+            if !self.pinnedFolderURLs.contains(where: {
+                $0.resolvingSymlinksInPath().path == canonical.path
+            }) {
+                self.pinnedFolderURLs.append(canonical)
+            }
+            self.refreshIndex()
         }
-        refreshIndex()
     }
 
     /// Remove indexed entries by path id and clear selection for them.
@@ -370,19 +382,25 @@ enum FolderAccessConsent {
     }
 
     static var downloadsURL: URL {
-        FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Downloads")
+        // Resolve the container Downloads symlink so tabs / index / FolderBrowser
+        // share one canonical path (standardizedFileURL alone does not).
+        FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Downloads")
+            .resolvingSymlinksInPath()
     }
 
     /// True when disk listing is safe (won't block main on TCC).
     /// Downloads uses the sandbox entitlement — always listable.
     /// Other roots need a stored security-scoped bookmark.
     static func canBrowse(_ url: URL) -> Bool {
-        let path = url.standardizedFileURL.path
-        if path == downloadsURL.path || path.hasPrefix(downloadsURL.path + "/") {
+        let path = url.resolvingSymlinksInPath().standardizedFileURL.path
+        let downloads = downloadsURL.path
+        if path == downloads || path.hasPrefix(downloads + "/") {
             return true
         }
         if SecurityBookmarkStore.storedPaths.contains(where: {
-            path == $0 || path.hasPrefix($0 + "/")
+            let root = URL(fileURLWithPath: $0).resolvingSymlinksInPath().standardizedFileURL.path
+            return path == root || path.hasPrefix(root + "/")
         }) { return true }
         return false
     }

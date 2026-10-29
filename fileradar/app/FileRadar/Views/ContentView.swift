@@ -89,27 +89,43 @@ struct ContentView: View {
     private var chromeAccent: Color { chromeView.accent }
 
     var body: some View {
-        ZStack {
-            splitChrome
-                .tint(chromeAccent)
-                .preferredColorScheme(theme.colorScheme)
-                .fileRadarAtmosphere(theme.look)
-                // While the consent card is up, chrome must not receive hits
-                // (Drop Stack / transfer dock previously sat above the card).
-                .allowsHitTesting(!showFolderAccess)
-                .modifier(ContentSheetsModifier(
-                    showLicense: $showLicense,
-                    showPalette: $showPalette,
-                    showBatchRename: $showBatchRename,
-                    selectedFiles: selectedFiles,
-                    onPalette: performPalette,
-                    onRenameApplied: { plan in
-                        for (old, newURL) in plan {
-                            store.updateFileURL(from: old.url, to: newURL)
-                        }
+        // Consent as overlay only — do NOT gate chrome with
+        // `.allowsHitTesting(!showFolderAccess)`. That modifier left the
+        // hosting view non-interactive after dismiss on some launches
+        // (menus still worked; toolbar/sidebar mouse + AX content did not).
+        splitChrome
+            .tint(chromeAccent)
+            .preferredColorScheme(theme.colorScheme)
+            .fileRadarAtmosphere(theme.look)
+            .overlay {
+                if showFolderAccess {
+                    ZStack {
+                        // Dimmer intercepts chrome hits only while consent is up.
+                        Color.black.opacity(0.45)
+                            .ignoresSafeArea()
+                            .contentShape(Rectangle())
+                            .accessibilityHidden(true)
+                        FolderAccessOnboardingView(
+                            onChooseFolders: handleOnboardingChooseFolders,
+                            onStartDownloads: handleOnboardingStartDownloads,
+                            onSkip: handleOnboardingSkip
+                        )
                     }
-                ))
-                .modifier(ContentNotificationsModifier(
+                }
+            }
+            .modifier(ContentSheetsModifier(
+                showLicense: $showLicense,
+                showPalette: $showPalette,
+                showBatchRename: $showBatchRename,
+                selectedFiles: selectedFiles,
+                onPalette: performPalette,
+                onRenameApplied: { plan in
+                    for (old, newURL) in plan {
+                        store.updateFileURL(from: old.url, to: newURL)
+                    }
+                }
+            ))
+            .modifier(ContentNotificationsModifier(
                 destination: $destination,
                 searchText: $searchText,
                 showBatchRename: $showBatchRename,
@@ -125,7 +141,12 @@ struct ContentView: View {
                 onSelectAll: selectAllVisible,
                 onTrashSelection: trashSelected
             ))
-            .onAppear(perform: bootstrap)
+            .onAppear {
+                bootstrap()
+                // Hardening: some launches left the WindowGroup ordered front
+                // but not key / mouse-ready after onboarding overlay work.
+                FileRadarAppDelegate.activateMainWindow()
+            }
             .onChange(of: chromeViewRaw) { _, _ in
                 applyChromeDefaults()
             }
@@ -145,15 +166,17 @@ struct ContentView: View {
                     dualPaneEnabled = true
                 } else if case .pinned(let url) = new {
                     // Standard-place / pin tags drive folder browse without a Button wrapper.
-                    if standardPlaces.contains(where: { $0.path == url.path }) {
+                    if standardPlaces.contains(where: {
+                        $0.resolvingSymlinksInPath().path == url.resolvingSymlinksInPath().path
+                    }) {
                         openStandardPlace(url)
                     } else if FolderAccessConsent.canBrowse(url) {
-                        tabState.setFirstFolder(url)
+                        tabState.setFirstFolder(url.resolvingSymlinksInPath().standardizedFileURL)
                         dualPaneEnabled = true
                     }
                 } else if case .favorite(let url) = new {
                     if FolderAccessConsent.canBrowse(url) {
-                        tabState.setFirstFolder(url)
+                        tabState.setFirstFolder(url.resolvingSymlinksInPath().standardizedFileURL)
                         dualPaneEnabled = true
                     }
                 }
@@ -171,22 +194,6 @@ struct ContentView: View {
                 QuickLookHelper.shared.show(files: selected)
                 return .handled
             }
-
-            if showFolderAccess {
-                // Dimmer is behind the card only — never a transparent plate above buttons.
-                Color.black.opacity(0.45)
-                    .ignoresSafeArea()
-                    .contentShape(Rectangle())
-                    .accessibilityHidden(true)
-
-                FolderAccessOnboardingView(
-                    onChooseFolders: handleOnboardingChooseFolders,
-                    onStartDownloads: handleOnboardingStartDownloads,
-                    onSkip: handleOnboardingSkip
-                )
-                .zIndex(1)
-            }
-        }
     }
 
     /// NSOpenPanel over the root overlay (not a SwiftUI sheet). Card stays
@@ -785,30 +792,40 @@ struct ContentView: View {
         }
         // User previously consented but this root was not among bookmarks —
         // add it through the shared multi-select panel (one dialog).
-        if let folders = SecurityBookmarkStore.pickAndStoreFolders(), !folders.isEmpty {
-            tabState.setFirstFolder(folders[0])
-            destination = .browser
-            dualPaneEnabled = true
-            store.refreshIndex()
+        // Defer panel so it is not nested in the SwiftUI update/layout pass.
+        DispatchQueue.main.async {
+            if let folders = SecurityBookmarkStore.pickAndStoreFolders(), !folders.isEmpty {
+                let canonical = folders[0].resolvingSymlinksInPath().standardizedFileURL
+                tabState.setFirstFolder(canonical)
+                destination = .browser
+                dualPaneEnabled = true
+                store.refreshIndex()
+            }
         }
     }
 
     private func chooseLeftPaneFolder() {
-        // Reuse bookmark-aware picker so grants persist and do not stack with
-        // a bare NSOpenPanel that never stores scope.
-        guard let folder = SecurityBookmarkStore.pickAndStoreFolder() else { return }
-        tabState.setFirstFolder(folder)
-        activeIsRight = false
-        destination = .browser
-        store.refreshIndex()
+        // Defer NSOpenPanel — synchronous runModal inside SwiftUI actions
+        // crashes the window via Update Constraints during the modal loop.
+        DispatchQueue.main.async {
+            guard let folder = SecurityBookmarkStore.pickAndStoreFolder() else { return }
+            let canonical = folder.resolvingSymlinksInPath().standardizedFileURL
+            tabState.setFirstFolder(canonical)
+            activeIsRight = false
+            destination = .browser
+            store.refreshIndex()
+        }
     }
 
     private func chooseRightPaneFolder() {
-        guard let folder = SecurityBookmarkStore.pickAndStoreFolder() else { return }
-        tabState.setSecondFolder(folder)
-        activeIsRight = true
-        destination = .browser
-        store.refreshIndex()
+        DispatchQueue.main.async {
+            guard let folder = SecurityBookmarkStore.pickAndStoreFolder() else { return }
+            let canonical = folder.resolvingSymlinksInPath().standardizedFileURL
+            tabState.setSecondFolder(canonical)
+            activeIsRight = true
+            destination = .browser
+            store.refreshIndex()
+        }
     }
 
     private func trashSelected() {

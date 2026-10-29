@@ -10,11 +10,10 @@ final class FileRadarAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidBecomeActive(_ notification: Notification) {
-        // Only reclaim when nothing is key/main — never steal from a valid
-        // Settings / inspector key window via a width heuristic.
-        if NSApp.keyWindow == nil && NSApp.mainWindow == nil {
-            Self.activateMainWindow()
-        }
+        // Only now is makeKeyAndOrderFront reliable — while `isActive` is
+        // false (common at launch beside MenuBarExtra / other agents),
+        // makeKey silently fails and toolbar mouse + AX content stay dead.
+        Self.keyContentWindow(attempt: 0)
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -25,25 +24,53 @@ final class FileRadarAppDelegate: NSObject, NSApplicationDelegate {
     @MainActor
     static func activateMainWindow() {
         NSApplication.shared.setActivationPolicy(.regular)
+        NSRunningApplication.current.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
         NSApplication.shared.activate(ignoringOtherApps: true)
         DispatchQueue.main.async {
-            // Never steal key from an attached sheet / modal session — that
-            // left the folder-access card visible but unclickable.
-            if let key = NSApp.keyWindow, key.attachedSheet != nil { return }
-            if NSApp.windows.contains(where: \.isSheet) { return }
-            let main = NSApplication.shared.windows.first(where: { window in
-                guard window.canBecomeKey,
-                      window.frame.width >= 400,
-                      window.frame.height >= 300 else { return false }
-                // Skip panels / popovers / non-activating chrome — they must
-                // not become the "main" content window for click routing.
-                if window is NSPanel { return false }
-                if window.styleMask.contains(.nonactivatingPanel) { return false }
-                return true
-            }) ?? NSApplication.shared.windows.first(where: {
-                !($0 is NSPanel) && !$0.styleMask.contains(.nonactivatingPanel)
-            })
-            main?.makeKeyAndOrderFront(nil)
+            Self.keyContentWindow(attempt: 0)
+        }
+    }
+
+    @MainActor
+    static func keyContentWindow(attempt: Int) {
+        // Never steal key from an attached sheet / active modal.
+        if let key = NSApp.keyWindow, key.attachedSheet != nil { return }
+        if NSApp.modalWindow != nil { return }
+
+        let main = NSApplication.shared.windows.first(where: { window in
+            guard window.canBecomeKey,
+                  window.frame.width >= 400,
+                  window.frame.height >= 300 else { return false }
+            if window is NSPanel { return false }
+            if window.styleMask.contains(.nonactivatingPanel) { return false }
+            if window.isSheet { return false }
+            return true
+        })
+
+        // If we are not the active app yet, wait for applicationDidBecomeActive
+        // rather than spinning makeKey while inactive (it cannot succeed).
+        guard NSApp.isActive else { return }
+        guard let main else {
+            if attempt < 6 {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    Self.keyContentWindow(attempt: attempt + 1)
+                }
+            }
+            return
+        }
+        if main.isKeyWindow { return }
+
+        main.ignoresMouseEvents = false
+        main.orderFrontRegardless()
+        main.makeKeyAndOrderFront(nil)
+        if main.firstResponder == nil || main.firstResponder === main {
+            main.makeFirstResponder(main.contentView)
+        }
+
+        if !main.isKeyWindow, attempt < 8 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                Self.keyContentWindow(attempt: attempt + 1)
+            }
         }
     }
 }

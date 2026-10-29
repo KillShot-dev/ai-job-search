@@ -269,7 +269,9 @@ final class TabState: ObservableObject {
         if let data = UserDefaults.standard.data(forKey: key),
            let saved = try? JSONDecoder().decode([TabItem].self, from: data),
            !saved.isEmpty {
-            let granted = saved.filter { FolderAccessConsent.canBrowse($0.folder) }
+            let granted = saved
+                .map { TabItem(id: $0.id, folder: $0.folder.resolvingSymlinksInPath().standardizedFileURL) }
+                .filter { FolderAccessConsent.canBrowse($0.folder) }
             if !granted.isEmpty {
                 tabs = granted
                 selectedID = granted.first?.id
@@ -292,6 +294,7 @@ final class TabState: ObservableObject {
     /// After the single consent sheet, pin dual-pane to granted roots.
     func seedDefaultsAfterConsent() {
         let bookmarks = SecurityBookmarkStore.resolvedFolders()
+            .map { $0.resolvingSymlinksInPath().standardizedFileURL }
         let downloads = FolderAccessConsent.downloadsURL
         var roots: [URL] = Array(bookmarks.prefix(2))
         if roots.isEmpty, FolderAccessConsent.useDownloadsEntitlement {
@@ -303,7 +306,8 @@ final class TabState: ObservableObject {
         if roots.isEmpty {
             roots = [downloads]
         }
-        tabs = roots.map { TabItem(folder: $0) }
+        // Persist canonical paths so relaunch tabs match the index.
+        tabs = roots.map { TabItem(folder: $0.resolvingSymlinksInPath().standardizedFileURL) }
         selectedID = tabs.first?.id
     }
 
@@ -323,28 +327,30 @@ final class TabState: ObservableObject {
 
     /// Pin the dual-pane left side to a chosen folder.
     func setFirstFolder(_ folder: URL) {
+        let canonical = folder.resolvingSymlinksInPath().standardizedFileURL
         if tabs.isEmpty {
-            addTab(folder: folder)
+            addTab(folder: canonical)
             return
         }
         var next = tabs
-        next[0].folder = folder
+        next[0].folder = canonical
         tabs = next
         selectedID = next[0].id
     }
 
     /// Pin the dual-pane right side to a chosen folder (creates/selects a tab).
     func setSecondFolder(_ folder: URL) {
+        let canonical = folder.resolvingSymlinksInPath().standardizedFileURL
         if tabs.count > 1 {
             var next = tabs
-            next[1].folder = folder
+            next[1].folder = canonical
             tabs = next
         } else if tabs.count == 1 {
-            addTab(folder: folder)
+            addTab(folder: canonical)
         } else {
             let home = FileManager.default.homeDirectoryForCurrentUser
-            addTab(folder: home.appendingPathComponent("Documents"))
-            addTab(folder: folder)
+            addTab(folder: home.appendingPathComponent("Documents").resolvingSymlinksInPath())
+            addTab(folder: canonical)
         }
     }
 

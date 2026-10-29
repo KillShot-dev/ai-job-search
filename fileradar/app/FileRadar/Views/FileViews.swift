@@ -312,8 +312,13 @@ struct FileCollectionView: View {
     @ViewBuilder
     private var content: some View {
         if files.isEmpty {
-            EmptyStateView(title: "Nothing here yet",
-                           message: "Files of this kind will appear here once they are indexed. Nothing has been moved or deleted.")
+            if store.isIndexing {
+                EmptyStateView(title: "Indexing…",
+                               message: "Scanning granted folders off the main thread. Files will appear here when this folder’s entries are ready.")
+            } else {
+                EmptyStateView(title: "Nothing here yet",
+                               message: "Files of this kind will appear here once they are indexed. Nothing has been moved or deleted.")
+            }
         } else if store.viewMode == .columns {
             ColumnBrowserView(rootFiles: files)
         } else if store.viewMode == .grid || store.viewMode == .showcase {
