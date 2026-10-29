@@ -40,10 +40,12 @@ final class HotkeyService {
     private var localMonitor: Any?
 
     func start() {
+        // KeyDown only — never install a mouse monitor here. Returning nil from
+        // a local mouse monitor would swallow clicks app-wide (dead UI).
         localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             if event.modifierFlags.contains([.command, .shift]) && event.keyCode == 49 { // Space
                 Task { @MainActor in QuickSearchPanel.shared.show() }
-                return nil
+                return nil // swallow only the Quick Search chord
             }
             return event
         }
