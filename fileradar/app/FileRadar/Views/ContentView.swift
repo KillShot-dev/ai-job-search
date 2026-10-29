@@ -93,13 +93,15 @@ struct ContentView: View {
         // `.allowsHitTesting(!showFolderAccess)`. That modifier left the
         // hosting view non-interactive after dismiss on some launches
         // (menus still worked; toolbar/sidebar mouse + AX content did not).
+        // Gate the overlay *layer* itself so an empty overlay never eats hits.
         splitChrome
             .tint(chromeAccent)
             .preferredColorScheme(theme.colorScheme)
             .fileRadarAtmosphere(theme.look)
+            .background(WindowClickPathConfigurator())
             .overlay {
-                if showFolderAccess {
-                    ZStack {
+                ZStack {
+                    if showFolderAccess {
                         // Dimmer intercepts chrome hits only while consent is up.
                         Color.black.opacity(0.45)
                             .ignoresSafeArea()
@@ -112,6 +114,7 @@ struct ContentView: View {
                         )
                     }
                 }
+                .allowsHitTesting(showFolderAccess)
             }
             .modifier(ContentSheetsModifier(
                 showLicense: $showLicense,

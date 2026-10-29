@@ -1,11 +1,15 @@
 import SwiftUI
 import AppKit
+import ObjectiveC
 
 /// Ensures a regular activation policy and a key main window so clicks
 /// reach content views. MenuBarExtra / Settings scenes must not steal
 /// first-responder focus at launch.
 final class FileRadarAppDelegate: NSObject, NSApplicationDelegate {
+    private static var didInstallClickPathGuard = false
+
     func applicationDidFinishLaunching(_ notification: Notification) {
+        Self.installClickPathGuardIfNeeded()
         Self.activateMainWindow()
     }
 
@@ -13,7 +17,9 @@ final class FileRadarAppDelegate: NSObject, NSApplicationDelegate {
         // Only now is makeKeyAndOrderFront reliable — while `isActive` is
         // false (common at launch beside MenuBarExtra / other agents),
         // makeKey silently fails and toolbar mouse + AX content stay dead.
+        Self.clearMouseIgnoreFlags()
         Self.keyContentWindow(attempt: 0)
+        Self.writeKeyDiagIfRequested(reason: "didBecomeActive")
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -21,23 +27,86 @@ final class FileRadarAppDelegate: NSObject, NSApplicationDelegate {
         return true
     }
 
+    /// Local mouseDown never swallows events (always returns the event).
+    /// Reclaims key if an NSPanel / overlay left the Browser non-key while
+    /// the app is active — the classic “menus work, toolbar dead” state.
     @MainActor
-    static func activateMainWindow() {
-        NSApplication.shared.setActivationPolicy(.regular)
-        NSRunningApplication.current.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
-        NSApplication.shared.activate(ignoringOtherApps: true)
-        DispatchQueue.main.async {
-            Self.keyContentWindow(attempt: 0)
+    static func installClickPathGuardIfNeeded() {
+        guard !didInstallClickPathGuard else { return }
+        didInstallClickPathGuard = true
+        AcceptsFirstMouseFix.install()
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.didChangeOcclusionStateNotification,
+            object: nil,
+            queue: .main
+        ) { note in
+            guard let window = note.object as? NSWindow,
+                  window.occlusionState.contains(.visible) else { return }
+            Self.hardenContentWindow(window)
+            if NSApp.isActive { Self.keyContentWindow(attempt: 0) }
+            Self.writeKeyDiagIfRequested(reason: "occlusionVisible")
+        }
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.didBecomeKeyNotification,
+            object: nil,
+            queue: .main
+        ) { note in
+            guard let window = note.object as? NSWindow else { return }
+            Self.hardenContentWindow(window)
+            Self.writeKeyDiagIfRequested(reason: "didBecomeKey")
+        }
+        _ = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { event in
+            // Never return nil — mouse monitors that swallow clicks are a
+            // documented dead-UI failure mode (HotkeyService only watches keys).
+            // Monitors run on the main thread; reclaim key synchronously so this
+            // same click can land on toolbar / sidebar after acceptsFirstMouse.
+            Self.clearMouseIgnoreFlags()
+            if NSApp.isActive {
+                let key = NSApp.keyWindow
+                let needsKey = key == nil
+                    || key is NSPanel
+                    || key?.styleMask.contains(.nonactivatingPanel) == true
+                if needsKey { Self.keyContentWindow(attempt: 0) }
+            }
+            return event
         }
     }
 
     @MainActor
-    static func keyContentWindow(attempt: Int) {
-        // Never steal key from an attached sheet / active modal.
-        if let key = NSApp.keyWindow, key.attachedSheet != nil { return }
-        if NSApp.modalWindow != nil { return }
+    static func activateMainWindow() {
+        NSApplication.shared.setActivationPolicy(.regular)
+        // NSRunningApplication.activateIgnoringOtherApps is a no-op on macOS 14+;
+        // keep NSApp.activate(ignoringOtherApps:) which still requests activation.
+        NSRunningApplication.current.activate(options: [.activateAllWindows])
+        NSApplication.shared.activate(ignoringOtherApps: true)
+        DispatchQueue.main.async {
+            Self.clearMouseIgnoreFlags()
+            Self.keyContentWindow(attempt: 0)
+            Self.writeKeyDiagIfRequested(reason: "activateMainWindow")
+        }
+    }
 
-        let main = NSApplication.shared.windows.first(where: { window in
+    @MainActor
+    static func clearMouseIgnoreFlags() {
+        for window in NSApp.windows where !(window is NSPanel) {
+            if window.ignoresMouseEvents {
+                window.ignoresMouseEvents = false
+            }
+        }
+    }
+
+    @MainActor
+    static func hardenContentWindow(_ window: NSWindow) {
+        if window is NSPanel { return }
+        if window.styleMask.contains(.nonactivatingPanel) { return }
+        if window.isSheet { return }
+        window.ignoresMouseEvents = false
+        window.acceptsMouseMovedEvents = true
+    }
+
+    @MainActor
+    static func contentWindows() -> [NSWindow] {
+        NSApplication.shared.windows.filter { window in
             guard window.canBecomeKey,
                   window.frame.width >= 400,
                   window.frame.height >= 300 else { return false }
@@ -45,7 +114,18 @@ final class FileRadarAppDelegate: NSObject, NSApplicationDelegate {
             if window.styleMask.contains(.nonactivatingPanel) { return false }
             if window.isSheet { return false }
             return true
-        })
+        }
+    }
+
+    @MainActor
+    static func keyContentWindow(attempt: Int) {
+        // Never steal key from an attached sheet / active modal / Quick Look.
+        if let key = NSApp.keyWindow, key.attachedSheet != nil { return }
+        if NSApp.modalWindow != nil { return }
+        if let key = NSApp.keyWindow, type(of: key).description().contains("QL") { return }
+
+        Self.clearMouseIgnoreFlags()
+        let main = Self.contentWindows().first
 
         // If we are not the active app yet, wait for applicationDidBecomeActive
         // rather than spinning makeKey while inactive (it cannot succeed).
@@ -58,9 +138,12 @@ final class FileRadarAppDelegate: NSObject, NSApplicationDelegate {
             }
             return
         }
-        if main.isKeyWindow { return }
+        Self.hardenContentWindow(main)
+        if main.isKeyWindow {
+            Self.writeKeyDiagIfRequested(reason: "alreadyKey")
+            return
+        }
 
-        main.ignoresMouseEvents = false
         main.orderFrontRegardless()
         main.makeKeyAndOrderFront(nil)
         if main.firstResponder == nil || main.firstResponder === main {
@@ -71,7 +154,84 @@ final class FileRadarAppDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 Self.keyContentWindow(attempt: attempt + 1)
             }
+        } else {
+            Self.writeKeyDiagIfRequested(reason: "keyed attempt=\(attempt)")
         }
+    }
+
+    /// Optional launch diagnostics: FILERADAR_KEY_DIAG=/path/to/log.txt
+    @MainActor
+    static func writeKeyDiagIfRequested(reason: String) {
+        let path = ProcessInfo.processInfo.environment["FILERADAR_KEY_DIAG"] ?? ""
+        guard !path.isEmpty else { return }
+        let wins = NSApp.windows.map { w -> String in
+            let kind = w is NSPanel ? "NSPanel" : "NSWindow"
+            return "\(kind) frame=\(Int(w.frame.width))x\(Int(w.frame.height)) key=\(w.isKeyWindow) main=\(w.isMainWindow) ignoreMouse=\(w.ignoresMouseEvents) canKey=\(w.canBecomeKey) panelMask=\(w.styleMask.contains(.nonactivatingPanel)) title=\(w.title)"
+        }.joined(separator: "\n")
+        let line = "t=\(Date()) reason=\(reason) active=\(NSApp.isActive) key=\(NSApp.keyWindow != nil) main=\(NSApp.mainWindow != nil)\n\(wins)\n---\n"
+        let url = URL(fileURLWithPath: path)
+        if let data = line.data(using: .utf8) {
+            if FileManager.default.fileExists(atPath: path),
+               let handle = try? FileHandle(forWritingTo: url) {
+                defer { try? handle.close() }
+                try? handle.seekToEnd()
+                try? handle.write(contentsOf: data)
+            } else {
+                try? data.write(to: url)
+            }
+        }
+    }
+}
+
+/// Makes the first click into an inactive FileRadar content window both
+/// activate the window and deliver to the control (toolbar / sidebar / rows).
+/// Without this, AppKit eats the first click as “activate only” and the UI
+/// feels dead until a second click.
+enum AcceptsFirstMouseFix {
+    private static var didInstall = false
+
+    static func install() {
+        guard !didInstall else { return }
+        didInstall = true
+        let sel = #selector(NSView.acceptsFirstMouse(for:))
+        // Cover NSView; hosting views inherit. Scoped by window in the IMP.
+        guard let original = class_getInstanceMethod(NSView.self, sel) else { return }
+        let originalIMP = method_getImplementation(original)
+        let block: @convention(block) (AnyObject, NSEvent?) -> Bool = { obj, event in
+            if let view = obj as? NSView,
+               let window = view.window,
+               !(window is NSPanel),
+               !window.styleMask.contains(.nonactivatingPanel),
+               window.frame.width >= 400 {
+                return true
+            }
+            typealias Fn = @convention(c) (AnyObject, Selector, NSEvent?) -> Bool
+            let fn = unsafeBitCast(originalIMP, to: Fn.self)
+            return fn(obj, sel, event)
+        }
+        method_setImplementation(original, imp_implementationWithBlock(block))
+    }
+}
+
+/// Tiny AppKit bridge so each SwiftUI window hardens mouse delivery on appear.
+struct WindowClickPathConfigurator: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView(frame: .zero)
+        DispatchQueue.main.async {
+            if let window = view.window {
+                FileRadarAppDelegate.hardenContentWindow(window)
+                if NSApp.isActive {
+                    FileRadarAppDelegate.keyContentWindow(attempt: 0)
+                }
+                FileRadarAppDelegate.writeKeyDiagIfRequested(reason: "WindowClickPathConfigurator")
+            }
+        }
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        guard let window = nsView.window else { return }
+        FileRadarAppDelegate.hardenContentWindow(window)
     }
 }
 

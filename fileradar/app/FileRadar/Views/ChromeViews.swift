@@ -11,6 +11,9 @@ struct RadarGlassWatermark: View {
     var accent: Color
 
     var body: some View {
+        // GeometryReader fills the sidebar ZStack — disable hit-testing on the
+        // reader itself, not only its circles, or gaps in the List fall through
+        // to a hit-absorbing empty GeometryReader.
         GeometryReader { geo in
             let side = max(geo.size.width, geo.size.height) * 1.6
             ZStack {
@@ -23,8 +26,9 @@ struct RadarGlassWatermark: View {
             }
             .frame(width: geo.size.width, height: geo.size.height, alignment: .leading)
             .offset(x: -geo.size.width * 0.55)
-            .allowsHitTesting(false)
         }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
 
