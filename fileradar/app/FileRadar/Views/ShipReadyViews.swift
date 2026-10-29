@@ -358,12 +358,17 @@ struct SelectionPreviewStrip: View {
 
 // MARK: - Single folder-access consent (launch)
 
-/// One sheet at first launch. User either multi-selects roots in a single
-/// NSOpenPanel or starts with Downloads (sandbox entitlement). Indexing
-/// stays gated until this finishes — no serial Desktop/Documents/Downloads
-/// prompts and no parallel open-panel storms.
+/// First-launch consent card. Presented as a root `ZStack` overlay (not a
+/// nested SwiftUI `.sheet`) so Drop Stack / transfer chrome / dimmers cannot
+/// sit above the buttons and swallow clicks. Parent dismisses, then runs
+/// NSOpenPanel / indexing — never a nested modal on top of this card.
 struct FolderAccessOnboardingView: View {
-    var onFinished: () -> Void
+    /// Choose Folders… — parent dismisses then opens NSOpenPanel.
+    var onChooseFolders: () -> Void
+    /// Start with Downloads only — bookmark entitlement path + index.
+    var onStartDownloads: () -> Void
+    /// Skip / continue without indexing — always lets the user into the app.
+    var onSkip: () -> Void
     @EnvironmentObject var theme: ThemeSettings
     @State private var busy = false
 
@@ -383,57 +388,77 @@ struct FolderAccessOnboardingView: View {
             }
             .font(FileRadarFont.caption())
             .foregroundStyle(.secondary)
+            .allowsHitTesting(false)
 
             Spacer(minLength: 8)
 
             VStack(spacing: 10) {
                 Button {
-                    chooseFolders()
+                    guard !busy else { return }
+                    busy = true
+                    onChooseFolders()
+                    // Panel cancel leaves this card up — re-enable actions.
+                    busy = false
                 } label: {
                     Text("Choose Folders…")
                         .frame(maxWidth: .infinity)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
                 .disabled(busy)
+                .contentShape(Rectangle())
+                .accessibilityIdentifier("onboarding.chooseFolders")
                 .accessibilityLabel("Choose folders")
 
                 Button {
-                    startWithDownloads()
+                    guard !busy else { return }
+                    busy = true
+                    onStartDownloads()
                 } label: {
                     Text("Start with Downloads only")
                         .frame(maxWidth: .infinity)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.large)
                 .disabled(busy)
+                .contentShape(Rectangle())
+                .accessibilityIdentifier("onboarding.startDownloads")
                 .accessibilityLabel("Start with Downloads only")
+
+                Button {
+                    guard !busy else { return }
+                    busy = true
+                    onSkip()
+                } label: {
+                    Text("Continue without indexing")
+                        .frame(maxWidth: .infinity)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .controlSize(.large)
+                .disabled(busy)
+                .contentShape(Rectangle())
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier("onboarding.skip")
+                .accessibilityLabel("Continue without indexing")
             }
+            .zIndex(10)
         }
         .padding(28)
-        .frame(width: 440, height: 360)
-        .background(Color(nsColor: .windowBackgroundColor))
+        .frame(width: 440)
+        .fixedSize(horizontal: false, vertical: true)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color(nsColor: .windowBackgroundColor))
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: Color.black.opacity(0.22), radius: 24, y: 10)
+        .contentShape(Rectangle())
+        .zIndex(1000)
         .preferredColorScheme(theme.colorScheme)
-        .interactiveDismissDisabled(true)
-    }
-
-    private func chooseFolders() {
-        busy = true
-        // Present the panel after the sheet paints so we never stack two
-        // modal sessions on the first frame.
-        DispatchQueue.main.async {
-            if let urls = SecurityBookmarkStore.pickAndStoreFolders(allowsMultiple: true), !urls.isEmpty {
-                FolderAccessConsent.completeWithBookmarks(urls)
-                busy = false
-                onFinished()
-            } else {
-                busy = false
-            }
-        }
-    }
-
-    private func startWithDownloads() {
-        FolderAccessConsent.completeWithDownloadsOnly()
-        onFinished()
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("onboarding.folderAccess")
     }
 }

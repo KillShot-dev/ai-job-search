@@ -27,6 +27,10 @@ final class FileRadarAppDelegate: NSObject, NSApplicationDelegate {
         NSApplication.shared.setActivationPolicy(.regular)
         NSApplication.shared.activate(ignoringOtherApps: true)
         DispatchQueue.main.async {
+            // Never steal key from an attached sheet / modal session — that
+            // left the folder-access card visible but unclickable.
+            if let key = NSApp.keyWindow, key.attachedSheet != nil { return }
+            if NSApp.windows.contains(where: \.isSheet) { return }
             let main = NSApplication.shared.windows.first(where: { window in
                 guard window.canBecomeKey,
                       window.frame.width >= 400,
