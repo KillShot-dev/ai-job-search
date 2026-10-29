@@ -45,6 +45,9 @@ public partial class App : Application
         TrySetMicaBackdrop(_window);
 
         _window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1480, 920));
+        var iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "FileRadar.ico");
+        if (File.Exists(iconPath))
+            _window.AppWindow.SetIcon(iconPath);
         _window.Activate();
     }
 
