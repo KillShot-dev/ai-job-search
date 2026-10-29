@@ -10,6 +10,8 @@ import UniformTypeIdentifiers
 struct FileCardView: View {
     var file: FileItem
     var size: CGFloat
+    var onSelect: () -> Void = {}
+    var onOpen: () -> Void = {}
     @EnvironmentObject var store: FileStore
     @EnvironmentObject var theme: ThemeSettings
     @EnvironmentObject var favorites: FavoritesStore
@@ -47,6 +49,7 @@ struct FileCardView: View {
                         .font(.caption2)
                         .foregroundStyle(.yellow)
                         .padding(6)
+                        .allowsHitTesting(false)
                 }
                 if file.isICloudOnly {
                     Label("iCloud only — not downloaded", systemImage: "icloud")
@@ -54,6 +57,7 @@ struct FileCardView: View {
                         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 6))
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
                         .padding(6)
+                        .allowsHitTesting(false)
                 }
             }
             .frame(width: size, height: thumbHeight)
@@ -61,6 +65,7 @@ struct FileCardView: View {
             .overlay(
                 RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
                     .strokeBorder(selected ? theme.look.accent : Color.clear, lineWidth: FileRadarChrome.selectionStroke)
+                    .allowsHitTesting(false)
             )
 
             Text(file.name).font(FileRadarFont.body()).lineLimit(2)
@@ -75,6 +80,14 @@ struct FileCardView: View {
                 .fill(selected ? FileRadarChrome.selectionWash(theme.look.accent) : Color.clear)
         )
         .contentShape(Rectangle())
+        .gesture(
+            TapGesture(count: 2)
+                .onEnded { _ in onOpen() }
+                .exclusively(before:
+                    TapGesture(count: 1)
+                        .onEnded { _ in onSelect() }
+                )
+        )
         .animation(FileRadarMotion.selection, value: hovering)
         .animation(FileRadarMotion.selection, value: selected)
         .onHover { hovering = $0 }
@@ -92,6 +105,75 @@ struct FileCardView: View {
         if let cam = file.cameraModel { parts.append(cam) }
         parts.append("From \(file.downloadSource.displayName)")
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    }
+}
+
+/// List-mode row with the same hit-testing rules as `FileCardView`:
+/// decorative chrome never steals taps; one exclusive double/single gesture.
+struct FileRowView: View {
+    var file: FileItem
+    var onSelect: () -> Void = {}
+    var onOpen: () -> Void = {}
+    @EnvironmentObject var store: FileStore
+    @EnvironmentObject var theme: ThemeSettings
+    @EnvironmentObject var favorites: FavoritesStore
+
+    private var selected: Bool { store.selectedIDs.contains(file.id) }
+
+    var body: some View {
+        HStack(spacing: 10) {
+            if file.kind == .image, !file.isICloudOnly {
+                AsyncFileThumbnail(file: file, size: CGSize(width: 28, height: 28))
+            } else {
+                FRKindIcon(kind: file.kind, size: .list)
+            }
+            Text(file.name)
+            Spacer()
+            if favorites.contains(file.url) {
+                Image(systemName: "star.fill")
+                    .font(.caption2)
+                    .foregroundStyle(.yellow)
+                    .allowsHitTesting(false)
+            }
+            if file.isICloudOnly {
+                Label("iCloud", systemImage: "icloud")
+                    .font(FileRadarFont.caption())
+                    .labelStyle(.iconOnly)
+                    .foregroundStyle(.secondary)
+                    .allowsHitTesting(false)
+            }
+            if file.kind == .folder {
+                FolderSizeText(folder: file.url)
+            } else {
+                Text(ByteCountFormatter.string(fromByteCount: file.size, countStyle: .file))
+                    .foregroundStyle(.secondary)
+            }
+            Text(file.modifiedDate, style: .date).foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 2)
+        .background(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(selected ? FileRadarChrome.selectionWash(theme.look.accent) : Color.clear)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .strokeBorder(selected ? theme.look.accent : Color.clear, lineWidth: FileRadarChrome.selectionStroke)
+                .allowsHitTesting(false)
+        )
+        .contentShape(Rectangle())
+        .gesture(
+            TapGesture(count: 2)
+                .onEnded { _ in onOpen() }
+                .exclusively(before:
+                    TapGesture(count: 1)
+                        .onEnded { _ in onSelect() }
+                )
+        )
+        .contextMenu { fileContextMenu(for: file) }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+        .accessibilityLabel(file.name)
+        .accessibilityHint("Double-click to open.")
     }
 }
 
@@ -241,36 +323,32 @@ struct FileCollectionView: View {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: minSize), spacing: theme.compactDensity ? 10 : 16)],
                           spacing: theme.compactDensity ? 10 : 16) {
                     ForEach(sortedFiles) { file in
-                        FileCardView(file: file, size: minSize)
-                            .onTapGesture(count: 2) { handleOpen(file) }
-                            .onTapGesture {
+                        FileCardView(
+                            file: file,
+                            size: minSize,
+                            onSelect: {
                                 withAnimation(FileRadarMotion.selection) {
                                     store.selectedIDs = [file.id]
                                 }
-                            }
+                            },
+                            onOpen: { handleOpen(file) }
+                        )
                     }
                 }.padding()
             }
         } else {
-            List(sortedFiles, selection: $store.selectedIDs) { file in
-                HStack(spacing: 10) {
-                    if file.kind == .image, !file.isICloudOnly {
-                        AsyncFileThumbnail(file: file, size: CGSize(width: 28, height: 28))
-                    } else {
-                        FRKindIcon(kind: file.kind, size: .list)
-                    }
-                    Text(file.name)
-                    Spacer()
-                    if file.kind == .folder {
-                        FolderSizeText(folder: file.url)
-                    } else {
-                        Text(ByteCountFormatter.string(fromByteCount: file.size, countStyle: .file))
-                            .foregroundStyle(.secondary)
-                    }
-                    Text(file.modifiedDate, style: .date).foregroundStyle(.secondary)
-                }
-                .contextMenu { fileContextMenu(for: file) }
-                .onTapGesture(count: 2) { handleOpen(file) }
+            List(sortedFiles) { file in
+                FileRowView(
+                    file: file,
+                    onSelect: {
+                        withAnimation(FileRadarMotion.selection) {
+                            store.selectedIDs = [file.id]
+                        }
+                    },
+                    onOpen: { handleOpen(file) }
+                )
+                .tag(file.id)
+                .listRowBackground(Color.clear)
             }
         }
     }

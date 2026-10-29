@@ -144,6 +144,19 @@ struct ContentView: View {
                     inspectorMode = .info
                 } else if new == .browser {
                     dualPaneEnabled = true
+                } else if case .pinned(let url) = new {
+                    // Standard-place / pin tags drive folder browse without a Button wrapper.
+                    if standardPlaces.contains(where: { $0.path == url.path }) {
+                        openStandardPlace(url)
+                    } else if FolderAccessConsent.canBrowse(url) {
+                        tabState.setFirstFolder(url)
+                        dualPaneEnabled = true
+                    }
+                } else if case .favorite(let url) = new {
+                    if FolderAccessConsent.canBrowse(url) {
+                        tabState.setFirstFolder(url)
+                        dualPaneEnabled = true
+                    }
                 }
                 museChatViewModel?.updateContext(title: new.title,
                                                  fileNames: museContextFileNames(for: new))
@@ -161,30 +174,26 @@ struct ContentView: View {
             }
     }
 
-    /// Sidebar row that sets `destination` directly. Avoids both
-    /// `NavigationLink(value:)` (swallows clicks with `List(selection:)`)
-    /// and tag-selection (also failed to update on this OS) — Buttons fire.
+    /// Sidebar row via `Label` + `.tag` for `List(selection:)` — no Button /
+    /// NavigationLink wrapper (those competed with selection hit-testing).
     @ViewBuilder
     private func sidebarItem(_ title: String, systemImage: String, _ dest: Destination,
                              nav: FRNavGlyph? = nil, place: FRPlaceKind? = nil, kind: FileKind? = nil) -> some View {
-        Button {
-            destination = dest
-        } label: {
-            FRSidebarLabel(title: title) {
-                if let kind {
-                    FRKindIcon(kind: kind, size: .sidebar)
-                } else if let place {
-                    FRPlaceIcon(place: place, size: .sidebar)
-                } else if let nav {
-                    FRNavIcon(glyph: nav, size: .sidebar, selected: destination == dest, accent: chromeAccent)
-                } else {
-                    FRNavIcon(glyph: .browser, size: .sidebar, selected: destination == dest, accent: chromeAccent)
-                }
+        Label {
+            Text(title)
+        } icon: {
+            if let kind {
+                FRKindIcon(kind: kind, size: .sidebar)
+            } else if let place {
+                FRPlaceIcon(place: place, size: .sidebar)
+            } else if let nav {
+                FRNavIcon(glyph: nav, size: .sidebar, selected: destination == dest, accent: chromeAccent)
+            } else {
+                Image(systemName: systemImage)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .tag(dest)
+        .contentShape(Rectangle())
         .listRowBackground(destination == dest ? FileRadarChrome.sidebarSelectionWash(chromeAccent) : Color.clear)
         .accessibilityAddTraits(destination == dest ? .isSelected : [])
         .accessibilityLabel(title)
@@ -256,11 +265,12 @@ struct ContentView: View {
 
     @ViewBuilder
     private var sidebarList: some View {
-        List {
+        List(selection: $destination) {
             if chromeView == .previewTheater {
                 Section {
                     sidebarItem("Home", systemImage: "house", .browser, nav: .home)
-                    sidebarItem("Downloads", systemImage: "arrow.down.circle", .browser, place: .downloads)
+                    let downloads = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Downloads")
+                    sidebarItem("Downloads", systemImage: "arrow.down.circle", .pinned(downloads), place: .downloads)
                     ForEach([FileKind.image, .audio, .video], id: \.self) { kind in
                         sidebarItem(kind.displayName, systemImage: kind.systemImage, .kind(kind), kind: kind)
                     }
@@ -270,20 +280,19 @@ struct ContentView: View {
                     sidebarItem("Browser", systemImage: "rectangle.split.2x1", .browser, nav: .browser)
                     sidebarItem("Search", systemImage: "magnifyingglass", .search, nav: .search)
                     ForEach(standardPlaces, id: \.path) { place in
-                        Button {
-                            openStandardPlace(place)
-                        } label: {
-                            FRSidebarLabel(title: place.lastPathComponent) {
-                                FRPlaceIcon(place: FRPlaceKind.from(url: place), size: .sidebar)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .contentShape(Rectangle())
+                        Label {
+                            Text(place.lastPathComponent)
+                        } icon: {
+                            FRPlaceIcon(place: FRPlaceKind.from(url: place), size: .sidebar)
                         }
-                        .buttonStyle(.plain)
+                        .tag(Destination.pinned(place))
+                        .contentShape(Rectangle())
                         .listRowBackground(
                             (destination == .browser && tabState.firstFolder.path == place.path)
+                                || destination == .pinned(place)
                             ? FileRadarChrome.sidebarSelectionWash(chromeAccent) : Color.clear
                         )
+                        .accessibilityLabel(place.lastPathComponent)
                     }
                     if !favorites.paths.isEmpty {
                         ForEach(favorites.paths, id: \.self) { path in
@@ -333,35 +342,44 @@ struct ContentView: View {
                     Section("Locations") {
                         ForEach(["Pictures", "Music", "Movies"], id: \.self) { name in
                             let url = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(name)
-                            Button {
-                                tabState.setFirstFolder(url)
-                                destination = .browser
-                                dualPaneEnabled = true
-                            } label: {
-                                FRSidebarLabel(title: name) {
-                                    FRPlaceIcon(place: FRPlaceKind.from(url: url), size: .sidebar)
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .contentShape(Rectangle())
+                            Label {
+                                Text(name)
+                            } icon: {
+                                FRPlaceIcon(place: FRPlaceKind.from(url: url), size: .sidebar)
                             }
-                            .buttonStyle(.plain)
+                            .tag(Destination.pinned(url))
+                            .contentShape(Rectangle())
+                            .accessibilityLabel(name)
                         }
                     }
                     Section("Shelves") {
                         sidebarItem("Shelves", systemImage: "square.stack", .home, nav: .shelves)
                     }
                 }
-                // Drop Stack lives in the List (not safeAreaInset). An inset
-                // hit plate previously swallowed sidebar activations.
-                if chromeView != .previewTheater {
-                    Section {
-                        DropStackView()
-                            .listRowInsets(EdgeInsets(top: 4, leading: 8, bottom: 8, trailing: 8))
-                            .listRowBackground(Color.clear)
-                            .listRowSeparator(.hidden)
-                    }
-                }
             }
+        }
+        // Drop Stack / Add Folder sit in a bottom inset with intrinsic height
+        // only — never a max-height plate that would swallow sidebar hits.
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            VStack(alignment: .leading, spacing: 8) {
+                if chromeView != .previewTheater {
+                    DropStackView()
+                        .padding(.horizontal, 10)
+                }
+                Button {
+                    store.addFolderInteractive()
+                } label: {
+                    Label("Add Folder…", systemImage: "folder.badge.plus")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, 12)
+                .accessibilityLabel("Add Folder")
+            }
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(theme.look.chromeMaterial)
         }
     }
 
@@ -395,46 +413,49 @@ struct ContentView: View {
                 TransferTopStrip(accent: chromeAccent) { showTransfers = true }
             }
             HStack(spacing: 0) {
-                ZStack(alignment: .bottom) {
-                    VStack(spacing: 0) {
-                        if showsDualPane {
-                            DualPaneView(leftFolder: tabState.firstFolder,
-                                         leftFiles: FolderBrowser.children(of: tabState.firstFolder, indexed: store.files),
-                                         rightFolder: tabState.secondFolder,
-                                         rightFiles: FolderBrowser.children(of: tabState.secondFolder, indexed: store.files),
-                                         activeIsRight: $activeIsRight,
-                                         onNavigateLeft: { tabState.setFirstFolder($0) },
-                                         onNavigateRight: { tabState.setSecondFolder($0) },
-                                         onChooseLeftFolder: chooseLeftPaneFolder,
-                                         onChooseRightFolder: chooseRightPaneFolder,
-                                         onSyncCompare: { destination = .syncCompare },
-                                         chromeView: chromeView,
-                                         accent: chromeAccent)
-                        } else {
-                            detailView
-                        }
-                        if previewStripEnabled, destination != .home, !showsDualPane {
-                            SelectionPreviewStrip(file: selectedFile)
-                        }
-                        if chromeView == .radarGlass {
-                            TransferDockedDrawer(accent: chromeAccent) { showTransfers = true }
-                        } else if chromeView == .commandRail {
-                            CommandKeyboardLegend()
-                        } else if chromeView != .previewTheater, chromeView != .workspaceTabs {
-                            ActivitiesStripView { showTransfers = true }
+                VStack(spacing: 0) {
+                    if showsDualPane {
+                        DualPaneView(leftFolder: tabState.firstFolder,
+                                     leftFiles: FolderBrowser.children(of: tabState.firstFolder, indexed: store.files),
+                                     rightFolder: tabState.secondFolder,
+                                     rightFiles: FolderBrowser.children(of: tabState.secondFolder, indexed: store.files),
+                                     activeIsRight: $activeIsRight,
+                                     onNavigateLeft: { tabState.setFirstFolder($0) },
+                                     onNavigateRight: { tabState.setSecondFolder($0) },
+                                     onChooseLeftFolder: chooseLeftPaneFolder,
+                                     onChooseRightFolder: chooseRightPaneFolder,
+                                     onSyncCompare: { destination = .syncCompare },
+                                     chromeView: chromeView,
+                                     accent: chromeAccent)
+                    } else {
+                        detailView
+                    }
+                    if previewStripEnabled, destination != .home, !showsDualPane {
+                        SelectionPreviewStrip(file: selectedFile)
+                    }
+                    if chromeView == .radarGlass {
+                        TransferDockedDrawer(accent: chromeAccent) { showTransfers = true }
+                    } else if chromeView == .commandRail {
+                        CommandKeyboardLegend()
+                    } else if chromeView != .previewTheater, chromeView != .workspaceTabs {
+                        ActivitiesStripView { showTransfers = true }
+                    }
+                }
+                // Transfer chrome via bottom inset (intrinsic height) — never a
+                // full-frame ZStack overlay that can eat detail clicks when idle.
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    Group {
+                        if chromeView == .commandRail {
+                            TransferFloatingPill(accent: chromeAccent)
+                        } else if chromeView != .radarGlass,
+                                  chromeView != .previewTheater,
+                                  chromeView != .workspaceTabs {
+                            TransferHUDView()
                         }
                     }
-                    // Floating transfer chrome only hits when visible/active —
-                    // an idle overlay must never sit as an invisible click plate.
-                    if chromeView == .commandRail {
-                        TransferFloatingPill(accent: chromeAccent)
-                            .allowsHitTesting(transferQueue.activeCount > 0
-                                              || transferQueue.items.contains { $0.status == .failed })
-                    } else if chromeView != .radarGlass, chromeView != .previewTheater, chromeView != .workspaceTabs {
-                        TransferHUDView()
-                            .allowsHitTesting(transferQueue.activeCount > 0
-                                              || transferQueue.items.contains { $0.status == .failed })
-                    }
+                    .frame(maxWidth: .infinity)
+                    .allowsHitTesting(transferQueue.activeCount > 0
+                                      || transferQueue.items.contains { $0.status == .failed })
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -627,6 +648,8 @@ struct ContentView: View {
                 }
                 .keyboardShortcut("p", modifiers: [.command, .shift])
                 Button("Add Folder…") { store.addFolderInteractive() }
+                    .buttonStyle(.plain)
+                    .contentShape(Rectangle())
                     .accessibilityLabel("Add Folder")
                 Button("Rename…") { showBatchRename = true }
                     .keyboardShortcut("r", modifiers: [.command, .shift])

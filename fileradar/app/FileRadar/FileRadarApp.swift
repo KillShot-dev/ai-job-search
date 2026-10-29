@@ -10,8 +10,9 @@ final class FileRadarAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidBecomeActive(_ notification: Notification) {
-        // Reclaim key window if a Settings/menu-extra panel briefly stole it.
-        if NSApp.keyWindow == nil || (NSApp.keyWindow?.frame.width ?? 0) < 400 {
+        // Only reclaim when nothing is key/main — never steal from a valid
+        // Settings / inspector key window via a width heuristic.
+        if NSApp.keyWindow == nil && NSApp.mainWindow == nil {
             Self.activateMainWindow()
         }
     }
@@ -26,9 +27,18 @@ final class FileRadarAppDelegate: NSObject, NSApplicationDelegate {
         NSApplication.shared.setActivationPolicy(.regular)
         NSApplication.shared.activate(ignoringOtherApps: true)
         DispatchQueue.main.async {
-            let main = NSApplication.shared.windows.first(where: {
-                $0.canBecomeKey && $0.frame.width >= 400 && $0.frame.height >= 300
-            }) ?? NSApplication.shared.windows.first
+            let main = NSApplication.shared.windows.first(where: { window in
+                guard window.canBecomeKey,
+                      window.frame.width >= 400,
+                      window.frame.height >= 300 else { return false }
+                // Skip panels / popovers / non-activating chrome — they must
+                // not become the "main" content window for click routing.
+                if window is NSPanel { return false }
+                if window.styleMask.contains(.nonactivatingPanel) { return false }
+                return true
+            }) ?? NSApplication.shared.windows.first(where: {
+                !($0 is NSPanel) && !$0.styleMask.contains(.nonactivatingPanel)
+            })
             main?.makeKeyAndOrderFront(nil)
         }
     }
