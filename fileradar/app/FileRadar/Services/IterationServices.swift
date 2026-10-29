@@ -452,7 +452,8 @@ final class FolderSizeService {
                 var total: Int64 = 0
                 let fm = FileManager.default
                 if let enumerator = fm.enumerator(at: folder, includingPropertiesForKeys: [.fileSizeKey, .isDirectoryKey, .isSymbolicLinkKey], options: [.skipsHiddenFiles]) {
-                    for case let url as URL in enumerator {
+                    // nextObject() — DirectoryEnumerator.makeIterator() is unavailable in async.
+                    while let url = enumerator.nextObject() as? URL {
                         if Task.isCancelled { break }
                         guard let values = try? url.resourceValues(forKeys: [.fileSizeKey, .isDirectoryKey, .isSymbolicLinkKey]) else { continue }
                         if values.isSymbolicLink == true { enumerator.skipDescendants(); continue }

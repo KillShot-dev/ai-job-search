@@ -1,5 +1,5 @@
 import Foundation
-import Vision
+@preconcurrency import Vision
 import AppKit
 
 /// On-device text recognition via Apple Vision. Runs on a background queue;
@@ -11,7 +11,8 @@ import AppKit
 ///   see InspectorView. This service itself only recognises text.
 /// Guards a continuation against double-resume when a Vision perform()
 /// throws after its completion handler already fired (or vice versa).
-final class ResumeOnce<T> {
+/// `@unchecked Sendable` because access is serialized by `NSLock`.
+final class ResumeOnce<T>: @unchecked Sendable {
     private var resumed = false
     private let lock = NSLock()
     private let continuation: CheckedContinuation<T, Never>
@@ -61,9 +62,12 @@ enum OCRService {
                 once.resume(returning: text)
             }
             request.recognitionLevel = .fast
-            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+            // Vision types are not Sendable; perform stays on one queue and
+            // these locals are only touched from that queue after creation.
+            nonisolated(unsafe) let unsafeRequest = request
+            nonisolated(unsafe) let unsafeHandler = VNImageRequestHandler(cgImage: cgImage, options: [:])
             DispatchQueue.global(qos: .userInitiated).async {
-                do { try handler.perform([request]) } catch { once.resume(returning: nil) }
+                do { try unsafeHandler.perform([unsafeRequest]) } catch { once.resume(returning: nil) }
             }
         }
     }
