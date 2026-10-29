@@ -59,7 +59,10 @@ struct DropStackView: View {
         .overlay(
             RoundedRectangle(cornerRadius: FileRadarChrome.radiusControl, style: .continuous)
                 .strokeBorder(isTargeted ? theme.look.accent.opacity(0.35) : FileRadarChrome.hairline.opacity(0.5), lineWidth: 1)
+                .allowsHitTesting(false)
         )
+        // Drop target is scoped to this tray row only — never a full-window
+        // plate that would swallow sidebar / detail clicks.
         .onDrop(of: [.fileURL], isTargeted: $isTargeted) { providers in
             DropUtilities.loadURLs(from: providers) { stack.add($0) }
             return true
@@ -68,11 +71,8 @@ struct DropStackView: View {
     }
 
     private func placeStack() {
-        let panel = NSOpenPanel()
-        panel.canChooseDirectories = true
-        panel.canChooseFiles = false
-        panel.prompt = "Place stack here"
-        guard panel.runModal() == .OK, let folder = panel.url else { return }
+        // Persist grant so Place Stack destinations stay accessible after relaunch.
+        guard let folder = SecurityBookmarkStore.pickAndStoreFolder() else { return }
         queue.enqueueMove(stack.urls, to: folder)
         stack.clear()
     }
@@ -246,6 +246,7 @@ struct ActivitiesStripView: View {
         .background(FileRadarChrome.chromeBarFill)
         .overlay(alignment: .top) {
             Rectangle().fill(FileRadarChrome.hairline).frame(height: 1)
+                .allowsHitTesting(false)
         }
         .accessibilityLabel("Activities")
     }
@@ -636,6 +637,8 @@ struct ArchiveBrowserView: View {
     var archive: URL
     @EnvironmentObject var license: LicenseManager
     @State private var entries: [ArchiveEntry] = []
+    @State private var listing = false
+    @State private var extracting = false
     @State private var extractMessage: String?
     @State private var showLicense = false
 
@@ -647,12 +650,16 @@ struct ArchiveBrowserView: View {
             } else {
                 Text("Browsing read-only, as if this archive were a folder. Nothing inside it is changed. Extract only when you ask.")
                     .font(FileRadarFont.body()).foregroundStyle(.secondary).padding(.horizontal)
-                Button("Extract archive to a folder…") { extract() }
+                Button(extracting ? "Extracting…" : "Extract archive to a folder…") { extract() }
                     .padding(.horizontal)
+                    .disabled(extracting || listing)
                 if let message = extractMessage {
                     Text(message).font(FileRadarFont.body()).padding(.horizontal)
                 }
-                if entries.isEmpty {
+                if listing {
+                    ProgressView("Listing archive…")
+                        .padding(.horizontal)
+                } else if entries.isEmpty {
                     EmptyStateView(title: "No entries listed",
                                    message: "This archive listed no entries, or its listing could not be read. Nothing was changed.")
                 } else {
@@ -671,8 +678,16 @@ struct ArchiveBrowserView: View {
             }
         }
         .sheet(isPresented: $showLicense) { LicenseEntryView() }
-        .onAppear {
-            entries = ArchiveBrowser.listEntries(of: archive)
+        // Never list archives on MainActor — unzip/tar pipes can fill and deadlock.
+        .task(id: archive) {
+            guard license.isAllowed(.archiveBrowse) else {
+                entries = []
+                return
+            }
+            listing = true
+            let listed = await ArchiveBrowser.listEntriesAsync(of: archive)
+            entries = listed
+            listing = false
         }
     }
 
@@ -682,10 +697,17 @@ struct ArchiveBrowserView: View {
         panel.canChooseFiles = false
         panel.prompt = "Extract here"
         guard panel.runModal() == .OK, let folder = panel.url else { return }
-        if let error = ArchiveBrowser.extract(archive, to: folder) {
-            extractMessage = error
-        } else {
-            extractMessage = "Extracted to \(folder.lastPathComponent). The archive itself was not changed."
+        extracting = true
+        extractMessage = nil
+        let archiveURL = archive
+        Task {
+            let error = await ArchiveBrowser.extractAsync(archiveURL, to: folder)
+            extracting = false
+            if let error {
+                extractMessage = error
+            } else {
+                extractMessage = "Extracted to \(folder.lastPathComponent). The archive itself was not changed."
+            }
         }
     }
 }

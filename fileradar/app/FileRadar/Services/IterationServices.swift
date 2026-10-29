@@ -542,11 +542,26 @@ enum ArchiveBrowser {
         ["zip", "tar", "gz", "tgz"].contains(url.pathExtension.lowercased())
     }
 
+    /// Sync listing — call only from a background queue / Task.detached.
     static func listEntries(of archive: URL) -> [ArchiveEntry] {
         switch archive.pathExtension.lowercased() {
         case "zip": return listZip(archive)
         default: return listTar(archive)
         }
+    }
+
+    /// Off-main listing so unzip/tar pipes never freeze the UI thread.
+    static func listEntriesAsync(of archive: URL) async -> [ArchiveEntry] {
+        await Task.detached(priority: .utility) {
+            listEntries(of: archive)
+        }.value
+    }
+
+    /// Off-main extract (same confinement rules as `extract`).
+    static func extractAsync(_ archive: URL, to folder: URL) async -> String? {
+        await Task.detached(priority: .userInitiated) {
+            extract(archive, to: folder)
+        }.value
     }
 
     private static func run(_ tool: String, _ args: [String]) -> String {

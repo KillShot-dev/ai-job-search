@@ -193,6 +193,7 @@ struct FileCollectionView: View {
             ZStack {
                 content
                 if dropTargeted, dropTargetFolder != nil {
+                    // Visual-only drop highlight — never intercept clicks / scroll.
                     RoundedRectangle(cornerRadius: theme.look.cardCorner, style: .continuous)
                         .strokeBorder(theme.look.accent, style: StrokeStyle(lineWidth: 2, dash: [7, 5]))
                         .background(
@@ -200,13 +201,14 @@ struct FileCollectionView: View {
                                 .fill(theme.look.accent.opacity(0.08))
                         )
                         .padding(8)
-                        .allowsHitTesting(false)
                         .overlay {
                             Text(preferCopyOnDrop ? "Release to copy" : "Release to move")
                                 .font(FileRadarFont.heading())
                                 .padding(.horizontal, 14).padding(.vertical, 8)
                                 .background(.ultraThinMaterial, in: Capsule())
+                                .allowsHitTesting(false)
                         }
+                        .allowsHitTesting(false)
                         .transition(.opacity)
                 }
             }

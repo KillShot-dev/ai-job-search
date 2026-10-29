@@ -29,23 +29,13 @@ enum OCRService {
     /// (we must not trigger a download) and for non-images.
     static func recogniseText(in file: FileItem) async -> String? {
         guard !file.isICloudOnly, file.kind == .image else { return nil }
-        guard let image = NSImage(contentsOf: file.url),
-              let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
-        return await withCheckedContinuation { continuation in
-            let once = ResumeOnce(continuation)
-            let request = VNRecognizeTextRequest { request, _ in
-                let text = request.results?.compactMap { $0 as? VNRecognizedTextObservation }
-                    .compactMap { $0.topCandidates(1).first?.string }
-                    .joined(separator: "\n")
-                once.resume(returning: text)
-            }
-            request.recognitionLevel = .accurate
-            request.usesLanguageCorrection = true
-            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-            DispatchQueue.global(qos: .userInitiated).async {
-                do { try handler.perform([request]) } catch { once.resume(returning: nil) }
-            }
-        }
+        // Decode off the caller's actor (often MainActor from inspector .task).
+        let cgImage: CGImage? = await Task.detached(priority: .utility) {
+            guard let image = NSImage(contentsOf: file.url) else { return nil }
+            return image.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        }.value
+        guard let cgImage else { return nil }
+        return await recogniseTextInCGImage(cgImage)
     }
 
     /// Recognise text on the first pages of a PDF (up to `maxPages`).

@@ -76,22 +76,24 @@ enum DuplicateFinder {
     }
 
     private static func featurePrint(for file: FileItem) async -> VNFeaturePrintObservation? {
-        guard let image = NSImage(contentsOf: file.url),
-              let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
-        return await withCheckedContinuation { continuation in
-            let request = VNGenerateImageFeaturePrintRequest { request, _ in
-                continuation.resume(returning: request.results?.first as? VNFeaturePrintObservation)
+        // Decode + Vision entirely off the main actor — never NSImage(contentsOf:)
+        // from a view body or MainActor Task.
+        await Task.detached(priority: .userInitiated) {
+            guard let image = NSImage(contentsOf: file.url),
+                  let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+                return nil as VNFeaturePrintObservation?
             }
-            let handler = VNImageRequestHandler(cgImage: cg, options: [:])
-            DispatchQueue.global(qos: .userInitiated).async {
-                do { try handler.perform([request]) } catch {
-                    // Completion may not fire if perform throws; resume nil.
-                    // (Double-resume is guarded by the continuation contract
-                    // in practice because a failed perform produces no result
-                    // callback; see README UNTESTED section.)
+            return await withCheckedContinuation { (continuation: CheckedContinuation<VNFeaturePrintObservation?, Never>) in
+                let request = VNGenerateImageFeaturePrintRequest { request, _ in
+                    continuation.resume(returning: request.results?.first as? VNFeaturePrintObservation)
+                }
+                let handler = VNImageRequestHandler(cgImage: cg, options: [:])
+                do {
+                    try handler.perform([request])
+                } catch {
                     continuation.resume(returning: nil)
                 }
             }
-        }
+        }.value
     }
 }

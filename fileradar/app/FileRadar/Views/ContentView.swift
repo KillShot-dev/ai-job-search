@@ -424,6 +424,8 @@ struct ContentView: View {
                             ActivitiesStripView { showTransfers = true }
                         }
                     }
+                    // Floating transfer chrome only hits when visible/active —
+                    // an idle overlay must never sit as an invisible click plate.
                     if chromeView == .commandRail {
                         TransferFloatingPill(accent: chromeAccent)
                             .allowsHitTesting(transferQueue.activeCount > 0
@@ -625,6 +627,7 @@ struct ContentView: View {
                 }
                 .keyboardShortcut("p", modifiers: [.command, .shift])
                 Button("Add Folder…") { store.addFolderInteractive() }
+                    .accessibilityLabel("Add Folder")
                 Button("Rename…") { showBatchRename = true }
                     .keyboardShortcut("r", modifiers: [.command, .shift])
                     .disabled(store.selectedIDs.isEmpty)

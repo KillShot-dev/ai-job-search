@@ -1,9 +1,43 @@
 import SwiftUI
 import AppKit
 
+/// Ensures a regular activation policy and a key main window so clicks
+/// reach content views. MenuBarExtra / Settings scenes must not steal
+/// first-responder focus at launch.
+final class FileRadarAppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        Self.activateMainWindow()
+    }
+
+    func applicationDidBecomeActive(_ notification: Notification) {
+        // Reclaim key window if a Settings/menu-extra panel briefly stole it.
+        if NSApp.keyWindow == nil || (NSApp.keyWindow?.frame.width ?? 0) < 400 {
+            Self.activateMainWindow()
+        }
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        Self.activateMainWindow()
+        return true
+    }
+
+    @MainActor
+    static func activateMainWindow() {
+        NSApplication.shared.setActivationPolicy(.regular)
+        NSApplication.shared.activate(ignoringOtherApps: true)
+        DispatchQueue.main.async {
+            let main = NSApplication.shared.windows.first(where: {
+                $0.canBecomeKey && $0.frame.width >= 400 && $0.frame.height >= 300
+            }) ?? NSApplication.shared.windows.first
+            main?.makeKeyAndOrderFront(nil)
+        }
+    }
+}
+
 /// FileRadar entry point.
 @main
 struct FileRadarApp: App {
+    @NSApplicationDelegateAdaptor(FileRadarAppDelegate.self) private var appDelegate
     @StateObject private var store = FileStore()
     @StateObject private var license = LicenseManager()
     @StateObject private var theme = ThemeSettings()
@@ -34,6 +68,7 @@ struct FileRadarApp: App {
                 .preferredColorScheme(theme.colorScheme)
                 .frame(minWidth: 960, minHeight: 640)
                 .onAppear {
+                    FileRadarAppDelegate.activateMainWindow()
                     license.attach(storeKit: storeKit, trial: trial)
                     store.manualTagNames = { [manualTags] path in
                         manualTags.tags(for: path).map(\.name)
@@ -199,6 +234,8 @@ struct FileRadarApp: App {
             }
         }
 
+        // Menu style (not .window) so the extra never steals key-window focus
+        // from the main Browser at launch or when clicked in the menu bar.
         MenuBarExtra("FileRadar", systemImage: "magnifyingglass") {
             MenuBarExtraView()
                 .environmentObject(store)
@@ -207,7 +244,7 @@ struct FileRadarApp: App {
                 .environmentObject(storeKit)
                 .environmentObject(trial)
         }
-        .menuBarExtraStyle(.window)
+        .menuBarExtraStyle(.menu)
 
         Settings {
             SettingsView()
