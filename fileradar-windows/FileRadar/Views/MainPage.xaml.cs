@@ -284,6 +284,17 @@ public sealed partial class MainPage : Page
         TransferHud.Background = BrushFrom(dark ? "#CC2C2C2E" : "#CCF5F5F7");
         BrandText.Foreground = BrushFrom(palette.Text);
 
+        // Path bars + pane chrome: push palette brushes explicitly so light mode
+        // never keeps orphaned dark-theme white text on light list backgrounds.
+        LeftPathBar.Background = BrushFrom(palette.Panel);
+        RightPathBar.Background = BrushFrom(palette.Panel);
+        LeftPathPill.Background = BrushFrom(palette.Panel2);
+        RightPathPill.Background = BrushFrom(palette.Panel2);
+        LeftPathBox.Foreground = BrushFrom(palette.Text);
+        RightPathBox.Foreground = BrushFrom(palette.Text);
+        LeftPaneFrame.RequestedTheme = dark ? ElementTheme.Dark : ElementTheme.Light;
+        RightPaneFrame.RequestedTheme = dark ? ElementTheme.Dark : ElementTheme.Light;
+
         AppearanceIconImg.Source = IconCatalog.Get(
             App.Theme.Appearance == AppearanceMode.Light ? "sun" : "moon");
         DualPaneIconImg.Opacity = App.Theme.DualPane ? 1.0 : 0.55;
@@ -293,6 +304,7 @@ public sealed partial class MainPage : Page
         if (_activeNav is not null) HighlightNav(_activeNav);
         ApplyDualPaneLayout();
         ApplyChromeView();
+        RecolorBrowserListText(palette);
     }
 
     private static SolidColorBrush BrushFrom(string hex)
@@ -308,6 +320,59 @@ public sealed partial class MainPage : Page
         var g = Convert.ToByte(hex[2..4], 16);
         var b = Convert.ToByte(hex[4..6], 16);
         return new SolidColorBrush(Color.FromArgb(a, r, g, b));
+    }
+
+    /// <summary>Primary + secondary list text brushes from the resolved Modern palette.</summary>
+    private (Brush Text, Brush Muted) ListTextBrushes()
+    {
+        var dark = App.Theme.IsDark(_systemDark);
+        var palette = ThemeCatalog.Resolve(AppLook.Modern, dark, App.Theme.ChromeView);
+        return (BrushFrom(palette.Text), BrushFrom(palette.Muted));
+    }
+
+    /// <summary>
+    /// Force name/size/date TextBlocks in both panes onto theme-appropriate foregrounds.
+    /// Prevents focused-pane / orphaned dark-theme white text on light backgrounds.
+    /// </summary>
+    private void RecolorBrowserListText(ThemePalette palette)
+    {
+        var text = BrushFrom(palette.Text);
+        var muted = BrushFrom(palette.Muted);
+        RecolorBrowserListTextIn(MainContent, text, muted);
+        RecolorBrowserListTextIn(RightContent, text, muted);
+    }
+
+    private static void RecolorBrowserListTextIn(Panel? root, Brush text, Brush muted)
+    {
+        if (root is null) return;
+        foreach (var child in root.Children)
+            RecolorBrowserListSubtree(child, text, muted);
+    }
+
+    private static void RecolorBrowserListSubtree(DependencyObject node, Brush text, Brush muted)
+    {
+        switch (node)
+        {
+            case TextBlock tb:
+                // Caption-sized cells are size/date; body-sized is the filename.
+                tb.Foreground = Math.Abs(tb.FontSize - FileRadarChrome.TypeCaption) < 0.1
+                    ? muted
+                    : text;
+                break;
+            case Panel panel:
+                foreach (var child in panel.Children)
+                {
+                    if (child is DependencyObject d)
+                        RecolorBrowserListSubtree(d, text, muted);
+                }
+                break;
+            case Border { Child: DependencyObject borderChild }:
+                RecolorBrowserListSubtree(borderChild, text, muted);
+                break;
+            case ContentControl { Content: DependencyObject contentChild }:
+                RecolorBrowserListSubtree(contentChild, text, muted);
+                break;
+        }
     }
 
     private void ApplyDualPaneLayout()
@@ -358,6 +423,10 @@ public sealed partial class MainPage : Page
         RightPaneFrame.BorderThickness = _rightPaneActive ? new Thickness(1.5) : new Thickness(0);
         LeftPaneFrame.Background = _rightPaneActive ? new SolidColorBrush(Colors.Transparent) : wash;
         RightPaneFrame.Background = _rightPaneActive ? wash : new SolidColorBrush(Colors.Transparent);
+        // Active-pane wash must never flip list text to a dark-theme (white) foreground.
+        var dark = App.Theme.IsDark(_systemDark);
+        var palette = ThemeCatalog.Resolve(AppLook.Modern, dark, App.Theme.ChromeView);
+        RecolorBrowserListText(palette);
     }
 
     private void RenderRightPane()
@@ -948,6 +1017,10 @@ public sealed partial class MainPage : Page
 
     private FrameworkElement BuildBrowserRow(FileItem item, bool rightPane)
     {
+        // Resolve from the live palette (not a possibly-orphaned resource brush) so
+        // both panes — including the focused/active left pane — get dark text in
+        // Light mode and light text in Dark mode.
+        var (textBrush, mutedBrush) = ListTextBrushes();
         var row = new Border
         {
             Padding = new Thickness(8, 5, 8, 5),
@@ -969,7 +1042,7 @@ public sealed partial class MainPage : Page
             FontSize = FileRadarChrome.TypeBody,
             TextTrimming = TextTrimming.CharacterEllipsis,
             VerticalAlignment = VerticalAlignment.Center,
-            Foreground = (Brush)Application.Current.Resources["FrTextBrush"]
+            Foreground = textBrush
         };
         Grid.SetColumn(name, 1);
         g.Children.Add(name);
@@ -980,7 +1053,7 @@ public sealed partial class MainPage : Page
             FontSize = FileRadarChrome.TypeCaption,
             HorizontalAlignment = HorizontalAlignment.Right,
             VerticalAlignment = VerticalAlignment.Center,
-            Foreground = (Brush)Application.Current.Resources["FrMutedBrush"]
+            Foreground = mutedBrush
         };
         Grid.SetColumn(size, 2);
         g.Children.Add(size);
@@ -991,7 +1064,7 @@ public sealed partial class MainPage : Page
             FontSize = FileRadarChrome.TypeCaption,
             HorizontalAlignment = HorizontalAlignment.Right,
             VerticalAlignment = VerticalAlignment.Center,
-            Foreground = (Brush)Application.Current.Resources["FrMutedBrush"]
+            Foreground = mutedBrush
         };
         Grid.SetColumn(modified, 3);
         g.Children.Add(modified);
